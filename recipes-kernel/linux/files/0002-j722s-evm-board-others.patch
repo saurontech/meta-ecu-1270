@@ -1,0 +1,758 @@
+diff --git a/drivers/misc/eeprom/Kconfig b/drivers/misc/eeprom/Kconfig
+index 2d240bfa819f..8120ce75b419 100644
+--- a/drivers/misc/eeprom/Kconfig
++++ b/drivers/misc/eeprom/Kconfig
+@@ -46,6 +46,17 @@ config EEPROM_AT25
+ 	  This driver can also be built as a module.  If so, the module
+ 	  will be called at25.
+ 
++config FRAM_FM25
++	tristate "SPI Cypress FRAM"
++	depends on SPI && SYSFS
++	help
++	  Enable this driver to get read/write support to SPI FRAMs,
++	  after you configure the board init code to know about each fram
++	  on your target board.
++
++	  This driver can also be built as a module.  If so, the module
++	  will be called fm25.
++
+ config EEPROM_LEGACY
+ 	tristate "Old I2C EEPROM reader (DEPRECATED)"
+ 	depends on I2C && SYSFS
+diff --git a/drivers/misc/eeprom/Makefile b/drivers/misc/eeprom/Makefile
+index a9b4b6579b75..842b78102050 100644
+--- a/drivers/misc/eeprom/Makefile
++++ b/drivers/misc/eeprom/Makefile
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-$(CONFIG_EEPROM_AT24)	+= at24.o
+ obj-$(CONFIG_EEPROM_AT25)	+= at25.o
++obj-$(CONFIG_FRAM_FM25)	    += fm25.o
+ obj-$(CONFIG_EEPROM_LEGACY)	+= eeprom.o
+ obj-$(CONFIG_EEPROM_MAX6875)	+= max6875.o
+ obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
+diff --git a/drivers/net/usb/Makefile b/drivers/net/usb/Makefile
+index 4964f7b326fb..92bd6180ae1f 100644
+--- a/drivers/net/usb/Makefile
++++ b/drivers/net/usb/Makefile
+@@ -37,6 +37,7 @@ obj-$(CONFIG_USB_NET_CX82310_ETH)	+= cx82310_eth.o
+ obj-$(CONFIG_USB_NET_CDC_NCM)	+= cdc_ncm.o
+ obj-$(CONFIG_USB_NET_HUAWEI_CDC_NCM)	+= huawei_cdc_ncm.o
+ obj-$(CONFIG_USB_VL600)		+= lg-vl600.o
++obj-$(CONFIG_USB_NET_QMI_WWAN)	+= qmi_wwan_q.o
+ obj-$(CONFIG_USB_NET_QMI_WWAN)	+= qmi_wwan.o
+ obj-$(CONFIG_USB_NET_CDC_MBIM)	+= cdc_mbim.o
+ obj-$(CONFIG_USB_NET_CH9200)	+= ch9200.o
+diff --git a/drivers/net/usb/cdc_ether.c b/drivers/net/usb/cdc_ether.c
+index 6d61052353f0..e869c0c93b90 100644
+--- a/drivers/net/usb/cdc_ether.c
++++ b/drivers/net/usb/cdc_ether.c
+@@ -946,6 +946,30 @@ static const struct usb_device_id	products[] = {
+ 	USB_VENDOR_AND_INTERFACE_INFO(HUAWEI_VENDOR_ID, USB_CLASS_COMM,
+ 				      USB_CDC_SUBCLASS_ETHERNET, 255),
+ 	.driver_info = (unsigned long)&wwan_info,
++},
++{
++	/* CH336 Based 4-port HUB and USB 2.0 Ethernet Adapters */
++	USB_DEVICE_AND_INTERFACE_INFO(0x1a86, 0x5394, USB_CLASS_COMM,
++			USB_CDC_SUBCLASS_ETHERNET, USB_CDC_PROTO_NONE),
++	.driver_info = 0,
++},
++{
++	/* CH339 Based 7-port HUB and USB 2.0 Ethernet Adapters */
++	USB_DEVICE_AND_INTERFACE_INFO(0x1a86, 0x5395, USB_CLASS_COMM,
++			USB_CDC_SUBCLASS_ETHERNET, USB_CDC_PROTO_NONE),
++	.driver_info = 0,
++},
++{
++	/* CH396 Based USB 2.0 Ethernet Adapters */
++	USB_DEVICE_AND_INTERFACE_INFO(0x1a86, 0x5396, USB_CLASS_COMM,
++			USB_CDC_SUBCLASS_ETHERNET, USB_CDC_PROTO_NONE),
++	.driver_info = 0,
++},
++{
++	/* CH397 Based USB 2.0 Ethernet Adapters */
++	USB_DEVICE_AND_INTERFACE_INFO(0x1a86, 0x5397, USB_CLASS_COMM,
++			USB_CDC_SUBCLASS_ETHERNET, USB_CDC_PROTO_NONE),
++	.driver_info = 0,
+ },
+ 	{ },		/* END */
+ };
+diff --git a/drivers/usb/class/cdc-acm.c b/drivers/usb/class/cdc-acm.c
+index 0e7439dba8fe..bdc7b4569cc5 100644
+--- a/drivers/usb/class/cdc-acm.c
++++ b/drivers/usb/class/cdc-acm.c
+@@ -962,10 +962,12 @@ static int get_serial_info(struct tty_struct *tty, struct serial_struct *ss)
+ 	struct acm *acm = tty->driver_data;
+ 
+ 	ss->line = acm->minor;
++	mutex_lock(&acm->port.mutex);
+ 	ss->close_delay	= jiffies_to_msecs(acm->port.close_delay) / 10;
+ 	ss->closing_wait = acm->port.closing_wait == ASYNC_CLOSING_WAIT_NONE ?
+ 				ASYNC_CLOSING_WAIT_NONE :
+ 				jiffies_to_msecs(acm->port.closing_wait) / 10;
++	mutex_unlock(&acm->port.mutex);
+ 	return 0;
+ }
+ 
+@@ -1761,6 +1763,9 @@ static const struct usb_device_id acm_ids[] = {
+ 	{ USB_DEVICE(0x11ca, 0x0201), /* VeriFone Mx870 Gadget Serial */
+ 	.driver_info = SINGLE_RX_URB,
+ 	},
++	{ USB_DEVICE(0x1901, 0x0006), /* GE Healthcare Patient Monitor UI Controller */
++	.driver_info = DISABLE_ECHO, /* DISABLE ECHO in termios flag */
++	},
+ 	{ USB_DEVICE(0x1965, 0x0018), /* Uniden UBC125XLT */
+ 	.driver_info = NO_UNION_NORMAL, /* has no union descriptor */
+ 	},
+@@ -1987,6 +1992,21 @@ static const struct usb_device_id acm_ids[] = {
+ 	.driver_info = IGNORE_DEVICE,
+ 	},
+ 
++	/* Exclude WCH usb to uart devices */
++	{ USB_DEVICE(0x1a86, 0x55d2), .driver_info = IGNORE_DEVICE, }, 	/* ch342 chip */
++	{ USB_DEVICE(0x1a86, 0x55d3), .driver_info = IGNORE_DEVICE, },	/* ch343 chip */
++	{ USB_DEVICE(0x1a86, 0x55d5), .driver_info = IGNORE_DEVICE, },	/* ch344 chip */
++	{ USB_DEVICE(0x1a86, 0x55d6), .driver_info = IGNORE_DEVICE, },	/* ch9143 chip */
++	{ USB_DEVICE(0x1a86, 0x55da), .driver_info = IGNORE_DEVICE, },	/* ch347t chip mode0*/
++	{ USB_DEVICE_INTERFACE_NUMBER(0x1a86, 0x55db, 0x00), .driver_info = IGNORE_DEVICE, }, /* ch347t chip mode1*/
++	{ USB_DEVICE_INTERFACE_NUMBER(0x1a86, 0x55dd, 0x00), .driver_info = IGNORE_DEVICE, }, /* ch347t chip mode3*/
++	{ USB_DEVICE_INTERFACE_NUMBER(0x1a86, 0x55de, 0x00), .driver_info = IGNORE_DEVICE, }, /* ch347f chip uart0*/
++	{ USB_DEVICE_INTERFACE_NUMBER(0x1a86, 0x55de, 0x02), .driver_info = IGNORE_DEVICE, }, /* ch347f chip uart1*/
++	{ USB_DEVICE(0x1a86, 0x55d8), .driver_info = IGNORE_DEVICE, },	/* ch9101 chip */
++	{ USB_DEVICE(0x1a86, 0x55d4), .driver_info = IGNORE_DEVICE, },	/* ch9102 chip */
++	{ USB_DEVICE(0x1a86, 0x55d7), .driver_info = IGNORE_DEVICE, },	/* ch9103 chip */
++	{ USB_DEVICE(0x1a86, 0x55df), .driver_info = IGNORE_DEVICE, },	/* ch9104 chip */
++
+ 	/* control interfaces without any protocol set */
+ 	{ USB_INTERFACE_INFO(USB_CLASS_COMM, USB_CDC_SUBCLASS_ACM,
+ 		USB_CDC_PROTO_NONE) },
+diff --git a/drivers/usb/serial/option.c b/drivers/usb/serial/option.c
+index 311040f9b935..a83d62ce6f5e 100644
+--- a/drivers/usb/serial/option.c
++++ b/drivers/usb/serial/option.c
+@@ -279,6 +279,7 @@ static void option_instat_callback(struct urb *urb);
+ #define QUECTEL_PRODUCT_EG912Y			0x6001
+ #define QUECTEL_PRODUCT_EC200S_CN		0x6002
+ #define QUECTEL_PRODUCT_EC200A			0x6005
++#define QUECTEL_PRODUCT_EG916Q			0x6007
+ #define QUECTEL_PRODUCT_EM061K_LWW		0x6008
+ #define QUECTEL_PRODUCT_EM061K_LCN		0x6009
+ #define QUECTEL_PRODUCT_EC200T			0x6026
+@@ -619,9 +620,27 @@ static void option_instat_callback(struct urb *urb);
+ 
+ /* MeiG Smart Technology products */
+ #define MEIGSMART_VENDOR_ID			0x2dee
++/* MeiG Smart SRM825L based on Qualcomm 315 */
++#define MEIGSMART_PRODUCT_SRM825L		0x4d22
+ /* MeiG Smart SLM320 based on UNISOC UIS8910 */
+ #define MEIGSMART_PRODUCT_SLM320		0x4d41
+ 
++#if 1 //+=
++#define ZTE_PRODUCT_ME3620			0x1476
++
++/* Fibocom products */
++#define FIBOCOM_VENDOR_ID 			0x2CB7
++#define FIBOCOM_PRODUCT_L71X 		0x0001
++#define NODECOM_VENDOR_ID			0x1508
++
++#define FIBOCOM_USB_VENDOR_AND_INTERFACE_INFO(vend, cl, sc, pr) \
++.match_flags = USB_DEVICE_ID_MATCH_INT_INFO | USB_DEVICE_ID_MATCH_VENDOR, \
++.idVendor = (vend), \
++.bInterfaceClass = (cl), \
++.bInterfaceSubClass = (sc), \
++.bInterfaceProtocol = (pr)
++#endif
++
+ /* Device flags */
+ 
+ /* Highest interface number which can be used with NCTRL() and RSVD() */
+@@ -640,7 +659,95 @@ static void option_instat_callback(struct urb *urb);
+ #define ZLP		BIT(17)
+ 
+ 
++//+=
++struct option_blacklist_info {
++	/* bitmask of interface numbers blacklisted for send_setup */
++	const unsigned long sendsetup;
++	/* bitmask of interface numbers that are reserved */
++	const unsigned long reserved;
++};
++
++static const struct option_blacklist_info ublox_gps_g7_blacklist = {
++	.sendsetup = BIT(1),
++	.reserved = BIT(0),
++};
++
++static const struct option_blacklist_info ublox_lasa_r280_blacklist = {
++    .sendsetup = BIT(1) | BIT(3) | BIT(5) | BIT(7) | BIT(9) | BIT(11),
++    .reserved = BIT(0) | BIT(2) | BIT(4) | BIT(6) | BIT(8) | BIT(10),
++};
++
++static const struct option_blacklist_info longsung_u9300_blacklist = {
++	.reserved = BIT(4),
++};
++
++static const struct option_blacklist_info ublox_lisa_u220_blacklist = {
++    .sendsetup = BIT(1) | BIT(3) | BIT(5) | BIT(7) | BIT(9) | BIT(11),
++    .reserved = BIT(0) | BIT(2) | BIT(4) | BIT(6) | BIT(8) | BIT(10),
++};
++
++static const struct option_blacklist_info ublox_lisa_u200_blacklist = {   
++    .sendsetup = BIT(1) | BIT(3) | BIT(5) | BIT(7) | BIT(9) | BIT(11),
++    .reserved = BIT(0) | BIT(2) | BIT(4) | BIT(6) | BIT(8) | BIT(10),
++};  
++
++static const struct option_blacklist_info ublox_lisa_u220_2_blacklist = {
++	.sendsetup = BIT(1) | BIT(3) | BIT(5),
++	.reserved = BIT(0) | BIT(2) | BIT(4),
++};
++
++static const struct option_blacklist_info ublox_lisa_u220_3_blacklist = {
++	.sendsetup = BIT(1) | BIT(3),
++	.reserved = BIT(0) | BIT(2),
++};
++
++static const struct option_blacklist_info zmtel_mlh4481_blacklist = {
++	.sendsetup = BIT(1),
++	.reserved = BIT(0),
++};
++
++static const struct option_blacklist_info ublox_sara_r410m_blacklist = {
++	.reserved = BIT(1) | BIT(3),
++};
++
++static const struct option_blacklist_info zte_1255_blacklist = {
++	.reserved = BIT(3) | BIT(4),
++};
++
+ static const struct usb_device_id option_ids[] = {
++#if 1 //Added by Quectel
++	{ USB_DEVICE(0x05C6, 0x9090) }, /* Quectel UC15 */
++	{ USB_DEVICE(0x05C6, 0x9003) }, /* Quectel UC20 */
++	{ USB_DEVICE(0x05C6, 0x9215) }, /* Quectel EC20(MDM9215) */
++    { USB_DEVICE(0x05C6, 0x9091) }, /* Quectel QCM6125 */
++	{ USB_DEVICE(0x05C6, 0x90DB) }, /* Quectel QCM6490 */
++	{ USB_DEVICE(0x2C7C, 0x0125) }, /* Quectel EC20(MDM9x07)/EC25/EG25 */
++	{ USB_DEVICE(0x2C7C, 0x0121) }, /* Quectel EC21 */
++    { USB_DEVICE(0x2C7C, 0x030E) }, /* Quectel EM05G */
++	{ USB_DEVICE(0x2C7C, 0x0191) }, /* Quectel EG91 */
++	{ USB_DEVICE(0x2C7C, 0x0195) }, /* Quectel EG95 */
++	{ USB_DEVICE(0x2C7C, 0x0306) }, /* Quectel EG06/EP06/EM06 */
++	{ USB_DEVICE(0x2C7C, 0x030B) }, /* Quectel EG065K/EG060K */
++	{ USB_DEVICE(0x2C7C, 0x0514) }, /* Quectel BL EG060K RNDIS Only */
++	{ USB_DEVICE(0x2C7C, 0x0512) }, /* Quectel EG12/EP12/EM12/EG16/EG18 */
++	{ USB_DEVICE(0x2C7C, 0x0296) }, /* Quectel BG96 */
++	{ USB_DEVICE(0x2C7C, 0x0700) }, /* Quectel BG95/BG77/BG600L-M3/BC69 */
++	{ USB_DEVICE(0x2C7C, 0x0435) }, /* Quectel AG35 */
++	{ USB_DEVICE(0x2C7C, 0x0415) }, /* Quectel AG15 */
++	{ USB_DEVICE(0x2C7C, 0x0452) }, /* Quectel AG520 */
++	{ USB_DEVICE(0x2C7C, 0x0455) }, /* Quectel AG550 */
++	{ USB_DEVICE(0x2C7C, 0x0620) }, /* Quectel EG20 */
++	{ USB_DEVICE(0x2C7C, 0x0800) }, /* Quectel RG500/RM500/RG510/RM510 */
++	{ USB_DEVICE(0x2C7C, 0x0801) }, /* Quectel RG520/RM520/SG520 */
++    { USB_DEVICE(0x2C7C, 0x0122) }, /* Quectel RG650 SDX7X */
++    { USB_DEVICE(0x2C7C, 0x0316) }, /* Quectel RG255 SDX35 */
++	{ USB_DEVICE(0x2C7C, 0x6026) }, /* Quectel EC200 */
++	{ USB_DEVICE(0x2C7C, 0x6120) }, /* Quectel UC200 */
++	{ USB_DEVICE(0x2C7C, 0x6000) }, /* Quectel EC200/UC200 */
++	{ USB_DEVICE(0x3763, 0x3C93) }, /* Quectel GW */
++	{ USB_DEVICE(0x3C93, 0xFFFF) }, /* Quectel GW */
++	{ .match_flags = USB_DEVICE_ID_MATCH_VENDOR, .idVendor = 0x2C7C }, /* Match All Quectel Modules */
++#endif
+ 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_COLT) },
+ 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA) },
+ 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA_LIGHT) },
+@@ -1268,6 +1375,7 @@ static const struct usb_device_id option_ids[] = {
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200S_CN, 0xff, 0, 0) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200T, 0xff, 0, 0) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG912Y, 0xff, 0, 0) },
++	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EG916Q, 0xff, 0x00, 0x00) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_RM500K, 0xff, 0x00, 0x00) },
+ 
+ 	{ USB_DEVICE(CMOTECH_VENDOR_ID, CMOTECH_PRODUCT_6001) },
+@@ -1378,10 +1486,16 @@ static const struct usb_device_id option_ids[] = {
+ 	  .driver_info = NCTRL(0) | RSVD(1) },
+ 	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x10a0, 0xff),	/* Telit FN20C04 (rmnet) */
+ 	  .driver_info = RSVD(0) | NCTRL(3) },
++	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x10a2, 0xff),	/* Telit FN920C04 (MBIM) */
++	  .driver_info = NCTRL(4) },
+ 	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x10a4, 0xff),	/* Telit FN20C04 (rmnet) */
+ 	  .driver_info = RSVD(0) | NCTRL(3) },
++	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x10a7, 0xff),	/* Telit FN920C04 (MBIM) */
++	  .driver_info = NCTRL(4) },
+ 	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x10a9, 0xff),	/* Telit FN20C04 (rmnet) */
+ 	  .driver_info = RSVD(0) | NCTRL(2) | RSVD(3) | RSVD(4) },
++	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x10aa, 0xff),	/* Telit FN920C04 (MBIM) */
++	  .driver_info = NCTRL(3) | RSVD(4) | RSVD(5) },
+ 	{ USB_DEVICE(TELIT_VENDOR_ID, TELIT_PRODUCT_ME910),
+ 	  .driver_info = NCTRL(0) | RSVD(1) | RSVD(3) },
+ 	{ USB_DEVICE(TELIT_VENDOR_ID, TELIT_PRODUCT_ME910_DUAL_MODEM),
+@@ -1816,7 +1930,7 @@ static const struct usb_device_id option_ids[] = {
+ 	  .driver_info = RSVD(2) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0x1428, 0xff, 0xff, 0xff),  /* Telewell TW-LTE 4G v2 */
+ 	  .driver_info = RSVD(2) },
+-	{ USB_DEVICE_INTERFACE_CLASS(ZTE_VENDOR_ID, 0x1476, 0xff) },	/* GosunCn ZTE WeLink ME3630 (ECM/NCM mode) */
++	//{ USB_DEVICE_INTERFACE_CLASS(ZTE_VENDOR_ID, 0x1476, 0xff) },	/* GosunCn ZTE WeLink ME3630 (ECM/NCM mode) */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0x1481, 0xff, 0x00, 0x00) }, /* ZTE MF871A */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0x1485, 0xff, 0xff, 0xff),  /* ZTE MF286D */
+ 	  .driver_info = RSVD(5) },
+@@ -2030,6 +2144,31 @@ static const struct usb_device_id option_ids[] = {
+ 	{ USB_VENDOR_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0xff, 0x02, 0x05) },
+ 	{ USB_VENDOR_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0xff, 0x86, 0x10) },
+ 
++#if 1 //+=
++	{ USB_DEVICE(ZTE_VENDOR_ID, ZTE_PRODUCT_ME3620),
++	  .driver_info = RSVD(3) | RSVD(4) },
++
++    /* Add by Fibocom products */
++	{ FIBOCOM_USB_VENDOR_AND_INTERFACE_INFO(FIBOCOM_VENDOR_ID, 0xff, 0xff, 0xff) },
++	{ FIBOCOM_USB_VENDOR_AND_INTERFACE_INFO(FIBOCOM_VENDOR_ID, 0x0a, 0x00, 0xff) },
++	{ USB_DEVICE_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0x0256, 0xff, 0xff, 0xff) },
++	{ USB_DEVICE_AND_INTERFACE_INFO(ZTE_VENDOR_ID, 0x0579, 0xff, 0xff, 0xff) },
++	
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0104) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0105) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0106) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0107) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0108) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0109) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x010A) },
++	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x010B) },
++	{ USB_DEVICE(NODECOM_VENDOR_ID, 0x1000) },
++	{ USB_DEVICE(NODECOM_VENDOR_ID, 0x1001) },
++	{ USB_DEVICE(QUALCOMM_VENDOR_ID, 0x9025) },
++	{ USB_DEVICE(QUALCOMM_VENDOR_ID, 0x90DB) },
++	{ USB_DEVICE(0x2C7C, 0x0306) },
++#endif
++
+ 	{ USB_DEVICE(BENQ_VENDOR_ID, BENQ_PRODUCT_H10) },
+ 	{ USB_DEVICE(DLINK_VENDOR_ID, DLINK_PRODUCT_DWM_652) },
+ 	{ USB_DEVICE(ALINK_VENDOR_ID, DLINK_PRODUCT_DWM_652_U5) }, /* Yes, ALINK_VENDOR_ID */
+@@ -2366,6 +2505,68 @@ static const struct usb_device_id option_ids[] = {
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(UNISOC_VENDOR_ID, TOZED_PRODUCT_LT70C, 0xff, 0, 0) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(UNISOC_VENDOR_ID, LUAT_PRODUCT_AIR720U, 0xff, 0, 0) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(MEIGSMART_VENDOR_ID, MEIGSMART_PRODUCT_SLM320, 0xff, 0, 0) },
++	{ USB_DEVICE_AND_INTERFACE_INFO(MEIGSMART_VENDOR_ID, MEIGSMART_PRODUCT_SRM825L, 0xff, 0xff, 0x30) },
++	{ USB_DEVICE_AND_INTERFACE_INFO(MEIGSMART_VENDOR_ID, MEIGSMART_PRODUCT_SRM825L, 0xff, 0xff, 0x40) },
++	{ USB_DEVICE_AND_INTERFACE_INFO(MEIGSMART_VENDOR_ID, MEIGSMART_PRODUCT_SRM825L, 0xff, 0xff, 0x60) },
++#if 1 //+=
++	{ USB_DEVICE(0x1546, 0x1141), //+=ublox LISA-U220
++	  .driver_info = RSVD(0) | RSVD(2) | RSVD(4) | RSVD(6) | RSVD(8) | RSVD(10) },
++	{ USB_DEVICE(0x1546, 0x1143), //+=ublox LISA-U220
++	  .driver_info = RSVD(0) | RSVD(2) | RSVD(4) },
++	{ USB_DEVICE(0x1546, 0x1146), //+=ublox LISA-U220
++	  .driver_info = RSVD(0) | RSVD(2) },
++	{ USB_DEVICE(0x1546, 0x1102), //+=u-blox LISA-U200
++	  .driver_info = RSVD(0) | RSVD(2) | RSVD(4) | RSVD(6) | RSVD(8) | RSVD(10) },
++	{ USB_DEVICE(0x1546, 0x01a7), //+=u-blox GPS-G7
++	  .driver_info = RSVD(0) },
++	{ USB_DEVICE(0x1546, 0x110a),  //+=ublox_lasa-R280 EWM-C128FG01E LTE
++	  .driver_info = RSVD(0) | RSVD(2) | RSVD(4) | RSVD(6) | RSVD(8) | RSVD(10) },
++	{ USB_DEVICE(0x1546, 0x01a8) }, //+=ublox_lasa-R280 EWM-C128FG01E GNSS
++	{ USB_DEVICE(0x19f5, 0x9909) }, //+=MC680
++	{ USB_DEVICE(0x1c9e, 0x9b05), //+=U9300C
++	  .driver_info = RSVD(4) },
++	{ USB_DEVICE(0x1ecb, 0x0202) }, //+=AMM570 ACM
++	{ USB_DEVICE(0x1ecb, 0x0205) }, //+=AMM570 RNDIS
++	{ USB_DEVICE(0x1ecb, 0x0208) }, //+=AMM570 ECM
++	{ USB_DEVICE(0x1ecb, 0x020B) }, //+=AMM570 RMNET
++	{ USB_DEVICE(0x1ecb, 0x0209) }, //+=AMM570 BMIM
++
++	/* Added by Quectel */
++	{ USB_DEVICE(0x05C6, 0x9090) }, /* Quectel UC15 */ 
++	{ USB_DEVICE(0x05C6, 0x9003) }, /* Quectel UC20 */ 
++	{ USB_DEVICE(0x05C6, 0x90b3) }, /* Quectel MDG100 */ 
++	{ USB_DEVICE(0x05C6, 0x9215) },  
++	{ USB_DEVICE(0x2C7C, 0x0125) }, /* Quectel EC20 R2.0/EC20 R2.1/EC25/EG25-G/EM05 */ 
++	{ USB_DEVICE(0x2C7C, 0x0121) }, /* Quectel EC21/EG21-G */ 
++	{ USB_DEVICE(0x2C7C, 0x0191) }, /* Quectel EG91 */ 
++	{ USB_DEVICE(0x2C7C, 0x0195) }, /* Quectel EG95 */ 
++	{ USB_DEVICE(0x2C7C, 0x0306) }, /* Quectel EG06/EP06/EM06 */ 
++	{ USB_DEVICE(0x2C7C, 0x0512) }, /* Quectel EG12/EM12/EG18 */ 
++	{ USB_DEVICE(0x2C7C, 0x0296) }, /* Quectel BG96 */ 
++	{ USB_DEVICE(0x2C7C, 0x0700) }, /* Quectel BG95/BG77/BG600L-M3/BC69 */ 
++	{ USB_DEVICE(0x2C7C, 0x0435) }, /* Quectel AG35 */ 
++	{ USB_DEVICE(0x2C7C, 0x0415) }, /* Quectel AG15 */ 
++	{ USB_DEVICE(0x2C7C, 0x0520) }, /* Quectel AG520 */
++	{ USB_DEVICE(0x2C7C, 0x0550) }, /* Quectel AG550 */
++	{ USB_DEVICE(0x2C7C, 0x0620) }, /* Quectel EG20 */ 
++	{ USB_DEVICE(0x2C7C, 0x0800) }, /* Quectel RG500Q/RM500Q/RG510Q/RM510Q */ 
++	{ USB_DEVICE(0x2C7C, 0x0801) }, /* Quectel RM520N-GL */ 
++	{ USB_DEVICE(0x2C7C, 0x6026) }, /* Quectel EC200 */
++	{ USB_DEVICE(0x2C7C, 0x6120) }, /* Quectel UC200 */
++	{ USB_DEVICE(0x2C7C, 0x6000) }, /* Quectel EC200/UC200 */
++	{ USB_DEVICE(0x2C7C, 0x0452) }, /* Quectel AG520R */ 
++	{ USB_DEVICE(0x2C7C, 0x0455) }, /* Quectel AG550R */ 
++
++	/* MLH4481 */
++	{ USB_DEVICE(0x258D, 0x2000),
++	  .driver_info = RSVD(0) },
++	/* GM800 */
++	{ USB_DEVICE(0x305a, 0x1421) },
++	/* N720V5 */
++	{ USB_DEVICE(0x2949, 0x8700) },
++	/* N511-CA */
++	{ USB_DEVICE(0x2949, 0x8802) },	
++#endif
+ 	{ } /* Terminating entry */
+ };
+ MODULE_DEVICE_TABLE(usb, option_ids);
+@@ -2374,7 +2575,26 @@ MODULE_DEVICE_TABLE(usb, option_ids);
+  * recognizes separately, thus num_port=1.
+  */
+ 
++#if 1 //Added by Quectel
++static void cfmakeraw(struct ktermios *t)
++{
++	t->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
++	t->c_oflag &= ~OPOST;
++	t->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
++	t->c_cflag &= ~(CSIZE|PARENB);
++	t->c_cflag |= CS8;
++	t->c_cc[VMIN] = 1;
++	t->c_cc[VTIME] = 0;
++}
++
++static void option_init_termios(struct tty_struct *tty)
++{
++	cfmakeraw(&tty->termios);
++}
++#endif
++
+ static struct usb_serial_driver option_1port_device = {
++	.init_termios  = option_init_termios,
+ 	.driver = {
+ 		.owner =	THIS_MODULE,
+ 		.name =		"option1",
+@@ -2399,6 +2619,9 @@ static struct usb_serial_driver option_1port_device = {
+ #ifdef CONFIG_PM
+ 	.suspend           = usb_wwan_suspend,
+ 	.resume            = usb_wwan_resume,
++#if 1 //+=Added by Quectel 
++	.reset_resume      = usb_wwan_resume, 
++#endif 
+ #endif
+ };
+ 
+@@ -2423,6 +2646,45 @@ static int option_probe(struct usb_serial *serial,
+ 				&serial->interface->cur_altsetting->desc;
+ 	unsigned long device_flags = id->driver_info;
+ 
++#if 1 //Added by Quectel
++	struct usb_device_descriptor *dev_desc = &serial->dev->descriptor;
++	//Quectel UC20's interface 4 can be used as USB Network device
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9003)
++		&& serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
++		return -ENODEV;
++
++	//Quectel EC20(MDM9215)'s interface 4 can be used as USB Network device
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9215)
++		&& serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
++		return -ENODEV;
++        
++    //Quectel QCM6125 & QCM6490's interface 2 can be used as USB Network device
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && 
++		(serial->dev->descriptor.idProduct == cpu_to_le16(0x9091) || serial->dev->descriptor.idProduct == cpu_to_le16(0x90DB))
++		&& serial->interface->cur_altsetting->desc.bInterfaceNumber >= 2)
++		return -ENODEV;
++
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x2C7C)) {
++		__u16 idProduct = le16_to_cpu(serial->dev->descriptor.idProduct);
++		struct usb_interface_descriptor *intf = &serial->interface->cur_altsetting->desc;
++
++		if (intf->bInterfaceClass != 0xFF || intf->bInterfaceSubClass == 0x42) {
++			//ECM, RNDIS, NCM, MBIM, ACM, UAC, ADB
++			return -ENODEV;
++		}
++
++		if ((idProduct&0xF000) == 0x0000) {
++			//MDM interface 4 is QMI
++            if (idProduct == 0x0316 && intf->bInterfaceNumber == 3)   //SDX35
++				return -ENODEV;
++            
++			if (intf->bInterfaceNumber == 4 && intf->bNumEndpoints == 3
++				&& intf->bInterfaceSubClass == 0xFF && intf->bInterfaceProtocol == 0xFF)
++				return -ENODEV;
++		}
++	}
++#endif
++
+ 	/* Never bind to the CD-Rom emulation interface	*/
+ 	if (iface_desc->bInterfaceClass == USB_CLASS_MASS_STORAGE)
+ 		return -ENODEV;
+@@ -2435,6 +2697,73 @@ static int option_probe(struct usb_serial *serial,
+ 	if (iface_is_reserved(device_flags, iface_desc->bInterfaceNumber))
+ 		return -ENODEV;
+ 
++#if 1 //+=
++	if (dev_desc->idVendor == ZTE_VENDOR_ID && dev_desc->idProduct == ZTE_PRODUCT_ME3620 &&
++	    iface_desc->bInterfaceNumber == 3)
++		return -ENODEV;
++
++	if (dev_desc->idVendor == ZTE_VENDOR_ID && dev_desc->idProduct == ZTE_PRODUCT_ME3620 &&
++	    iface_desc->bInterfaceNumber == 4)
++		return -ENODEV;
++	
++	if (serial->dev->descriptor.idVendor == 0x305a && 
++    		((serial->dev->descriptor.idProduct == 0x1406) || 
++    		 (serial->dev->descriptor.idProduct == 0x1421)) && 
++			serial->interface->cur_altsetting->desc. bInterfaceNumber == 3)
++ 		return -ENODEV; 
++	if (serial->dev->descriptor.idVendor == 0x305a &&
++    		((serial->dev->descriptor.idProduct == 0x1406) || 
++    		 (serial->dev->descriptor.idProduct == 0x1421)) && 
++			serial->interface->cur_altsetting->desc. bInterfaceNumber == 4) 
++		 return -ENODEV; 
++	if (serial->dev->descriptor.idVendor == 0x305a &&
++    		((serial->dev->descriptor.idProduct == 0x1406) || 
++    		 (serial->dev->descriptor.idProduct == 0x1421)) && 
++			serial->interface->cur_altsetting->desc. bInterfaceNumber == 5) 
++		 return -ENODEV; 
++#endif
++
++#if 1   /*Add by Fibocom products */      
++	if (serial->dev->descriptor.idVendor == FIBOCOM_VENDOR_ID &&
++			serial->dev->descriptor.idProduct == FIBOCOM_PRODUCT_L71X &&
++			serial->interface->cur_altsetting->desc.bInterfaceClass == 0x7)
++		return -ENODEV;
++
++
++    if ((dev_desc->idVendor == FIBOCOM_VENDOR_ID &&
++    		(((dev_desc->idProduct == cpu_to_le16(0x0104) || 
++    		dev_desc->idProduct == cpu_to_le16(0x0105) ||  
++    		dev_desc->idProduct == cpu_to_le16(0x010b)) && 
++            	serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4) || 
++    		(dev_desc->idProduct == cpu_to_le16(0x0109) &&
++            	serial->interface->cur_altsetting->desc.bInterfaceNumber >= 2))
++    	) || (dev_desc->idVendor == NODECOM_VENDOR_ID &&
++        	((dev_desc->idProduct == cpu_to_le16(0x1001) && 
++            	serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4) || 
++        	(dev_desc->idProduct == cpu_to_le16(0x1000) &&
++            	serial->interface->cur_altsetting->desc.bInterfaceNumber >= 2))
++      	) || (dev_desc->idVendor == 0x2C7C && (dev_desc->idProduct == cpu_to_le16(0x0306) && 
++        		serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)))
++    {
++    	printk(KERN_INFO "Discovery the interface for Fibocom.");
++        return -ENODEV;
++    }
++
++    if (dev_desc->idVendor == QUALCOMM_VENDOR_ID &&
++    		(dev_desc->idProduct == cpu_to_le16(0x90DB) && 
++            	((serial->interface->cur_altsetting->desc.bInterfaceNumber == 2) || 
++            	(serial->interface->cur_altsetting->desc.bInterfaceNumber == 5))))
++    {
++    	printk(KERN_INFO "Discovery the interface for Fibocom.");
++        return -ENODEV;
++    }
++
++	if (serial->dev->descriptor.idVendor == ZTE_VENDOR_ID &&
++			serial->dev->descriptor.idProduct == 0x0579 &&
++			serial->interface->cur_altsetting->desc.bInterfaceClass == 0x6)
++		return -ENODEV;
++#endif
++
+ 	/*
+ 	 * Allow matching on bNumEndpoints for devices whose interface numbers
+ 	 * can change (e.g. Quectel EP06).
+diff --git a/drivers/usb/serial/qcserial.c b/drivers/usb/serial/qcserial.c
+index 703a9c563557..f20520033411 100644
+--- a/drivers/usb/serial/qcserial.c
++++ b/drivers/usb/serial/qcserial.c
+@@ -26,12 +26,21 @@ enum qcserial_layouts {
+ 	QCSERIAL_G1K = 1,	/* Gobi 1000 */
+ 	QCSERIAL_SWI = 2,	/* Sierra Wireless */
+ 	QCSERIAL_HWI = 3,	/* Huawei */
++	QCSERIAL_SWI_9X50 = 4, /* Sierra Wireless 9x50 USB-IF */
++	QCSERIAL_SWI_SDX55 = 5, /* Sierra Wireless SDX55 */
++	QCSERIAL_SWI_SDX55_RMNET = 6, /* Sierra Wireless SDX55 */
+ };
+ 
+ #define DEVICE_G1K(v, p) \
+ 	USB_DEVICE(v, p), .driver_info = QCSERIAL_G1K
+ #define DEVICE_SWI(v, p) \
+ 	USB_DEVICE(v, p), .driver_info = QCSERIAL_SWI
++#define DEVICE_SWI_9X50(v, p) \
++	USB_DEVICE(v, p), .driver_info = QCSERIAL_SWI_9X50
++#define DEVICE_SWI_SDX55(v, p) \
++	USB_DEVICE(v, p), .driver_info = QCSERIAL_SWI_SDX55
++#define DEVICE_SWI_SDX55_RMNET(v, p) \
++	USB_DEVICE(v, p), .driver_info = QCSERIAL_SWI_SDX55_RMNET
+ #define DEVICE_HWI(v, p) \
+ 	USB_DEVICE(v, p), .driver_info = QCSERIAL_HWI
+ 
+@@ -63,7 +72,7 @@ static const struct usb_device_id id_table[] = {
+ 	{DEVICE_G1K(0x05c6, 0x9202)},	/* Generic Gobi Modem device */
+ 	{DEVICE_G1K(0x05c6, 0x9203)},	/* Generic Gobi Modem device */
+ 	{DEVICE_G1K(0x05c6, 0x9222)},	/* Generic Gobi Modem device */
+-	{DEVICE_G1K(0x05c6, 0x9008)},	/* Generic Gobi QDL device */
++	//{DEVICE_G1K(0x05c6, 0x9008)},	/* Generic Gobi QDL device */
+ 	{DEVICE_G1K(0x05c6, 0x9009)},	/* Generic Gobi Modem device */
+ 	{DEVICE_G1K(0x05c6, 0x9201)},	/* Generic Gobi QDL device */
+ 	{DEVICE_G1K(0x05c6, 0x9221)},	/* Generic Gobi QDL device */
+@@ -168,6 +177,16 @@ static const struct usb_device_id id_table[] = {
+ 	{DEVICE_SWI(0x1199, 0x90d2)},	/* Sierra Wireless EM9191 QDL */
+ 	{DEVICE_SWI(0x1199, 0xc080)},	/* Sierra Wireless EM7590 QDL */
+ 	{DEVICE_SWI(0x1199, 0xc081)},	/* Sierra Wireless EM7590 */
++	{DEVICE_SWI(0x1199, 0x90B0)},	/* Sierra Wireless EM7565 QDL */
++	{DEVICE_SWI_9X50(0x1199, 0x90B1)},	/* Sierra Wireless EM7565 */
++	{DEVICE_SWI(0x1199, 0x90d2)},	/* Sierra Wireless EM9190 QDL */
++	{DEVICE_SWI_SDX55(0x1199, 0x90d3)},	/* Sierra Wireless EM9190 */
++	{DEVICE_SWI(0x1199, 0x90d8)},	/* Sierra Wireless EM9190 QDL */
++	{DEVICE_SWI_SDX55_RMNET(0x1199, 0x90d9)},	/* Sierra Wireless EM9190 */
++	{DEVICE_SWI(0x1199, 0x90e0)},	/* Sierra Wireless EM929x QDL */
++	{DEVICE_SWI_SDX55(0x1199, 0x90e1)},	/* Sierra Wireless EM929x */
++	{DEVICE_SWI(0x1199, 0x90e2)},	/* Sierra Wireless EM929x QDL */
++	{DEVICE_SWI_SDX55(0x1199, 0x90e3)},	/* Sierra Wireless EM929x */
+ 	{DEVICE_SWI(0x413c, 0x81a2)},	/* Dell Wireless 5806 Gobi(TM) 4G LTE Mobile Broadband Card */
+ 	{DEVICE_SWI(0x413c, 0x81a3)},	/* Dell Wireless 5570 HSPA+ (42Mbps) Mobile Broadband Card */
+ 	{DEVICE_SWI(0x413c, 0x81a4)},	/* Dell Wireless 5570e HSPA+ (42Mbps) Mobile Broadband Card */
+@@ -401,6 +420,71 @@ static int qcprobe(struct usb_serial *serial, const struct usb_device_id *id)
+ 				intf->desc.bInterfaceProtocol);
+ 		}
+ 		break;
++	case QCSERIAL_SWI_SDX55:
++		/*
++		 * Sierra Wireless SDX55 layout:
++		 * 3: AT-capable modem port
++		 * 4: DM
++		 */
++		switch (ifnum) {
++		case 3:
++			dev_dbg(dev, "Modem port found\n");
++			sendsetup = true;
++			break;
++		case 4:
++			dev_dbg(dev, "DM/DIAG interface found\n");
++			break;
++		default:
++			/* don't claim any unsupported interface */
++			altsetting = -1;
++			break;
++		}
++		break;
++	case QCSERIAL_SWI_SDX55_RMNET:
++		/*
++		 * Sierra Wireless SDX55 layout:
++		 * 1: AT-capable modem port
++		 * 2: DM
++		 */
++		switch (ifnum) {
++		case 1:
++			dev_dbg(dev, "Modem port found\n");
++			sendsetup = true;
++			break;
++		case 2:
++			dev_dbg(dev, "DM/DIAG interface found\n");
++			break;
++		default:
++			/* don't claim any unsupported interface */
++			altsetting = -1;
++			break;
++		}
++		break;
++	case QCSERIAL_SWI_9X50:
++		/*
++		 * Sierra Wireless 9X50 USB-IF layout:
++		 * 2: AT-capable modem port
++		 * 3: NMEA
++		 * 4: DM
++		 */
++		switch (ifnum) {
++		case 2:
++			dev_dbg(dev, "Modem port found\n");
++			sendsetup = true;
++			break;
++		case 3:
++			dev_dbg(dev, "NMEA GPS interface found\n");
++			sendsetup = true;
++			break;
++		case 4:
++			dev_dbg(dev, "DM/DIAG interface found\n");
++			break;
++		default:
++			/* don't claim any unsupported interface */
++			altsetting = -1;
++			break;
++		}
++		break;
+ 	default:
+ 		dev_err(dev, "unsupported device layout type: %lu\n",
+ 			id->driver_info);
+diff --git a/drivers/usb/serial/usb_wwan.c b/drivers/usb/serial/usb_wwan.c
+index 0017f6e969e1..dfa51ecb3e72 100644
+--- a/drivers/usb/serial/usb_wwan.c
++++ b/drivers/usb/serial/usb_wwan.c
+@@ -34,6 +34,11 @@
+ #include <linux/serial.h>
+ #include "usb-wwan.h"
+ 
++#if 1	/* Add by Fibocom products */
++#define FIBOCOM_BCDUSB 0x0100
++#define FIBOCOM_VENDOR_ID 0x2cb7
++#endif
++
+ /*
+  * Generate DTR/RTS signals on the port using the SET_CONTROL_LINE_STATE request
+  * in CDC ACM.
+@@ -145,6 +150,10 @@ int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
+ 	int err;
+ 	unsigned long flags;
+ 
++#if 1   /* Add by Fibocom products */
++	struct usb_host_endpoint *ep;
++#endif
++
+ 	portdata = usb_get_serial_port_data(port);
+ 	intfdata = usb_get_serial_data(port->serial);
+ 
+@@ -177,6 +186,21 @@ int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
+ 		memcpy(this_urb->transfer_buffer, buf, todo);
+ 		this_urb->transfer_buffer_length = todo;
+ 
++#if 1   /* Add by Fibocom products */
++		if((FIBOCOM_VENDOR_ID == port->serial->dev->descriptor.idVendor)
++				&& (FIBOCOM_BCDUSB != port->serial->dev->descriptor.bcdUSB)) 
++		{ 
++			ep =usb_pipe_endpoint(this_urb->dev, this_urb->pipe);
++			if (ep && (0 != this_urb->transfer_buffer_length)
++					&& (0 == this_urb->transfer_buffer_length % ep->desc.wMaxPacketSize)) 
++			{
++				this_urb->transfer_flags |= URB_ZERO_PACKET;
++				printk("GHT:Send ZERO PACKET ####\r\n");
++			}
++		}
++#endif
++
++
+ 		spin_lock_irqsave(&intfdata->susp_lock, flags);
+ 		if (intfdata->suspended) {
+ 			usb_anchor_urb(this_urb, &portdata->delayed);
+@@ -433,6 +457,23 @@ static struct urb *usb_wwan_setup_urb(struct usb_serial_port *port,
+ 			  usb_sndbulkpipe(serial->dev, endpoint) | dir,
+ 			  buf, len, callback, ctx);
+ 
++#if 1 //Added by Quectel for Zero Packet
++	if (dir == USB_DIR_OUT) {
++		if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9090))
++			urb->transfer_flags |= URB_ZERO_PACKET;
++		if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9003))
++			urb->transfer_flags |= URB_ZERO_PACKET;
++		if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9215))
++			urb->transfer_flags |= URB_ZERO_PACKET;
++        if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9091))
++			urb->transfer_flags |= URB_ZERO_PACKET;
++        if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x90DB))
++			urb->transfer_flags |= URB_ZERO_PACKET;
++		if (serial->dev->descriptor.idVendor == cpu_to_le16(0x2C7C))
++			urb->transfer_flags |= URB_ZERO_PACKET;
++	}
++#endif
++
+ 	if (intfdata->use_zlp && dir == USB_DIR_OUT)
+ 		urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+-- 
+2.34.1
+
