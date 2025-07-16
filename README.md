@@ -12,7 +12,7 @@
 #https://software-dl.ti.com/jacinto7/esd/processor-sdk-linux-am67/09_02_00_04/exports/docs/linux/Overview_Building_the_SDK.html
 ```
 
-## Add the ECU-1270 customized metal layer
+## Add the ECU-1270 customized meta layer
 Download the yocto meta layer from this git repostory and place it under the "source" directory
 ```sh
 > ls ../sources/meta-ecu-1270/conf/machine/
