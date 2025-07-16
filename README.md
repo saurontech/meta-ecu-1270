@@ -1,3 +1,7 @@
+## ECU-1270 Yocto Layer introduction
+
+The goal of this project is to open source the Advantech ECU-1270 Linux project.
+We intend to release our changes as a yocto meta-layer on top of the standard TI Yocto project, so customizations would be more obvious.
 
 ## Download standard TI Yocto project and setup environment
 
