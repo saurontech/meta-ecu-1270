@@ -9,9 +9,7 @@ We intend to release our changes as a yocto meta-layer on top of the standard TI
 > git clone https://git.ti.com/git/arago-project/oe-layersetup.git ti-yocto
 > cd ./ti-yocto/ && ./oe-layertool-setup.sh -f configs/processor-sdk-linux/processor-sdk-linux-10_01_08_01.txt
 > cd ./build/ && source ./conf/setenv
-
-> export MACHINE=j722s-evm
-> bitbake -k tisdk-base-image
+> export MACHINE=j722s-ecu1270  
 
 #https://software-dl.ti.com/jacinto7/esd/processor-sdk-linux-am67/09_02_00_04/exports/docs/linux/Overview_Building_the_SDK.html
 ```
