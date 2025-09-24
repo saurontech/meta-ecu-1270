@@ -1,4 +1,4 @@
-## ECU-1270 Yocto Layer introduction
+# ECU-1270 Yocto Layer introduction
 
 The goal of this project is to open source the Advantech ECU-1270 Linux project.
 We intend to release our changes as a yocto meta-layer on top of the standard TI Yocto project, so customizations would be more obvious.
@@ -33,12 +33,55 @@ The wic image is named: tisdk-base-image-j722s-ecu1270.rootfs.wic.xz
 
 ```sh
 > bitbake linux-ti-staging
-or
-> bitbake virtual/kernel
-
 ```
 ## Deploy Yocto image to SD
 ```sh
 > xzcat tisdk-base-image-j722s-ecu1270.rootfs.wic.xz | sudo dd of=/dev/sdc bs=1M iflag=fullblock oflag=direct conv=fsync
 ```
+# Setup SecureBoot
+## 1. Setup environment
+A tool called "OTP_KEYWRITER" will be needed to setup SecureBoot.  
+This tool is actually an addon app to the "MCU+ SDK for J722S"; therefore, 
+Start by downloading the [PROCESSOR-SDK-RTOS-J722S](https://www.ti.com/tool/PROCESSOR-SDK-J722S) tar file, and the "MCU_PLUS_SDK" folder can be found inside.  
+It also depends on [CCS](https://www.ti.com/tool/CCSTUDIO) and [SYSCONFIG](https://www.ti.com/tool/SYSCONFIG).  
+Download and install them to the default loacation at "~/ti/", which we will refer as "MCU_PLUS_SDK_INSTALL_DIR" in the future. 
+
+## 2. Install keywriter
+The OPT_KEYWRITER will be built spacific for each CPU arch, access the correct version via this portal: [https://www.ti.com/drr/opn/J7X-RESTRICTED-SECURITY](https://www.ti.com/drr/opn/J7X-RESTRICTED-SECURITY)   
+This is a restricted software resource that requires a TI portal account & approval to access.  
+After the correct OTP_KEYWRITER is aquired, at location <MCU_PLUS_SDK_INSTALL_DIR>/source , create an empty folder called "security" . Install the addon package at this location.
+
+## 3. Build Keywriter Certificates
+Go to the directory: <MCU_PLUS_SDK_INSTALL_DIR>/source/security/sbl_keywriter/scripts/cert_gen/j722s/
+Create the Certificates with the following command:  
+```sh
+> ./gen_keywr_cert.sh -g
+> cp -rf keys/* keys_devel/
+```
+These files are also required by the Yocto project to sign the certified binaries, copy them to the "keys" folder under this "meta-ecu-1270" layer.
+```sh
+> cp -rf keys_devel <YOCTO_PATH>/sources/meta-ecu-1270/recipes-bsp/u-boot/files/keys/
+```
+## 4. Build the tiboot3 binary running OTP_KEYWRITER
+Create a tiboot3.bin by following the commands listed below, and copy it to a bootable SD created by the previous WIC image.
+```sh
+> cd <MCU_PLUS_SDK_INSTALL_DIR>/ti_mcu_sdk/ti-processor-sdk-rtos-j722s-evm-11_00_00_06/mcu_plus_sdk_j722s_11_00_00_12/source/security/sbl_keywriter/scripts/cert_gen/j722s​
+> ./gen_keywr_cert.sh -t tifek/SR_10/ti_fek_public.pem --msv 0xC0FFE -b keys_devel/v15/bmpk.pem --bmek keys_devel/bmek.key -s keys_devel/v15/smpk.pem --smek keys_devel/smek.key --keycnt 2 --keyrev 1
+> cd <MCU_PLUS_SDK_INSTALL_DIR>/ti_mcu_sdk/ti-processor-sdk-rtos-j722s-evm-11_00_00_06/mcu_plus_sdk_j722s_11_00_00_12/source/security/sbl_keywriter/j722s-evm/wkup-r5fss0-0_nortos/ti-arm-clang
+> make -sj clean PROFILE=debug
+> make -sj PROFILE=debug
+```
+Before powering up the ECU unit, put a Jumper on __CN78__, and boot with the new tiboot3.bin and the following console output indicates the OTP has been programmed successfully.
+```sh
+Starting Keywriting
+Enable VPP
+DMSC Version 10.1.11-v10.01.11_j722s_keywriter
+DMSC Firmware revision 0xa
+DMSC API revision 4.0
+
+keys Certificate found: 0x43c56280
+Keywriter Debug Response: 0x0
+Success Programming Keys
+```
+Afterwards, unplug the power and remove the jumper on __CN78__.
 
