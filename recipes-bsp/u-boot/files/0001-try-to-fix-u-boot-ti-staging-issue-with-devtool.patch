@@ -30,7 +30,7 @@ index d799be55492..38360bed89f 100644
  / {
 -	compatible = "ti,j722s-evm", "ti,j722s";
 -	model = "Texas Instruments J722S EVM";
-+	compatible = "ti,j722s-ecu1270", "ti,j722s";
++	compatible = "ti,j722s-evm", "ti,j722s";
 +	model = "Texas Instruments J722S ECU1270";
  
  	aliases {
