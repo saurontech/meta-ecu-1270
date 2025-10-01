@@ -10,9 +10,10 @@ We intend to release our changes as a yocto meta-layer on top of the standard TI
 > cd ./ti-yocto/ && ./oe-layertool-setup.sh -f configs/processor-sdk-linux/processor-sdk-linux-10_01_08_01.txt
 > cd ./build/ && source ./conf/setenv
 > export MACHINE=j722s-ecu1270  
-
-#https://software-dl.ti.com/jacinto7/esd/processor-sdk-linux-am67/09_02_00_04/exports/docs/linux/Overview_Building_the_SDK.html
 ```
+
+> [!NOTE]
+> reference: https://software-dl.ti.com/jacinto7/esd/processor-sdk-linux-am67/09_02_00_04/exports/docs/linux/Overview_Building_the_SDK.html
 
 ## Add the ECU-1270 customized meta layer
 
@@ -146,4 +147,23 @@ Use the following commands to clean build Yocto for creating a signed image.
 > bitbake -c cleansstate ti-k3-secdev-native u-boot-ti-staging ti-dm-fw trusted-firmware-a optee-os linux-ti-staging
 > bitbake u-boot-ti-staging
 > bitbake -c deploy mc:k3r5:u-boot-ti-staging   
+```
+
+## Preparing the SD image
+Uboot with Secure boot enabled will require to kernel and device tree to be encapsulated as a FIT file.  
+Copy the newly generated images to the SD boot partition.  
+```sh 
+> cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
+> cp fitImage--*.bin <SD_MNT_PATH>/boot/fitImage
+> cp tiboot3-j722s-hs-evm.bin <SD_MNT_PATH>/boot/tiboot3.bin
+> cp tispl.bin-j722s-ecu1270-* <SD_MNT_PATH>/boot/tispl.bin
+> cp u-boot-j722s-ecu1270-*.img <SD_MNT_PATH>/boot/u-boot.img
+> cp uEnv.txt <SD_MNT_PATH>/boot/uEnv.txt
+```
+## U-Boot Boot Command
+The U-Boot can boot into the fit image and reference the device tree with the following commands:  
+```sh
+> setenv bootargs console=ttyS2,115200 root=/dev/mmcblk1p2 rw rootwait rootfstype=ext4
+> load mmc 1:1 0x90000000 fitImage
+> bootm 0x90000000#conf-ti_k3-j722s-ecu1270.dtb
 ```
