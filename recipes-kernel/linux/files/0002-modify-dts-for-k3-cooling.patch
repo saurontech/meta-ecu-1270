@@ -19,7 +19,7 @@ index c7486fb2a5b4..328741377a00 100644
  
  		trips {
 +			main0_alert0: main0_alert0 {
-+				temperature = <60000>; /* millicelsius */
++				temperature = <100000>; /* millicelsius */
 +				hysteresis = <2000>; /* millicelsius */
 +				type = "passive";
 +			};
