@@ -33,7 +33,7 @@ index 000000000000..9625d74d00d3
 +#include "k3-serdes.h"
 +
 +/ {
-+	compatible = "ti,j722s-ecu1270", "ti,j722s";
++	compatible = "ti,j722s-evm", "ti,j722s";
 +	model = "Texas Instruments J722S ECU1270/DIO";
 +
 +	aliases {
@@ -1028,7 +1028,7 @@ index 000000000000..a4969d3bc4b0
 +#include "k3-serdes.h"
 +
 +/ {
-+	compatible = "ti,j722s-ecu1270", "ti,j722s";
++	compatible = "ti,j722s-evm", "ti,j722s";
 +	model = "Texas Instruments J722S ECU1270";
 +
 +	aliases {
