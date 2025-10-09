@@ -271,7 +271,7 @@ Booted from: rootfs.0 (system0)
 
 === Bootloader ===
 Activated: rootfs.0 (system0)
- ... //we're going to update to system1, unmoutn partion before updating.
+ ... 
 
 > umount /dev/mmcblk1p3
 > rauc install -d http://IP_ADDR/update.raucb 
@@ -284,7 +284,7 @@ Activated: rootfs.0 (system0)
 > Booted from: rootfs.0 (system0)
 
 === Bootloader ===
-Activated: rootfs.0 (system0)
+Activated: rootfs.1 (system1)
 
 === Slot Status ===
 ...
