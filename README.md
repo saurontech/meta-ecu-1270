@@ -278,10 +278,10 @@ Activated: rootfs.0 (system0)
 > e2fsck -f /dev/mmcblk1p3
 > resize2fs /dev/mmcblk1p3
 > rauc status
->  === System Info ===
-> Compatible: Advantech
-> Variant:
-> Booted from: rootfs.0 (system0)
+=== System Info ===
+Compatible: Advantech
+Variant:
+Booted from: rootfs.0 (system0)
 
 === Bootloader ===
 Activated: rootfs.1 (system1)
