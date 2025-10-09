@@ -209,8 +209,8 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
    > parted -s /dev/sdb set 1 boot on
    ```
 
-2. __Copy Files to SD__
-   mount the newly partitioned SD and files to the corresponding locations with the following commands:   
+2. __Copy Files to SD__  
+   mount the newly partitioned SD and copy files to the corresponding locations with the following commands:   
    
    ```sh
    > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
