@@ -227,7 +227,7 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 
 3. Installing RAUC on the host PC, referencing: https://github.com/rauc/rauc/tree/v1.14?tab=readme-ov-file#building-from-sources  
 
-4. Generate rootfs.ext4
+4. Generate rootfs.ext4  
    Create a EXT4 image with the following commands:  
    
    ```sh
