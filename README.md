@@ -243,7 +243,7 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
    > sudo umount mountpoint
    ```
 
-5. Genderate manifest.raucm & bundle  
+5. Generate manifest.raucm & bundle  
    
    ```sh
    > cat >> content-dir/manifest.raucm << EOF
