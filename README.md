@@ -150,9 +150,11 @@ Use the following commands to clean build Yocto for creating a signed image.
 ```
 
 ## Preparing the SD image
+
 Uboot with Secure boot enabled will require to kernel and device tree to be encapsulated as a FIT file.  
 Copy the newly generated images to the SD boot partition.  
-```sh 
+
+```sh
 > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
 > cp fitImage--*.bin <SD_MNT_PATH>/boot/fitImage
 > cp tiboot3-j722s-hs-evm.bin <SD_MNT_PATH>/boot/tiboot3.bin
@@ -160,10 +162,130 @@ Copy the newly generated images to the SD boot partition.
 > cp u-boot-j722s-ecu1270-*.img <SD_MNT_PATH>/boot/u-boot.img
 > cp uEnv.txt <SD_MNT_PATH>/boot/uEnv.txt
 ```
+
 ## U-Boot Boot Command
+
 The U-Boot can boot into the fit image and reference the device tree with the following commands:  
+
 ```sh
 > setenv bootargs console=ttyS2,115200 root=/dev/mmcblk1p2 rw rootwait rootfstype=ext4
 > load mmc 1:1 0x90000000 fitImage
 > bootm 0x90000000#conf-ti_k3-j722s-ecu1270.dtb
+```
+
+# Setup RAUC for firmware update service
+
+## Environment setup & Build
+
+Setup the RAUC layer, create a new CA, and build the image with the following commands.   
+
+```sh
+> cd <YOCTO_PATH>/source
+> git clone https://github.com/rauc/meta-rauc -b scarthgap
+> bitbake-layers add-layer ./meta-rauc/
+> cd ./meta-ecu-1270/recipes-core/rauc/files
+> openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out ca.cert.pem
+> bitbake -k tisdk-base-image
+```
+
+## Prepare Bootable SD card
+
+> [!Caution]
+> the following demo assumes that __sdb__ is the SD card,  
+> change according to your system setup.
+
+1. __Partition and Formate SD__
+   
+   ```sh
+   > umount /dev/sdb*
+   > parted -s /dev/sdb mklabel msdos
+   > parted -s /dev/sdb mkpart primary ext2 1049kB 135MB
+   > parted -s /dev/sdb mkpart primary ext4 135MB 3135MB
+   > parted -s /dev/sdb mkpart primary ext4 3135MB 6135MB
+   > mkfs.vfat /dev/sdb1 -n boot
+   > mkfs.ext4 /dev/sdb2 -L rootfs0
+   > mkfs.ext4 /dev/sdb3 -L rootfs1
+   > parted -s /dev/sdb set 1 lba on
+   > parted -s /dev/sdb set 1 boot on
+   ```
+
+2. __Copy Files to SD__
+   mount the newly partitioned SD and files to the corresponding locations with the following commands:   
+   
+   ```sh
+   >cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
+   > cp ./tiboot3.bin <SD_MNT_PATH>/boot
+   > cp ./tispl.bin <SD_MNT_PATH>/boot
+   > cp ./u-boot.img <SD_MNT_PATH>/boot
+   > tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs0
+   > tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs1
+   ```
+   
+   unmout the SD card and it should be ready to boot.  
+   
+   ## Create RAUC bundle
+
+3. Installing RAUC on the host PC, referencing: https://github.com/rauc/rauc/tree/v1.14?tab=readme-ov-file#building-from-sources  
+
+4. Generate rootfs.ext4
+   Create a EXT4 image with the following commands:  
+   
+   ```sh
+   > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
+   > mkdir mountpoint
+   > mkdir content-dir
+   > mkdir rootfs
+   > tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C rootfs
+   > sudo dd if=/dev/zero of=./rootfs.ext4 bs=1M count=1024
+   > sudo mkfs.ext4 ./rootfs.ext4
+   > sudo mount -t ext4 rootfs.ext4 mountpoint
+   > sudo cp -r rootfs/* mountpoint
+   > sudo umount mountpoint
+   ```
+
+5. Genderate manifest.raucm & bundle  
+   
+   ```sh
+   > cat >> content-dir/manifest.raucm << EOF
+   [update]
+   compatible=Advantech
+   version=$version
+   [bundle]
+   format=verity
+   [image.rootfs]
+   filename=rootfs.ext4
+   EOF
+   > rauc --cert ca.cert.pem --key key.pem bundle content-dir/ update.raucb -d
+   ```
+
+## Firmware Upate with RAUC(on the embedded device)
+
+ The following commands demonstrate a remote firmware update via http on a SD booting from system0, ready to update to system1 
+
+```sh
+> rauc status 
+=== System Info ===
+Compatible: Advantech
+Variant:
+Booted from: rootfs.0 (system0)
+
+=== Bootloader ===
+Activated: rootfs.0 (system0)
+ ... //we're going to update to system1, unmoutn partion before updating.
+
+> umount /dev/mmcblk1p3
+> rauc install -d http://IP_ADDR/update.raucb 
+> e2fsck -f /dev/mmcblk1p3
+> resize2fs /dev/mmcblk1p3
+> rauc status
+>  === System Info ===
+> Compatible: Advantech
+> Variant:
+> Booted from: rootfs.0 (system0)
+
+=== Bootloader ===
+Activated: rootfs.0 (system0)
+
+=== Slot Status ===
+...
 ```
