@@ -12,7 +12,7 @@ SRC_URI:append:j722s-ecu1270 = " file://0003-add-ecu1270-dts.patch"
 SRC_URI:append:j722s-ecu1270 = " file://rauc.cfg"
 
 
-#KERNEL_CONFIG_FRAGMENTS += "ecu1270.cfg"
+KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/rauc.cfg"
 
 #do_configure:append() {
 #    cp ${WORKDIR}/${ADV_ECU_FOLDER}/k3-j722s-ecu*.dts ${S}/arch/arm64/boot/dts/ti/ 
