@@ -1,0 +1,13 @@
+[Unit]
+Description=advantech rauc start script Service
+After=local-fs.target systemd-udev-settle.service
+Requires=systemd-udev-settle.service
+
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/adv_rauc_start.sh
+
+[Install]
+WantedBy=multi-user.target
+

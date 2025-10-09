@@ -9,7 +9,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI:append:j722s-ecu1270 = " file://0001-add-driver-support-for-cooling-device.patch"
 SRC_URI:append:j722s-ecu1270 = " file://0002-modify-dts-for-k3-cooling.patch"
 SRC_URI:append:j722s-ecu1270 = " file://0003-add-ecu1270-dts.patch"
-
+SRC_URI:append:j722s-ecu1270 = " file://rauc.cfg"
 
 
 #KERNEL_CONFIG_FRAGMENTS += "ecu1270.cfg"
