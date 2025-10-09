@@ -213,7 +213,7 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
    mount the newly partitioned SD and files to the corresponding locations with the following commands:   
    
    ```sh
-   >cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
+   > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
    > cp ./tiboot3.bin <SD_MNT_PATH>/boot
    > cp ./tispl.bin <SD_MNT_PATH>/boot
    > cp ./u-boot.img <SD_MNT_PATH>/boot
