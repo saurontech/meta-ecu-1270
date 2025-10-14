@@ -199,7 +199,7 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
    ```sh
    > umount /dev/sdb*
    > parted -s /dev/sdb mklabel msdos
-   > parted -s /dev/sdb mkpart primary ext2 1049kB 135MB
+   > parted -s /dev/sdb mkpart primary fat16 1049kB 135MB
    > parted -s /dev/sdb mkpart primary ext4 135MB 3135MB
    > parted -s /dev/sdb mkpart primary ext4 3135MB 6135MB
    > mkfs.vfat /dev/sdb1 -n boot
