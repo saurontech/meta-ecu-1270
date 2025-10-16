@@ -205,7 +205,7 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 
 > [!NOTE]
 > The same procedure can be modifed to prepare the eMMC.  
-> boot the device with a bootble SD card, and switch the "/dev/sdb" to "/dev/mmcblk0", and the "/dev/sdb*" to "/dev/mmcblk0p*".  
+> boot the device with a bootble SD card, and switch "/dev/sdb" to "/dev/mmcblk0", and "/dev/sdb*" to "/dev/mmcblk0p*".  
 
 1. __Partition and Formate SD__
    
