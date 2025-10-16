@@ -225,8 +225,9 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 2. __Copy Files to SD__  
    mount the newly partitioned SD and copy files to the corresponding locations with the following commands:   
    
-   > [!NOTE]
-   >  If the target CPU has HS(high security, wich is required for running secure boot) enabled. remember to copy the tiboot3 with the **hs** tag(tiboot3-j722s-hs-evm.bin) instead.
+> [!NOTE]
+>  If the target CPU has HS(high security, wich is required for running secure boot) enabled.
+> Copy the tiboot3 marked with the **hs** tag(tiboot3-j722s-hs-evm.bin) instead.
    
    ```sh
    > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
