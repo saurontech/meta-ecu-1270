@@ -241,6 +241,7 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
    > sudo mount -t ext4 rootfs.ext4 mountpoint
    > sudo cp -r rootfs/* mountpoint
    > sudo umount mountpoint
+   > sudo mv ./rootfs.ext4 ./content-dir
    ```
 
 5. Generate manifest.raucm & bundle  
