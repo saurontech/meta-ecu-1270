@@ -74,13 +74,13 @@ A tool called "OTP_KEYWRITER" will be needed to setup SecureBoot.
 This tool is actually an addon app to the "MCU+ SDK for J722S"; therefore, 
 Start by downloading the [PROCESSOR-SDK-RTOS-J722S](https://www.ti.com/tool/PROCESSOR-SDK-J722S) tar file, and the "MCU_PLUS_SDK" folder can be found inside.  
 It also depends on [CCS](https://www.ti.com/tool/CCSTUDIO) and [SYSCONFIG](https://www.ti.com/tool/SYSCONFIG).  
-Download and install them to the default loacation at "~/ti/", which we will refer as "MCU_PLUS_SDK_INSTALL_DIR" in the future. 
+Download and install them to the default loacation at "~/ti/", which we will refer as "MCU_PLUS_SDK_INSTALL_DIR" in the future.  
 
 ## Install keywriter
 
 The OPT_KEYWRITER will be built spacific for each CPU arch, access the correct version via this portal: [https://www.ti.com/drr/opn/J7X-RESTRICTED-SECURITY](https://www.ti.com/drr/opn/J7X-RESTRICTED-SECURITY)   
 This is a restricted software resource that requires a TI portal account & approval to access.  
-After the correct OTP_KEYWRITER is aquired, at location <MCU_PLUS_SDK_INSTALL_DIR>/source , create an empty folder called "security" . Install the addon package at this location.
+After the correct OTP_KEYWRITER is aquired, at location <MCU_PLUS_SDK_INSTALL_DIR>/source , create an empty folder called "security" . Install the addon package at this location.  
 
 ## Build Keywriter Certificates
 
@@ -101,6 +101,12 @@ These files are also required by the Yocto project to sign the certified binarie
 ```
 
 ## Build the tiboot3 binary running OTP_KEYWRITER
+
+> [!NOTE]
+> __tiboot3.bin__ is the first executed code, running on the R5 core, acting as the first executed code during the boot process.  
+> TI uses this as the platform the run the OTP_KEYWRITER app to access the OTP registers.  
+> The tiboot3.bin created during this proccess is used to lockdown the CPU, making it switch to HS(High Security) mode. it cannot be used to boot into linux.  
+> After locking down the CPU remember to swap the tiboot3.bin in the "boot/" partition back to the one created by the yocto project.
 
 Create a tiboot3.bin by following the commands listed below, and copy it to a bootable SD created by the previous WIC image.
 
@@ -151,6 +157,9 @@ Use the following commands to clean build Yocto for creating a signed image.
 
 ## Preparing the SD image
 
+> [!NOTE]
+> For secure boot please notice that we need to copy the tiboot3 with the **hs**(High Security) tag, created by the Yocto project.
+
 Uboot with Secure boot enabled will require to kernel and device tree to be encapsulated as a FIT file.  
 Copy the newly generated images to the SD boot partition.  
 
@@ -194,6 +203,10 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 > the following demo assumes that __sdb__ is the SD card,  
 > change according to your system setup.
 
+> [!NOTE]
+> The same procedure can be modifed to prepare the eMMC.  
+> boot the device with a bootble SD card, and switch the "/dev/sdb" to "/dev/mmcblk0", and the "/dev/sdb*" to "/dev/mmcblk0p*".  
+
 1. __Partition and Formate SD__
    
    ```sh
@@ -211,6 +224,9 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 
 2. __Copy Files to SD__  
    mount the newly partitioned SD and copy files to the corresponding locations with the following commands:   
+   
+   > [!NOTE]
+   >  If the target CPU has HS(high security, wich is required for running secure boot) enabled. remember to copy the tiboot3 with the **hs** tag(tiboot3-j722s-hs-evm.bin) instead.
    
    ```sh
    > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
