@@ -1,0 +1,2055 @@
+From 217f5ec035343ba2ea2eb8fde1a617135eedae3f Mon Sep 17 00:00:00 2001
+From: Samuel Cheng <samuelogre@gmail.com>
+Date: Thu, 2 Oct 2025 16:11:42 +0800
+Subject: [PATCH 3/3] add ecu1270 dts
+
+---
+ .../boot/dts/ti/k3-j722s-ecu1270-dio.dts      |  989 ++++++++++++++++
+ arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts   | 1039 +++++++++++++++++
+ 2 files changed, 2028 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/ti/k3-j722s-ecu1270-dio.dts
+ create mode 100644 arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
+
+diff --git a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270-dio.dts b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270-dio.dts
+new file mode 100644
+index 000000000000..9625d74d00d3
+--- /dev/null
++++ b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270-dio.dts
+@@ -0,0 +1,989 @@
++// SPDX-License-Identifier: GPL-2.0-only OR MIT
++/*
++ * Device Tree file for the J722S ECU1270
++ * Copyright (C) 2024 Texas Instruments Incorporated - https://www.ti.com/
++ *
++ * Schematics: https://www.ti.com/lit/zip/sprr495
++ */
++
++/dts-v1/;
++
++#include <dt-bindings/net/ti-dp83867.h>
++#include <dt-bindings/leds/common.h>
++#include <dt-bindings/phy/phy.h>
++#include "k3-j722s.dtsi"
++#include "k3-serdes.h"
++
++/ {
++	compatible = "ti,j722s-evm", "ti,j722s";
++	model = "Texas Instruments J722S ECU1270/DIO";
++
++	aliases {
++		serial0 = &wkup_uart0;
++		serial2 = &main_uart0;
++		serial3 = &main_uart1;
++		serial4 = &main_uart2;
++		serial5 = &main_uart3;
++		serial6 = &main_uart4;
++		serial7 = &main_uart5;
++		serial8 = &main_uart6;
++        i2c0 = &main_i2c0;
++        i2c1 = &wkup_i2c0;
++        i2c3 = &main_i2c3;
++		mmc0 = &sdhci0;
++		mmc1 = &sdhci1;
++		usb0 = &usb0;
++		usb1 = &usb1;
++		gpio0 = &main_gpio0;
++		gpio1 = &main_gpio1;
++	};
++
++	chosen {
++		stdout-path = &main_uart0;
++	};
++
++	memory@80000000 {
++		/* 4G RAM */
++		reg = <0x00000000 0x80000000 0x00000000 0x80000000>,
++		      <0x00000008 0x80000000 0x00000000 0x80000000>;
++		device_type = "memory";
++		bootph-all;
++	};
++
++	reserved_memory: reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		/* global cma region */
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0x00 0x38000000>;
++			linux,cma-default;
++		};
++
++		secure_tfa_ddr: tfa@9e780000 {
++			reg = <0x00 0x9e780000 0x00 0x80000>;
++			no-map;
++		};
++
++		secure_ddr: optee@9e800000 {
++			reg = <0x00 0x9e800000 0x00 0x01800000>;
++			no-map;
++		};
++
++		wkup_r5fss0_core0_dma_memory_region: r5f-dma-memory@a0000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa0000000 0x00 0x100000>;
++			no-map;
++		};
++
++		wkup_r5fss0_core0_memory_region: r5f-memory@a0100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa0100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		mcu_r5fss0_core0_dma_memory_region: mcu-r5fss-dma-memory-region@a1000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa1000000 0x00 0x100000>;
++			no-map;
++		};
++
++		mcu_r5fss0_core0_memory_region: mcu-r5fss-memory-region@a1100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa1100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		main_r5fss0_core0_dma_memory_region: main-r5fss-dma-memory-region@a2000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa2000000 0x00 0x100000>;
++			no-map;
++		};
++
++		main_r5fss0_core0_memory_region: main-r5fss-memory-region@a2100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa2100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		c7x_0_dma_memory_region: c7x-dma-memory@a3000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa3000000 0x00 0x100000>;
++			no-map;
++		};
++
++		c7x_0_memory_region: c7x-memory@a3100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa3100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		c7x_1_dma_memory_region: c7x-dma-memory@a4000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa4000000 0x00 0x100000>;
++			no-map;
++		};
++
++		c7x_1_memory_region: c7x-memory@a4100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa4100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		rtos_ipc_memory_region: ipc-memories@a5000000 {
++			reg = <0x00 0xa5000000 0x00 0x00800000>; // 2G
++			//reg = <0x00 0xa5000000 0x00 0x1c00000>; // 4G
++			alignment = <0x1000>;
++			no-map;
++		};
++	};
++
++	vmain_pd: regulator-0 {
++		/* TPS65988 PD CONTROLLER OUTPUT */
++		compatible = "regulator-fixed";
++		regulator-name = "vmain_pd";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++		regulator-boot-on;
++		bootph-all;
++	};
++
++	vsys_5v0: regulator-vsys5v0 {
++		/* Output of LM5140 */
++		compatible = "regulator-fixed";
++		regulator-name = "vsys_5v0";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&vmain_pd>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vdd_mmc1: regulator-mmc1 {
++		/* TPS22918DBVR */
++		compatible = "regulator-fixed";
++		regulator-name = "vdd_mmc1";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		bootph-all;
++	};
++
++	vdd_sd_dv: regulator-TLV71033 {
++		compatible = "regulator-gpio";
++		regulator-name = "tlv71033";
++		pinctrl-names = "default";
++		pinctrl-0 = <&vdd_sd_dv_pins_default>;
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		vin-supply = <&vsys_5v0>;
++		gpios = <&main_gpio1 49 GPIO_ACTIVE_HIGH>;
++		states = <1800000 0x0>,
++			 <3300000 0x1>;
++	};
++
++	vcc_3v3_aud: regulator-vcc3v3 {
++		/* Output of LM5140 */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc_3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vsys_io_1v8: regulator-vsys-io-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vsys_io_1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vsys_io_1v2: regulator-vsys-io-1v2 {
++		compatible = "regulator-fixed";
++		regulator-name = "vsys_io_1v2";
++		regulator-min-microvolt = <1200000>;
++		regulator-max-microvolt = <1200000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&led_pins_default>;
++
++		PL-1 {
++			label = "PL1";
++			gpios = <&main_gpio1 13 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++	};
++
++	transceiver0: can-phy0 {
++		compatible = "ti,tcan1042";
++		#phy-cells = <0>;
++		max-bitrate = <5000000>;
++	};
++
++	transceiver1: can-phy1 {
++		compatible = "ti,tcan1042";
++		#phy-cells = <0>;
++		max-bitrate = <5000000>;
++	};
++
++	reg_1p8v: regulator-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_12v: regulator-12v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-12V";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	clocks {
++		clk_ext_cec: clk-ext-cec {
++			#clock-cells = <0>;
++			compatible = "fixed-clock";
++			clock-frequency = <24000000>;
++		};
++	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		label = "hdmi";
++		type = "a";
++
++		port {
++			hdmi_connector_in: endpoint {
++				remote-endpoint = <&adv7535_out>;
++			};
++		};
++	};
++};
++
++&main_pmx0 {
++
++	/delete-property/ interrupts;
++	main_i2c0_pins_default: main-i2c0-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01e0, PIN_INPUT_PULLUP, 0) /* (D23) I2C0_SCL */
++			J722S_IOPAD(0x01e4, PIN_INPUT_PULLUP, 0) /* (B22) I2C0_SDA */
++		>;
++		bootph-all;
++	};
++
++	main_i2c3_pins_default: main-i2c3-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0118, PIN_INPUT_PULLUP, 6) /* (H26) MMC2_CLK.I2C3_SCL */
++			J722S_IOPAD(0x0120, PIN_INPUT_PULLUP, 6) /* (F27) MMC2_CMD.I2C3_SDA */
++		>;
++		bootph-all;
++	};
++
++	main_uart0_pins_default: main-uart0-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01c8, PIN_INPUT, 0)	/* (F19) UART0_RXD */
++			J722S_IOPAD(0x01cc, PIN_OUTPUT, 0)	/* (F20) UART0_TXD */
++		>;
++		bootph-all;
++	};
++
++	vdd_sd_dv_pins_default: vdd-sd-dv-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0244, PIN_OUTPUT, 7) /* (A24) MMC1_SDWP.GPIO1_49 */
++		>;
++		bootph-all;
++	};
++
++	main_mmc1_pins_default: main-mmc1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x023c, PIN_INPUT, 0) /* (H22) MMC1_CMD */
++			J722S_IOPAD(0x0234, PIN_OUTPUT, 0) /* (H24) MMC1_CLK */
++			J722S_IOPAD(0x0230, PIN_INPUT, 0) /* (H23) MMC1_DAT0 */
++			J722S_IOPAD(0x022c, PIN_INPUT_PULLUP, 0) /* (H20) MMC1_DAT1 */
++			J722S_IOPAD(0x0228, PIN_INPUT_PULLUP, 0) /* (J23) MMC1_DAT2 */
++			J722S_IOPAD(0x0224, PIN_INPUT_PULLUP, 0) /* (H25) MMC1_DAT3 */
++			J722S_IOPAD(0x0240, PIN_INPUT, 0) /* (B24) MMC1_SDCD */
++		>;
++		bootph-all;
++	};
++
++	main_uart1_pins_default: main-uart1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01e8, PIN_INPUT, 1) /* (C24) I2C1_SCL.UART1_RXD */
++			J722S_IOPAD(0x01ec, PIN_OUTPUT, 1) /* (A22) I2C1_SDA.UART1_TXD */
++			J722S_IOPAD(0x0198, PIN_OUTPUT, 7) /* (A26) MCASP0_AXR2.GPIO1_8 485_CTL */
++		>;
++		bootph-all;
++	};
++
++	main_uart2_pins_default: main-uart2-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x005c, PIN_INPUT, 2) /* (U27) GPMC0_AD8.UART2_RXD */
++			J722S_IOPAD(0x0060, PIN_OUTPUT, 2) /* (U26) GPMC0_AD9.UART2_TXD */
++			J722S_IOPAD(0x0078, PIN_OUTPUT, 7) /* (V23) GPMC0_AD15.GPIO0_30 485_CTL */
++		>;
++		bootph-all;
++	};
++
++	main_uart3_pins_default: main-uart3-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00c0, PIN_INPUT, 4) /* (W24) VOUT0_DATA2.UART3_RXD */
++			J722S_IOPAD(0x0068, PIN_OUTPUT, 2) /* (V25) GPMC0_AD11.UART3_TXD */
++			J722S_IOPAD(0x0088, PIN_OUTPUT_PULLDOWN, 7) /* (N22) GPMC0_OEn_REn.GPIO0_33 */
++		>;
++		bootph-all;
++	};
++
++	main_uart4_pins_default: main-uart4-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00c8, PIN_INPUT, 4) /* (W22) VOUT0_DATA4.UART4_RXD */
++			J722S_IOPAD(0x0070, PIN_OUTPUT, 2) /* (V24) GPMC0_AD13.UART4_TXD */
++			J722S_IOPAD(0x00ac, PIN_OUTPUT_PULLDOWN, 7) /* (P21) GPMC0_CSn1.GPIO0_42 */
++		>;
++		bootph-all;
++	};
++
++	main_spi0_pins_default: main-spi0-pins-default {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01bc, PIN_INPUT, 0) /* (D20) SPI0_CLK */
++			J722S_IOPAD(0x01b4, PIN_OUTPUT, 0) /* (B20) SPI0_CS0 */
++			J722S_IOPAD(0x01c0, PIN_INPUT, 0) /* (E19) SPI0_D0 */
++			J722S_IOPAD(0x01c4, PIN_INPUT, 0) /* (E20) SPI0_D1 */
++		>;
++	};
++
++	main_mcan0_pins_default: main-mcan0-pins-default {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01dc, PIN_INPUT, 0) /* (C22) MCAN0_RX */
++			J722S_IOPAD(0x01d8, PIN_OUTPUT, 0) /* (D22) MCAN0_TX */
++		>;
++	};
++
++	main_mcan1_pins_default: main-mcan1-pins-default {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00b4, PIN_INPUT, 5) /* (P23) MCAN1_RX */
++			J722S_IOPAD(0x00b0, PIN_OUTPUT, 5) /* (P22) MCAN1_TX */
++		>;
++	};
++
++	mdio_pins_default: mdio-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0160, PIN_OUTPUT, 0) /* (AC24) MDIO0_MDC */
++			J722S_IOPAD(0x015c, PIN_INPUT, 0) /* (AD25) MDIO0_MDIO */
++		>;
++	};
++
++	rgmii1_pins_default: rgmii1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x014c, PIN_INPUT, 0) /* (AC25) RGMII1_RD0 */
++			J722S_IOPAD(0x0150, PIN_INPUT, 0) /* (AD27) RGMII1_RD1 */
++			J722S_IOPAD(0x0154, PIN_INPUT, 0) /* (AE24) RGMII1_RD2 */
++			J722S_IOPAD(0x0158, PIN_INPUT, 0) /* (AE26) RGMII1_RD3 */
++			J722S_IOPAD(0x0148, PIN_INPUT, 0) /* (AE27) RGMII1_RXC */
++			J722S_IOPAD(0x0144, PIN_INPUT, 0) /* (AD23) RGMII1_RX_CTL */
++			J722S_IOPAD(0x0134, PIN_OUTPUT, 0) /* (AF27) RGMII1_TD0 */
++			J722S_IOPAD(0x0138, PIN_OUTPUT, 0) /* (AE23) RGMII1_TD1 */
++			J722S_IOPAD(0x013c, PIN_OUTPUT, 0) /* (AG25) RGMII1_TD2 */
++			J722S_IOPAD(0x0140, PIN_OUTPUT, 0) /* (AF24) RGMII1_TD3 */
++			J722S_IOPAD(0x0130, PIN_OUTPUT, 0) /* (AG26) RGMII1_TXC */
++			J722S_IOPAD(0x012c, PIN_OUTPUT, 0) /* (AF25) RGMII1_TX_CTL */
++		>;
++	};
++
++	rgmii2_pins_default: rgmii2-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00f8, PIN_INPUT, 2) /* (AB24) VOUT0_HSYNC.RGMII2_RD0 */
++			J722S_IOPAD(0x00fc, PIN_INPUT, 2) /* (AC27) VOUT0_DE.RGMII2_RD1 */
++			J722S_IOPAD(0x0100, PIN_INPUT, 2) /* (AB23) VOUT0_VSYNC.RGMII2_RD2 */
++			J722S_IOPAD(0x0104, PIN_INPUT, 2) /* (AC26) VOUT0_PCLK.RGMII2_RD3 */
++			J722S_IOPAD(0x00f4, PIN_INPUT, 2) /* (AB27) VOUT0_DATA15.RGMII2_RXC */
++			J722S_IOPAD(0x00f0, PIN_INPUT, 2) /* (AB26) VOUT0_DATA14.RGMII2_RX_CTL */
++			J722S_IOPAD(0x00e0, PIN_INPUT, 2) /* (AA25) VOUT0_DATA10.RGMII2_TD0 */
++			J722S_IOPAD(0x00e4, PIN_INPUT, 2) /* (AB25) VOUT0_DATA11.RGMII2_TD1 */
++			J722S_IOPAD(0x00e8, PIN_INPUT, 2) /* (AA23) VOUT0_DATA12.RGMII2_TD2 */
++			J722S_IOPAD(0x00ec, PIN_INPUT, 2) /* (AA22) VOUT0_DATA13.RGMII2_TD3 */
++			J722S_IOPAD(0x00dc, PIN_INPUT, 2) /* (AA27) VOUT0_DATA9.RGMII2_TXC */
++			J722S_IOPAD(0x00d8, PIN_INPUT, 2) /* (AA24) VOUT0_DATA8.RGMII2_TX_CTL */
++		>;
++	};
++
++	led_pins_default: led-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01ac, PIN_OUTPUT_PULLUP, 7) // (C27) MCASP0_AFSR.GPIO1_13 LED1
++		>;
++	};
++
++	power_en_pins_default: power-en-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0010, PIN_OUTPUT_PULLUP, 7) /* (L27) OSPI0_D1.GPIO0_4 COM_PWR_EN */
++			J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 */
++			J722S_IOPAD(0x00c4, PIN_OUTPUT_PULLUP, 7) /* (W23) VOUT0_DATA3.GPIO0_48 */
++		>;
++	};
++
++	main_usb1_pins_default: main-usb1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0258, PIN_INPUT, 0) /* (B27) USB1_DRVVBUS */
++		>;
++	};
++	
++	main_dsi_int_pins_default: main-dsi-int-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0008, PIN_INPUT, 7) /* (L22) OSPI0_DQS.GPIO0_2 */
++		>;
++	};
++
++	main_gpio0_pins_default: main-gpio0-default-pins {
++		pinctrl-single,pins = <
++			// DI
++			J722S_IOPAD(0x010c, PIN_INPUT, 7) /* (H27) MMC2_DAT2.GPIO0_66 DI0 578 */
++			J722S_IOPAD(0x0074, PIN_INPUT, 7) /* (V22) GPMC0_AD14.GPIO0_29 DI1 541 */
++			J722S_IOPAD(0x0004, PIN_INPUT, 7) /* (L23) OSPI0_LBCLKO.GPIO0_1 DI2 513 */
++			J722S_IOPAD(0x00a0, PIN_INPUT, 7) /* (N24) GPMC0_WPn.GPIO0_39  DI3 551 */
++
++			// DO
++			J722S_IOPAD(0x009c, PIN_OUTPUT_PULLUP, 7) /* (W26) GPMC0_WAIT1.GPIO0_38 DO0 550 */
++			J722S_IOPAD(0x0024, PIN_OUTPUT_PULLUP, 7) /* (N27) OSPI0_D6.GPIO0_9 DO1 521 */
++			J722S_IOPAD(0x007c, PIN_OUTPUT_PULLUP, 7) /* (T23) GPMC0_CLK.GPIO0_31 GPIO6 DO2 */
++			J722S_IOPAD(0x0094, PIN_OUTPUT_PULLUP, 7) /* (P26) GPMC0_BE1n.GPIO0_36 GPIO7 DO3 */
++
++			// BOARD ID
++			J722S_IOPAD(0x00b8, PIN_INPUT, 7) /* (W27) VOUT0_DATA0.GPIO0_45 BID0 */
++			J722S_IOPAD(0x00bc, PIN_INPUT, 7) /* (W25) VOUT0_DATA1.GPIO0_46 BID1 */	
++
++			J722S_IOPAD(0x00cc, PIN_INPUT, 7) /* (W21) VOUT0_DATA5.GPIO0_50 BID2 */
++			J722S_IOPAD(0x00d0, PIN_INPUT, 7) /* (Y26) VOUT0_DATA6.GPIO0_51 BID3 */
++
++			// POWER ENABLE
++			J722S_IOPAD(0x0010, PIN_OUTPUT_PULLUP, 7) /* (L27) OSPI0_D1.GPIO0_4 COM_PWR_EN */
++			J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 PWR_EN1 */
++			J722S_IOPAD(0x00c4, PIN_OUTPUT_PULLUP, 7) /* (W23) VOUT0_DATA3.GPIO0_48 PWR_EN2 */			
++
++			// Reset_M.2
++			J722S_IOPAD(0x002c, PIN_OUTPUT, 7) /* (K26) OSPI0_CSn0.GPIO0_11 */
++
++			// PCIE_RSTN1
++			J722S_IOPAD(0x0028, PIN_OUTPUT, 7) /* (M27) OSPI0_D7.GPIO0_10 */
++		>;
++	};
++
++	main_gpio1_pins_default: main-gpio1-default-pins {
++		pinctrl-single,pins = <
++			// RS232/485
++			J722S_IOPAD(0x01f0, PIN_OUTPUT_PULLDOWN, 7) /* (A23) EXT_REFCLK1.GPIO1_30 COM1_SEL H-232 L-485 */
++			J722S_IOPAD(0x01b0, PIN_OUTPUT_PULLDOWN, 7) /* (F24) MCASP0_ACLKR.GPIO1_14 COM2_SEL H-232 L-485 */
++
++			// BOARD ID
++			J722S_IOPAD(0x01a0, PIN_INPUT, 7) /* (F23) MCASP0_AXR0.GPIO1_10 */
++			J722S_IOPAD(0x019c, PIN_INPUT, 7) /* (B25) MCASP0_AXR1.GPIO1_9 */
++
++			// PWREN_M2
++			J722S_IOPAD(0x0194, PIN_OUTPUT, 7) /* (A25) MCASP0_AXR3.GPIO1_7 */
++
++			// MPCIE3V3_EN
++			J722S_IOPAD(0x01a8, PIN_OUTPUT, 7) /* (C26) MCASP0_AFSX.GPIO1_12 */
++		>;
++	};
++};
++
++&main_gpio0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_gpio0_pins_default>;
++};
++
++&main_gpio1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_gpio1_pins_default>;
++};
++
++&mcu_gpio0 {
++	status = "disabled";
++};
++
++&main_uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart0_pins_default>;
++	status = "okay";
++	bootph-all;
++};
++
++&main_uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart1_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio1 8 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart2_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 30 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart3_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 33 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart4_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 42 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&mcu_pmx0 {
++
++	wkup_uart0_pins_default: wkup-uart0-default-pins {
++		pinctrl-single,pins = <
++			J722S_MCU_IOPAD(0x02c, PIN_INPUT, 0)	/* (C7) WKUP_UART0_CTSn */
++			J722S_MCU_IOPAD(0x030, PIN_OUTPUT, 0)	/* (C6) WKUP_UART0_RTSn */
++			J722S_MCU_IOPAD(0x024, PIN_INPUT, 0)	/* (D8) WKUP_UART0_RXD */
++			J722S_MCU_IOPAD(0x028, PIN_OUTPUT, 0)	/* (D7) WKUP_UART0_TXD */
++		>;
++		bootph-all;
++	};
++
++	wkup_i2c0_pins_default: wkup-i2c0-default-pins {
++		pinctrl-single,pins = <
++			J722S_MCU_IOPAD(0x04c, PIN_INPUT_PULLUP, 0)	/* (B9) WKUP_I2C0_SCL */
++			J722S_MCU_IOPAD(0x050, PIN_INPUT_PULLUP, 0)	/* (D11) WKUP_I2C1_SDA */
++		>;
++		bootph-all;
++	};
++};
++
++&wkup_uart0 {
++	/* WKUP UART0 is used by Device Manager firmware */
++	pinctrl-names = "default";
++	pinctrl-0 = <&wkup_uart0_pins_default>;
++	status = "reserved";
++	bootph-all;
++};
++
++&wkup_i2c0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&wkup_i2c0_pins_default>;
++	clock-frequency = <400000>;
++	status = "okay";
++	bootph-all;
++};
++
++&main_i2c0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_i2c0_pins_default>;
++	clock-frequency = <400000>;
++	status = "okay";
++	bootph-all;
++
++	adv_bridge: bridge@3d {
++		status = "okay";
++
++		compatible = "adi,adv7535";
++		reg = <0x3d>;
++        adi,dsi-lanes = <4>;
++
++		avdd-supply = <&reg_1p8v>;
++		a2vdd-supply = <&reg_1p8v>;
++		dvdd-supply = <&reg_1p8v>;
++		pvdd-supply = <&reg_1p8v>;
++		v1p2-supply = <&reg_1p8v>;
++		v3p3-supply = <&reg_3p3v>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7535_in: endpoint {
++					remote-endpoint = <&dsi0_out>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7535_out: endpoint {
++					remote-endpoint = <&hdmi_connector_in>;
++				};
++			};
++		};
++	};
++};
++
++&main_i2c3 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_i2c3_pins_default>;
++	clock-frequency = <400000>;
++
++	st33htpi: st33htpi@2e {
++        compatible = "infineon,slb9673";
++		reg = <0x2e>;
++        clock-frequency = <400000>;
++	};
++
++	s35390a: s35390a@30 {
++		compatible = "sii,s35390a";
++		reg = <0x30>;
++		status = "okay";
++	};
++};
++
++&sdhci0 {
++	disable-wp;
++	bootph-all;
++	ti,driver-strength-ohm = <50>;
++	status = "okay";
++};
++
++&sdhci1 {
++	/* SD/MMC */
++	vmmc-supply = <&vdd_mmc1>;
++	vqmmc-supply = <&vdd_sd_dv>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_mmc1_pins_default>;
++	ti,driver-strength-ohm = <50>;
++	cd-gpios = <&main_gpio1 48 GPIO_ACTIVE_LOW>;
++	cd-debounce-delay-ms = <100>;
++	ti,fails-without-test-cd;
++	disable-wp;
++	status = "okay";
++	bootph-all;
++};
++
++&main_spi0 {
++    status = "okay";
++    pinctrl-names = "default";
++    pinctrl-0 = <&main_spi0_pins_default>;
++    #address-cells = <1>;
++    #size-cells = <0>;
++    ti,pindir-d0-out-d1-in;
++
++	fm25@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++
++		compatible = "cypress,fm25";
++		reg = <0>; // cs_num
++		spi-max-frequency = <48000000>;
++		status = "okay";
++	};
++};
++
++&main_mcan0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_mcan0_pins_default>;
++	phys = <&transceiver0>;
++};
++
++&main_mcan1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_mcan1_pins_default>;
++	phys = <&transceiver1>;
++};
++
++&cpsw3g {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&rgmii1_pins_default &rgmii2_pins_default>;
++};
++
++&cpsw3g_mdio {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&mdio_pins_default>;
++
++	cpsw3g_phy0: ethernet-phy@0 {
++		reg = <0>;
++		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
++		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
++		ti,min-output-impedance;
++	};
++
++	cpsw3g_phy1: ethernet-phy@9 {
++		reg = <9>;
++		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
++		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
++		ti,min-output-impedance;
++	};
++};
++
++&cpsw_port1 {
++	phy-mode = "rgmii-rxid";
++	phy-handle = <&cpsw3g_phy0>;
++};
++
++&cpsw_port2 {
++	phy-mode = "rgmii-rxid";
++	phy-handle = <&cpsw3g_phy1>;
++};
++
++&mailbox0_cluster0 {
++	status = "okay";
++	mbox_r5_0: mbox-r5-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++};
++
++&mailbox0_cluster1 {
++	status = "okay";
++	mbox_mcu_r5_0: mbox-mcu-r5-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++};
++
++&mailbox0_cluster2 {
++	status = "okay";
++	mbox_c7x_0: mbox-c7x-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++};
++
++&mailbox0_cluster3 {
++	status = "okay";
++	mbox_main_r5_0: mbox-main-r5-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++
++	mbox_c7x_1: mbox-c7x-1 {
++		ti,mbox-rx = <2 0 0>;
++		ti,mbox-tx = <3 0 0>;
++	};
++};
++
++&main_timer0 {
++	status = "reserved";
++};
++
++&main_timer1 {
++	status = "reserved";
++};
++
++&main_timer2 {
++	status = "reserved";
++};
++
++&wkup_r5fss0 {
++	status = "okay";
++};
++
++&wkup_r5fss0_core0 {
++	mboxes = <&mailbox0_cluster0 &mbox_r5_0>;
++	memory-region = <&wkup_r5fss0_core0_dma_memory_region>,
++			<&wkup_r5fss0_core0_memory_region>;
++};
++
++&mcu_r5fss0 {
++	status = "okay";
++};
++
++&mcu_r5fss0_core0 {
++	mboxes = <&mailbox0_cluster1 &mbox_mcu_r5_0>;
++	memory-region = <&mcu_r5fss0_core0_dma_memory_region>,
++			<&mcu_r5fss0_core0_memory_region>;
++};
++
++&main_r5fss0 {
++	status = "okay";
++};
++
++&main_r5fss0_core0 {
++	mboxes = <&mailbox0_cluster3 &mbox_main_r5_0>;
++	memory-region = <&main_r5fss0_core0_dma_memory_region>,
++			<&main_r5fss0_core0_memory_region>;
++};
++
++&c7x_0 {
++	status = "okay";
++	mboxes = <&mailbox0_cluster2 &mbox_c7x_0>;
++	memory-region = <&c7x_0_dma_memory_region>,
++			<&c7x_0_memory_region>;
++};
++
++&c7x_1 {
++	status = "okay";
++	mboxes = <&mailbox0_cluster3 &mbox_c7x_1>;
++	memory-region = <&c7x_1_dma_memory_region>,
++			<&c7x_1_memory_region>;
++};
++
++&serdes_ln_ctrl {
++	idle-states = <J722S_SERDES0_LANE0_USB>,
++		      <J722S_SERDES1_LANE0_PCIE0_LANE0>;
++};
++
++&serdes0 {
++	status = "okay";
++	serdes0_usb_link: phy@0 {
++		reg = <0>;
++		cdns,num-lanes = <1>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_USB3>;
++		resets = <&serdes_wiz0 1>;
++	};
++};
++
++&serdes1 {
++	serdes1_pcie_link: phy@0 {
++		reg = <0>;
++		cdns,num-lanes = <1>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_PCIE>;
++		resets = <&serdes_wiz1 1>;
++	};
++};
++
++&usbss0 {
++	ti,vbus-divider;
++	status = "okay";
++};
++
++&usb0 {
++	dr_mode = "host";
++	usb-role-switch;
++};
++
++&usbss1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_usb1_pins_default>;
++	ti,vbus-divider;
++	status = "okay";
++};
++
++&usb1 {
++	dr_mode = "host";
++	maximum-speed = "super-speed";
++	phys = <&serdes0_usb_link>;
++	phy-names = "cdns3,usb3-phy";
++};
++
++&pcie0_rc {
++	status = "okay";
++	reset-gpios = <&main_gpio0 11 GPIO_ACTIVE_HIGH>; // Reset_M.2 (K26) OSPI0_CSn0.GPIO0_11
++	phys = <&serdes1_pcie_link>;
++	phy-names = "pcie-phy";
++};
++
++&dphy_tx0 {
++	status = "okay";
++};
++
++&dss1 {
++	status = "okay";
++
++	//+=
++	clocks = <&k3_clks 232 8>,
++		 <&k3_clks 232 0>,
++		 <&k3_clks 232 4>;
++
++	assigned-clocks = <&k3_clks 241 0>,	/* DSS1-VP0 */
++			  <&k3_clks 240 0>,	/* DSS1-VP1 */
++			  <&k3_clks 245 0>;	/* DPI Output */
++
++	assigned-clock-parents = <&k3_clks 241 2>,	/* PLL 17 HDMI */
++				 <&k3_clks 240 1>,	/* PLL 18 DSI */
++				 <&k3_clks 245 2>;	/* DSS1-DPI0 */
++};
++
++&dss1_ports {
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	// DSS1-VP1: DSI Output
++	port@1 {
++		reg = <1>;
++
++		dss1_dpi1_out: endpoint {
++			remote-endpoint = <&dsi0_in>;
++		};
++	};
++};
++
++&dsi0 {
++	status = "okay";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			reg = <0>;
++			dsi0_out: endpoint {
++				remote-endpoint = <&adv7535_in>;
++			};
++		};
++
++		port@1 {
++			reg = <1>;
++			dsi0_in: endpoint {
++				remote-endpoint = <&dss1_dpi1_out>;
++			};
++		};
++	};
++};
++
+diff --git a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
+new file mode 100644
+index 000000000000..a4969d3bc4b0
+--- /dev/null
++++ b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
+@@ -0,0 +1,1039 @@
++// SPDX-License-Identifier: GPL-2.0-only OR MIT
++/*
++ * Device Tree file for the J722S ECU1270
++ * Copyright (C) 2024 Texas Instruments Incorporated - https://www.ti.com/
++ *
++ * Schematics: https://www.ti.com/lit/zip/sprr495
++ */
++
++/dts-v1/;
++
++#include <dt-bindings/net/ti-dp83867.h>
++#include <dt-bindings/leds/common.h>
++#include <dt-bindings/phy/phy.h>
++#include "k3-j722s.dtsi"
++#include "k3-serdes.h"
++
++/ {
++	compatible = "ti,j722s-evm", "ti,j722s";
++	model = "Texas Instruments J722S ECU1270";
++
++	aliases {
++		serial0 = &wkup_uart0;
++		serial2 = &main_uart0;
++		serial3 = &main_uart1;
++		serial4 = &main_uart2;
++		serial5 = &main_uart3;
++		serial6 = &main_uart4;
++		serial7 = &main_uart5;
++		serial8 = &main_uart6;
++        i2c0 = &main_i2c0;
++        i2c1 = &wkup_i2c0;
++        i2c3 = &main_i2c3;
++		mmc0 = &sdhci0;
++		mmc1 = &sdhci1;
++		usb0 = &usb0;
++		usb1 = &usb1;
++		gpio0 = &main_gpio0;
++		gpio1 = &main_gpio1;
++	};
++
++	chosen {
++		stdout-path = &main_uart0;
++	};
++
++	memory@80000000 {
++		/* 4G RAM */
++		reg = <0x00000000 0x80000000 0x00000000 0x80000000>,
++		      <0x00000008 0x80000000 0x00000000 0x80000000>;
++		device_type = "memory";
++		bootph-all;
++	};
++
++	reserved_memory: reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		/* global cma region */
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0x00 0x38000000>;
++			linux,cma-default;
++		};
++
++		secure_tfa_ddr: tfa@9e780000 {
++			reg = <0x00 0x9e780000 0x00 0x80000>;
++			no-map;
++		};
++
++		secure_ddr: optee@9e800000 {
++			reg = <0x00 0x9e800000 0x00 0x01800000>;
++			no-map;
++		};
++
++		wkup_r5fss0_core0_dma_memory_region: r5f-dma-memory@a0000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa0000000 0x00 0x100000>;
++			no-map;
++		};
++
++		wkup_r5fss0_core0_memory_region: r5f-memory@a0100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa0100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		mcu_r5fss0_core0_dma_memory_region: mcu-r5fss-dma-memory-region@a1000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa1000000 0x00 0x100000>;
++			no-map;
++		};
++
++		mcu_r5fss0_core0_memory_region: mcu-r5fss-memory-region@a1100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa1100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		main_r5fss0_core0_dma_memory_region: main-r5fss-dma-memory-region@a2000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa2000000 0x00 0x100000>;
++			no-map;
++		};
++
++		main_r5fss0_core0_memory_region: main-r5fss-memory-region@a2100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa2100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		c7x_0_dma_memory_region: c7x-dma-memory@a3000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa3000000 0x00 0x100000>;
++			no-map;
++		};
++
++		c7x_0_memory_region: c7x-memory@a3100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa3100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		c7x_1_dma_memory_region: c7x-dma-memory@a4000000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa4000000 0x00 0x100000>;
++			no-map;
++		};
++
++		c7x_1_memory_region: c7x-memory@a4100000 {
++			compatible = "shared-dma-pool";
++			reg = <0x00 0xa4100000 0x00 0xf00000>;
++			no-map;
++		};
++
++		rtos_ipc_memory_region: ipc-memories@a5000000 {
++			reg = <0x00 0xa5000000 0x00 0x00800000>; // 2G
++			//reg = <0x00 0xa5000000 0x00 0x1c00000>; // 4G
++			alignment = <0x1000>;
++			no-map;
++		};
++	};
++
++	vmain_pd: regulator-0 {
++		/* TPS65988 PD CONTROLLER OUTPUT */
++		compatible = "regulator-fixed";
++		regulator-name = "vmain_pd";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++		regulator-boot-on;
++		bootph-all;
++	};
++
++	vsys_5v0: regulator-vsys5v0 {
++		/* Output of LM5140 */
++		compatible = "regulator-fixed";
++		regulator-name = "vsys_5v0";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&vmain_pd>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vdd_mmc1: regulator-mmc1 {
++		/* TPS22918DBVR */
++		compatible = "regulator-fixed";
++		regulator-name = "vdd_mmc1";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		bootph-all;
++	};
++
++	vdd_sd_dv: regulator-TLV71033 {
++		compatible = "regulator-gpio";
++		regulator-name = "tlv71033";
++		pinctrl-names = "default";
++		pinctrl-0 = <&vdd_sd_dv_pins_default>;
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		vin-supply = <&vsys_5v0>;
++		gpios = <&main_gpio1 49 GPIO_ACTIVE_HIGH>;
++		states = <1800000 0x0>,
++			 <3300000 0x1>;
++	};
++
++	vcc_3v3_aud: regulator-vcc3v3 {
++		/* Output of LM5140 */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc_3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vsys_io_1v8: regulator-vsys-io-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vsys_io_1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vsys_io_1v2: regulator-vsys-io-1v2 {
++		compatible = "regulator-fixed";
++		regulator-name = "vsys_io_1v2";
++		regulator-min-microvolt = <1200000>;
++		regulator-max-microvolt = <1200000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&led_pins_default>;
++
++		PL-1 {
++			label = "PL1";
++			gpios = <&main_gpio1 13 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++	};
++
++	transceiver0: can-phy0 {
++		compatible = "ti,tcan1042";
++		#phy-cells = <0>;
++		max-bitrate = <5000000>;
++	};
++
++	transceiver1: can-phy1 {
++		compatible = "ti,tcan1042";
++		#phy-cells = <0>;
++		max-bitrate = <5000000>;
++	};
++
++	reg_1p8v: regulator-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_12v: regulator-12v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-12V";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	clocks {
++		clk_ext_cec: clk-ext-cec {
++			#clock-cells = <0>;
++			compatible = "fixed-clock";
++			clock-frequency = <24000000>;
++		};
++	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		label = "hdmi";
++		type = "a";
++
++		port {
++			hdmi_connector_in: endpoint {
++				remote-endpoint = <&adv7535_out>;
++			};
++		};
++	};
++};
++
++&main_pmx0 {
++
++	/delete-property/ interrupts;
++	main_i2c0_pins_default: main-i2c0-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01e0, PIN_INPUT_PULLUP, 0) /* (D23) I2C0_SCL */
++			J722S_IOPAD(0x01e4, PIN_INPUT_PULLUP, 0) /* (B22) I2C0_SDA */
++		>;
++		bootph-all;
++	};
++
++	main_i2c3_pins_default: main-i2c3-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0118, PIN_INPUT_PULLUP, 6) /* (H26) MMC2_CLK.I2C3_SCL */
++			J722S_IOPAD(0x0120, PIN_INPUT_PULLUP, 6) /* (F27) MMC2_CMD.I2C3_SDA */
++		>;
++		bootph-all;
++	};
++
++	main_uart0_pins_default: main-uart0-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01c8, PIN_INPUT, 0)	/* (F19) UART0_RXD */
++			J722S_IOPAD(0x01cc, PIN_OUTPUT, 0)	/* (F20) UART0_TXD */
++		>;
++		bootph-all;
++	};
++
++	vdd_sd_dv_pins_default: vdd-sd-dv-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0244, PIN_OUTPUT, 7) /* (A24) MMC1_SDWP.GPIO1_49 */
++		>;
++		bootph-all;
++	};
++
++	main_mmc1_pins_default: main-mmc1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x023c, PIN_INPUT, 0) /* (H22) MMC1_CMD */
++			J722S_IOPAD(0x0234, PIN_OUTPUT, 0) /* (H24) MMC1_CLK */
++			J722S_IOPAD(0x0230, PIN_INPUT, 0) /* (H23) MMC1_DAT0 */
++			J722S_IOPAD(0x022c, PIN_INPUT_PULLUP, 0) /* (H20) MMC1_DAT1 */
++			J722S_IOPAD(0x0228, PIN_INPUT_PULLUP, 0) /* (J23) MMC1_DAT2 */
++			J722S_IOPAD(0x0224, PIN_INPUT_PULLUP, 0) /* (H25) MMC1_DAT3 */
++			J722S_IOPAD(0x0240, PIN_INPUT, 0) /* (B24) MMC1_SDCD */
++		>;
++		bootph-all;
++	};
++
++	main_uart1_pins_default: main-uart1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01e8, PIN_INPUT, 1) /* (C24) I2C1_SCL.UART1_RXD */
++			J722S_IOPAD(0x01ec, PIN_OUTPUT, 1) /* (A22) I2C1_SDA.UART1_TXD */
++			J722S_IOPAD(0x0198, PIN_OUTPUT, 7) /* (A26) MCASP0_AXR2.GPIO1_8 485_CTL */
++		>;
++		bootph-all;
++	};
++
++	main_uart2_pins_default: main-uart2-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x005c, PIN_INPUT, 2) /* (U27) GPMC0_AD8.UART2_RXD */
++			J722S_IOPAD(0x0060, PIN_OUTPUT, 2) /* (U26) GPMC0_AD9.UART2_TXD */
++			J722S_IOPAD(0x0078, PIN_OUTPUT, 7) /* (V23) GPMC0_AD15.GPIO0_30 485_CTL */
++		>;
++		bootph-all;
++	};
++
++	main_uart3_pins_default: main-uart3-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00c0, PIN_INPUT, 4) /* (W24) VOUT0_DATA2.UART3_RXD */
++			J722S_IOPAD(0x0068, PIN_OUTPUT, 2) /* (V25) GPMC0_AD11.UART3_TXD */
++			J722S_IOPAD(0x0088, PIN_OUTPUT_PULLDOWN, 7) /* (N22) GPMC0_OEn_REn.GPIO0_33 */
++		>;
++		bootph-all;
++	};
++
++	main_uart4_pins_default: main-uart4-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00c8, PIN_INPUT, 4) /* (W22) VOUT0_DATA4.UART4_RXD */
++			J722S_IOPAD(0x0070, PIN_OUTPUT, 2) /* (V24) GPMC0_AD13.UART4_TXD */
++			J722S_IOPAD(0x00ac, PIN_OUTPUT_PULLDOWN, 7) /* (P21) GPMC0_CSn1.GPIO0_42 */
++		>;
++		bootph-all;
++	};
++
++	main_uart5_pins_default: main-uart5-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0074, PIN_INPUT, 2) /* (V22) GPMC0_AD14.UART5_RXD */
++			J722S_IOPAD(0x010c, PIN_OUTPUT, 3) /* (H27) MMC2_DAT2.UART5_TXD */
++			J722S_IOPAD(0x0004, PIN_OUTPUT_PULLDOWN, 7) /* (L23) OSPI0_LBCLKO.GPIO0_1 */
++		>;
++		bootph-all;
++	};
++
++	main_uart6_pins_default: main-uart6-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x009c, PIN_INPUT, 3) /* (W26) GPMC0_WAIT1.UART6_RXD */
++			J722S_IOPAD(0x00a0, PIN_OUTPUT, 3) /* (N24) GPMC0_WPn.UART6_TXD */
++			J722S_IOPAD(0x0024, PIN_OUTPUT_PULLDOWN, 7) /* (N27) OSPI0_D6.GPIO0_9 */
++		>;
++		bootph-all;
++	};
++
++	main_spi0_pins_default: main-spi0-pins-default {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01bc, PIN_INPUT, 0) /* (D20) SPI0_CLK */
++			J722S_IOPAD(0x01b4, PIN_OUTPUT, 0) /* (B20) SPI0_CS0 */
++			J722S_IOPAD(0x01c0, PIN_INPUT, 0) /* (E19) SPI0_D0 */
++			J722S_IOPAD(0x01c4, PIN_INPUT, 0) /* (E20) SPI0_D1 */
++		>;
++	};
++
++	main_mcan0_pins_default: main-mcan0-pins-default {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01dc, PIN_INPUT, 0) /* (C22) MCAN0_RX */
++			J722S_IOPAD(0x01d8, PIN_OUTPUT, 0) /* (D22) MCAN0_TX */
++		>;
++	};
++
++	main_mcan1_pins_default: main-mcan1-pins-default {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00b4, PIN_INPUT, 5) /* (P23) MCAN1_RX */
++			J722S_IOPAD(0x00b0, PIN_OUTPUT, 5) /* (P22) MCAN1_TX */
++		>;
++	};
++
++	mdio_pins_default: mdio-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0160, PIN_OUTPUT, 0) /* (AC24) MDIO0_MDC */
++			J722S_IOPAD(0x015c, PIN_INPUT, 0) /* (AD25) MDIO0_MDIO */
++		>;
++	};
++
++	rgmii1_pins_default: rgmii1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x014c, PIN_INPUT, 0) /* (AC25) RGMII1_RD0 */
++			J722S_IOPAD(0x0150, PIN_INPUT, 0) /* (AD27) RGMII1_RD1 */
++			J722S_IOPAD(0x0154, PIN_INPUT, 0) /* (AE24) RGMII1_RD2 */
++			J722S_IOPAD(0x0158, PIN_INPUT, 0) /* (AE26) RGMII1_RD3 */
++			J722S_IOPAD(0x0148, PIN_INPUT, 0) /* (AE27) RGMII1_RXC */
++			J722S_IOPAD(0x0144, PIN_INPUT, 0) /* (AD23) RGMII1_RX_CTL */
++			J722S_IOPAD(0x0134, PIN_OUTPUT, 0) /* (AF27) RGMII1_TD0 */
++			J722S_IOPAD(0x0138, PIN_OUTPUT, 0) /* (AE23) RGMII1_TD1 */
++			J722S_IOPAD(0x013c, PIN_OUTPUT, 0) /* (AG25) RGMII1_TD2 */
++			J722S_IOPAD(0x0140, PIN_OUTPUT, 0) /* (AF24) RGMII1_TD3 */
++			J722S_IOPAD(0x0130, PIN_OUTPUT, 0) /* (AG26) RGMII1_TXC */
++			J722S_IOPAD(0x012c, PIN_OUTPUT, 0) /* (AF25) RGMII1_TX_CTL */
++		>;
++	};
++
++	rgmii2_pins_default: rgmii2-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x00f8, PIN_INPUT, 2) /* (AB24) VOUT0_HSYNC.RGMII2_RD0 */
++			J722S_IOPAD(0x00fc, PIN_INPUT, 2) /* (AC27) VOUT0_DE.RGMII2_RD1 */
++			J722S_IOPAD(0x0100, PIN_INPUT, 2) /* (AB23) VOUT0_VSYNC.RGMII2_RD2 */
++			J722S_IOPAD(0x0104, PIN_INPUT, 2) /* (AC26) VOUT0_PCLK.RGMII2_RD3 */
++			J722S_IOPAD(0x00f4, PIN_INPUT, 2) /* (AB27) VOUT0_DATA15.RGMII2_RXC */
++			J722S_IOPAD(0x00f0, PIN_INPUT, 2) /* (AB26) VOUT0_DATA14.RGMII2_RX_CTL */
++			J722S_IOPAD(0x00e0, PIN_INPUT, 2) /* (AA25) VOUT0_DATA10.RGMII2_TD0 */
++			J722S_IOPAD(0x00e4, PIN_INPUT, 2) /* (AB25) VOUT0_DATA11.RGMII2_TD1 */
++			J722S_IOPAD(0x00e8, PIN_INPUT, 2) /* (AA23) VOUT0_DATA12.RGMII2_TD2 */
++			J722S_IOPAD(0x00ec, PIN_INPUT, 2) /* (AA22) VOUT0_DATA13.RGMII2_TD3 */
++			J722S_IOPAD(0x00dc, PIN_INPUT, 2) /* (AA27) VOUT0_DATA9.RGMII2_TXC */
++			J722S_IOPAD(0x00d8, PIN_INPUT, 2) /* (AA24) VOUT0_DATA8.RGMII2_TX_CTL */
++		>;
++	};
++
++	led_pins_default: led-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x01ac, PIN_OUTPUT_PULLUP, 7) // (C27) MCASP0_AFSR.GPIO1_13 LED1
++		>;
++	};
++
++	power_en_pins_default: power-en-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0010, PIN_OUTPUT_PULLUP, 7) /* (L27) OSPI0_D1.GPIO0_4 COM_PWR_EN */
++			J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 */
++			J722S_IOPAD(0x00c4, PIN_OUTPUT_PULLUP, 7) /* (W23) VOUT0_DATA3.GPIO0_48 */
++		>;
++	};
++
++	main_usb1_pins_default: main-usb1-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0258, PIN_INPUT, 0) /* (B27) USB1_DRVVBUS */
++		>;
++	};
++	
++	main_dsi_int_pins_default: main-dsi-int-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0008, PIN_INPUT, 7) /* (L22) OSPI0_DQS.GPIO0_2 */
++		>;
++	};
++
++	main_gpio0_pins_default: main-gpio0-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x007c, PIN_OUTPUT_PULLUP, 7) /* (T23) GPMC0_CLK.GPIO0_31 GPIO6 DO2 */
++			J722S_IOPAD(0x0094, PIN_OUTPUT_PULLUP, 7) /* (P26) GPMC0_BE1n.GPIO0_36 GPIO7 DO3 */
++
++			// BOARD ID
++			J722S_IOPAD(0x00b8, PIN_INPUT, 7) /* (W27) VOUT0_DATA0.GPIO0_45 BID0 */
++			J722S_IOPAD(0x00bc, PIN_INPUT, 7) /* (W25) VOUT0_DATA1.GPIO0_46 BID1 */	
++
++			J722S_IOPAD(0x00cc, PIN_INPUT, 7) /* (W21) VOUT0_DATA5.GPIO0_50 BID2 */
++			J722S_IOPAD(0x00d0, PIN_INPUT, 7) /* (Y26) VOUT0_DATA6.GPIO0_51 BID3 */
++
++			// POWER ENABLE
++			J722S_IOPAD(0x0010, PIN_OUTPUT_PULLUP, 7) /* (L27) OSPI0_D1.GPIO0_4 COM_PWR_EN */
++			J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 PWR_EN1 */
++			J722S_IOPAD(0x00c4, PIN_OUTPUT_PULLUP, 7) /* (W23) VOUT0_DATA3.GPIO0_48 PWR_EN2 */			
++
++			// Reset_M.2
++			J722S_IOPAD(0x002c, PIN_OUTPUT, 7) /* (K26) OSPI0_CSn0.GPIO0_11 */
++
++			// PCIE_RSTN1
++			J722S_IOPAD(0x0028, PIN_OUTPUT, 7) /* (M27) OSPI0_D7.GPIO0_10 */
++		>;
++	};
++
++	main_gpio1_pins_default: main-gpio1-default-pins {
++		pinctrl-single,pins = <
++			// RS232/485
++			J722S_IOPAD(0x01f0, PIN_OUTPUT_PULLDOWN, 7) /* (A23) EXT_REFCLK1.GPIO1_30 COM1_SEL H-232 L-485 */
++			J722S_IOPAD(0x01b0, PIN_OUTPUT_PULLDOWN, 7) /* (F24) MCASP0_ACLKR.GPIO1_14 COM2_SEL H-232 L-485 */
++
++			// BOARD ID
++			J722S_IOPAD(0x01a0, PIN_INPUT, 7) /* (F23) MCASP0_AXR0.GPIO1_10 */
++			J722S_IOPAD(0x019c, PIN_INPUT, 7) /* (B25) MCASP0_AXR1.GPIO1_9 */
++
++			// PWREN_M2
++			J722S_IOPAD(0x0194, PIN_OUTPUT, 7) /* (A25) MCASP0_AXR3.GPIO1_7 */
++
++			// MPCIE3V3_EN
++			J722S_IOPAD(0x01a8, PIN_OUTPUT, 7) /* (C26) MCASP0_AFSX.GPIO1_12 */
++		>;
++	};
++};
++
++&ospi0 {
++	status = "okay";
++	pinctrl-names = "default"; 
++	pinctrl-0 = <&main_dsi_int_pins_default>;
++};
++
++&main_gpio0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_gpio0_pins_default>;
++};
++
++&main_gpio1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_gpio1_pins_default>;
++};
++
++&mcu_gpio0 {
++	status = "disabled";
++};
++
++&main_uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart0_pins_default>;
++	status = "okay";
++	bootph-all;
++};
++
++&main_uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart1_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio1 8 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart2_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 30 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart3_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 33 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart4_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 42 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart5 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart5_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 1 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&main_uart6 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_uart6_pins_default>;
++	status = "okay";
++	bootph-all;
++
++   	rs485-rts-delay = <0x0 0x0>;
++   	rs485-rts-active-high;
++	rts-gpios = <&main_gpio0 9 GPIO_ACTIVE_HIGH>;
++   	linux,rs485-enabled-at-boot-time;
++	rs485-rx-during-tx;
++};
++
++&mcu_pmx0 {
++
++	wkup_uart0_pins_default: wkup-uart0-default-pins {
++		pinctrl-single,pins = <
++			J722S_MCU_IOPAD(0x02c, PIN_INPUT, 0)	/* (C7) WKUP_UART0_CTSn */
++			J722S_MCU_IOPAD(0x030, PIN_OUTPUT, 0)	/* (C6) WKUP_UART0_RTSn */
++			J722S_MCU_IOPAD(0x024, PIN_INPUT, 0)	/* (D8) WKUP_UART0_RXD */
++			J722S_MCU_IOPAD(0x028, PIN_OUTPUT, 0)	/* (D7) WKUP_UART0_TXD */
++		>;
++		bootph-all;
++	};
++
++	wkup_i2c0_pins_default: wkup-i2c0-default-pins {
++		pinctrl-single,pins = <
++			J722S_MCU_IOPAD(0x04c, PIN_INPUT_PULLUP, 0)	/* (B9) WKUP_I2C0_SCL */
++			J722S_MCU_IOPAD(0x050, PIN_INPUT_PULLUP, 0)	/* (D11) WKUP_I2C1_SDA */
++		>;
++		bootph-all;
++	};
++};
++
++&wkup_uart0 {
++	/* WKUP UART0 is used by Device Manager firmware */
++	pinctrl-names = "default";
++	pinctrl-0 = <&wkup_uart0_pins_default>;
++	status = "reserved";
++	bootph-all;
++};
++
++&wkup_i2c0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&wkup_i2c0_pins_default>;
++	clock-frequency = <400000>;
++	status = "okay";
++	bootph-all;
++};
++
++&main_i2c3 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_i2c3_pins_default>;
++	clock-frequency = <400000>;
++
++	st33htpi: st33htpi@2e {
++        compatible = "infineon,slb9673";
++		reg = <0x2e>;
++        clock-frequency = <400000>;
++	};
++
++	s35390a: s35390a@30 {
++		compatible = "sii,s35390a";
++		reg = <0x30>;
++		status = "okay";
++	};
++};
++
++&sdhci0 {
++	disable-wp;
++	bootph-all;
++	ti,driver-strength-ohm = <50>;
++	status = "okay";
++};
++
++&sdhci1 {
++	/* SD/MMC */
++	vmmc-supply = <&vdd_mmc1>;
++	vqmmc-supply = <&vdd_sd_dv>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_mmc1_pins_default>;
++	ti,driver-strength-ohm = <50>;
++	cd-gpios = <&main_gpio1 48 GPIO_ACTIVE_LOW>;
++	cd-debounce-delay-ms = <100>;
++	ti,fails-without-test-cd;
++	disable-wp;
++	status = "okay";
++	bootph-all;
++};
++
++&main_spi0 {
++    status = "okay";
++    pinctrl-names = "default";
++    pinctrl-0 = <&main_spi0_pins_default>;
++    #address-cells = <1>;
++    #size-cells = <0>;
++    ti,pindir-d0-out-d1-in;
++
++	fm25@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++
++		compatible = "cypress,fm25";
++		reg = <0>; // cs_num
++		spi-max-frequency = <48000000>;
++		status = "okay";
++	};
++};
++
++&main_mcan0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_mcan0_pins_default>;
++	phys = <&transceiver0>;
++};
++
++&main_mcan1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_mcan1_pins_default>;
++	phys = <&transceiver1>;
++};
++
++&cpsw3g {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&rgmii1_pins_default &rgmii2_pins_default>;
++};
++
++&cpsw3g_mdio {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&mdio_pins_default>;
++
++	cpsw3g_phy0: ethernet-phy@0 {
++		reg = <0>;
++		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
++		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
++		ti,min-output-impedance;
++	};
++
++	cpsw3g_phy1: ethernet-phy@9 {
++		reg = <9>;
++		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
++		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
++		ti,min-output-impedance;
++	};
++};
++
++&cpsw_port1 {
++	phy-mode = "rgmii-rxid";
++	phy-handle = <&cpsw3g_phy0>;
++};
++
++&cpsw_port2 {
++	phy-mode = "rgmii-rxid";
++	phy-handle = <&cpsw3g_phy1>;
++};
++
++&mailbox0_cluster0 {
++	status = "okay";
++	mbox_r5_0: mbox-r5-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++};
++
++&mailbox0_cluster1 {
++	status = "okay";
++	mbox_mcu_r5_0: mbox-mcu-r5-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++};
++
++&mailbox0_cluster2 {
++	status = "okay";
++	mbox_c7x_0: mbox-c7x-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++};
++
++&mailbox0_cluster3 {
++	status = "okay";
++	mbox_main_r5_0: mbox-main-r5-0 {
++		ti,mbox-rx = <0 0 0>;
++		ti,mbox-tx = <1 0 0>;
++	};
++
++	mbox_c7x_1: mbox-c7x-1 {
++		ti,mbox-rx = <2 0 0>;
++		ti,mbox-tx = <3 0 0>;
++	};
++};
++
++&main_timer0 {
++	status = "reserved";
++};
++
++&main_timer1 {
++	status = "reserved";
++};
++
++&main_timer2 {
++	status = "reserved";
++};
++
++&wkup_r5fss0 {
++	status = "okay";
++};
++
++&wkup_r5fss0_core0 {
++	mboxes = <&mailbox0_cluster0 &mbox_r5_0>;
++	memory-region = <&wkup_r5fss0_core0_dma_memory_region>,
++			<&wkup_r5fss0_core0_memory_region>;
++};
++
++&mcu_r5fss0 {
++	status = "okay";
++};
++
++&mcu_r5fss0_core0 {
++	mboxes = <&mailbox0_cluster1 &mbox_mcu_r5_0>;
++	memory-region = <&mcu_r5fss0_core0_dma_memory_region>,
++			<&mcu_r5fss0_core0_memory_region>;
++};
++
++&main_r5fss0 {
++	status = "okay";
++};
++
++&main_r5fss0_core0 {
++	mboxes = <&mailbox0_cluster3 &mbox_main_r5_0>;
++	memory-region = <&main_r5fss0_core0_dma_memory_region>,
++			<&main_r5fss0_core0_memory_region>;
++};
++
++&c7x_0 {
++	status = "okay";
++	mboxes = <&mailbox0_cluster2 &mbox_c7x_0>;
++	memory-region = <&c7x_0_dma_memory_region>,
++			<&c7x_0_memory_region>;
++};
++
++&c7x_1 {
++	status = "okay";
++	mboxes = <&mailbox0_cluster3 &mbox_c7x_1>;
++	memory-region = <&c7x_1_dma_memory_region>,
++			<&c7x_1_memory_region>;
++};
++
++&serdes_ln_ctrl {
++	idle-states = <J722S_SERDES0_LANE0_USB>,
++		      <J722S_SERDES1_LANE0_PCIE0_LANE0>;
++};
++
++&serdes0 {
++	status = "okay";
++	serdes0_usb_link: phy@0 {
++		reg = <0>;
++		cdns,num-lanes = <1>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_USB3>;
++		resets = <&serdes_wiz0 1>;
++	};
++};
++
++&serdes1 {
++	serdes1_pcie_link: phy@0 {
++		reg = <0>;
++		cdns,num-lanes = <1>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_PCIE>;
++		resets = <&serdes_wiz1 1>;
++	};
++};
++
++&usbss0 {
++	ti,vbus-divider;
++	status = "okay";
++};
++
++&usb0 {
++	dr_mode = "host";
++	usb-role-switch;
++};
++
++&usbss1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_usb1_pins_default>;
++	ti,vbus-divider;
++	status = "okay";
++};
++
++&usb1 {
++	dr_mode = "host";
++	maximum-speed = "super-speed";
++	phys = <&serdes0_usb_link>;
++	phy-names = "cdns3,usb3-phy";
++};
++
++&pcie0_rc {
++	status = "okay";
++	reset-gpios = <&main_gpio0 11 GPIO_ACTIVE_HIGH>; // Reset_M.2 (K26) OSPI0_CSn0.GPIO0_11
++	phys = <&serdes1_pcie_link>;
++	phy-names = "pcie-phy";
++};
++
++&dphy_tx0 {
++	status = "okay";
++};
++
++&dss1 {
++	status = "okay";
++
++	//+=
++	clocks = <&k3_clks 232 8>,
++		 <&k3_clks 232 0>,
++		 <&k3_clks 232 4>;
++
++	assigned-clocks = <&k3_clks 241 0>,	/* DSS1-VP0 */
++			  <&k3_clks 240 0>,	/* DSS1-VP1 */
++			  <&k3_clks 245 0>;	/* DPI Output */
++
++	assigned-clock-parents = <&k3_clks 241 2>,	/* PLL 17 HDMI */
++				 <&k3_clks 240 1>,	/* PLL 18 DSI */
++				 <&k3_clks 245 2>;	/* DSS1-DPI0 */
++};
++
++&dss1_ports {
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	// DSS1-VP1: DSI Output
++	port@1 {
++		reg = <1>;
++
++		dss1_dpi1_out: endpoint {
++			remote-endpoint = <&dsi0_in>;
++		};
++	};
++};
++
++&dsi0 {
++	status = "okay";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			reg = <0>;
++			dsi0_out: endpoint {
++				remote-endpoint = <&adv7535_in>;
++			};
++		};
++
++		port@1 {
++			reg = <1>;
++			dsi0_in: endpoint {
++				remote-endpoint = <&dss1_dpi1_out>;
++			};
++		};
++	};
++};
++
++&main_i2c0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_i2c0_pins_default>;
++	clock-frequency = <400000>;
++	status = "okay";
++	bootph-all;
++
++	adv_bridge: bridge@3d {
++		status = "okay";
++
++		compatible = "adi,adv7535";
++		//reg = <0x3d>;
++		reg-names = "main", "cec", "edid", "packet";
++		reg = <0x3d>, <0x3c>, <0x3e>, <0x3f>;
++		adi,dsi-lanes = <4>;
++
++		avdd-supply = <&reg_1p8v>;
++		a2vdd-supply = <&reg_1p8v>;
++		dvdd-supply = <&reg_1p8v>;
++		pvdd-supply = <&reg_1p8v>;
++		v1p2-supply = <&reg_1p8v>;
++		v3p3-supply = <&reg_3p3v>;
++
++		adi,disable-timing-generator;
++		pinctrl-0 = <&main_dsi_int_pins_default>;
++    	interrupt-parent = <&main_gpio0>;
++    	interrupts = <2 IRQ_TYPE_EDGE_FALLING>;
++		//interrupt-parent = <&ospi0>; /* (L22) OSPI0_DQS.GPIO0_2 */
++		//interrupts = <2 IRQ_TYPE_EDGE_FALLING>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7535_in: endpoint {
++					remote-endpoint = <&dsi0_out>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7535_out: endpoint {
++					remote-endpoint = <&hdmi_connector_in>;
++				};
++			};
++		};
++	};
++};
++
+-- 
+2.43.0
+

@@ -1,0 +1,97 @@
+From 5ba396752bad6836ab2c90afcb015ce5d988ee0e Mon Sep 17 00:00:00 2001
+From: Samuel Cheng <samuelogre@gmail.com>
+Date: Thu, 2 Oct 2025 16:10:39 +0800
+Subject: [PATCH 2/3] modify dts for k3 cooling
+
+add 1.4GHz
+add cooling map
+---
+ arch/arm64/boot/dts/ti/k3-am62p-thermal.dtsi | 15 +++++++++++++++
+ arch/arm64/boot/dts/ti/k3-am62p5.dtsi        | 11 +++++++++++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/ti/k3-am62p-thermal.dtsi b/arch/arm64/boot/dts/ti/k3-am62p-thermal.dtsi
+index c7486fb2a5b4..328741377a00 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62p-thermal.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am62p-thermal.dtsi
+@@ -12,12 +12,27 @@ main0_thermal: main0-thermal {
+ 		thermal-sensors = <&wkup_vtm0 0>;
+ 
+ 		trips {
++			main0_alert0: main0_alert0 {
++				temperature = <100000>; /* millicelsius */
++				hysteresis = <2000>; /* millicelsius */
++				type = "passive";
++			};
++				
+ 			main0_crit: main0-crit {
+ 				temperature = <125000>;	/* milliCelsius */
+ 				hysteresis = <2000>;	/* milliCelsius */
+ 				type = "critical";
+ 			};
+ 		};
++
++		cpu_cooling_maps: cooling-maps {
++			map0 {
++				trip = <&main0_alert0>;
++				cooling-device =
++				<&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
++			};
++		};
++
+ 	};
+ 
+ 	main1_thermal: main1-thermal {
+diff --git a/arch/arm64/boot/dts/ti/k3-am62p5.dtsi b/arch/arm64/boot/dts/ti/k3-am62p5.dtsi
+index 140587d02e88..25dbab1b5bf9 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62p5.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am62p5.dtsi
+@@ -49,6 +49,7 @@ cpu0: cpu@0 {
+ 			next-level-cache = <&l2_0>;
+ 			operating-points-v2 = <&a53_opp_table>;
+ 			clocks = <&k3_clks 135 0>;
++			#cooling-cells = <2>; /* min followed by max */
+ 		};
+ 
+ 		cpu1: cpu@1 {
+@@ -65,6 +66,7 @@ cpu1: cpu@1 {
+ 			next-level-cache = <&l2_0>;
+ 			operating-points-v2 = <&a53_opp_table>;
+ 			clocks = <&k3_clks 136 0>;
++			#cooling-cells = <2>; /* min followed by max */
+ 		};
+ 
+ 		cpu2: cpu@2 {
+@@ -81,6 +83,7 @@ cpu2: cpu@2 {
+ 			next-level-cache = <&l2_0>;
+ 			operating-points-v2 = <&a53_opp_table>;
+ 			clocks = <&k3_clks 137 0>;
++			#cooling-cells = <2>; /* min followed by max */
+ 		};
+ 
+ 		cpu3: cpu@3 {
+@@ -97,6 +100,7 @@ cpu3: cpu@3 {
+ 			next-level-cache = <&l2_0>;
+ 			operating-points-v2 = <&a53_opp_table>;
+ 			clocks = <&k3_clks 138 0>;
++			#cooling-cells = <2>; /* min followed by max */
+ 		};
+ 	};
+ 
+@@ -141,6 +145,13 @@ opp-1250000000 {
+ 			clock-latency-ns = <6000000>;
+ 			opp-suspend;
+ 		};
++
++		opp-1400000000 {
++			opp-hz = /bits/ 64 <1400000000>;
++			opp-supported-hw = <0x01 0x0004>;
++			clock-latency-ns = <6000000>;
++			opp-suspend;
++		};
+ 	};
+ 
+ 	l2_0: l2-cache0 {
+-- 
+2.43.0
+
