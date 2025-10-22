@@ -63,7 +63,7 @@ The wic image is named: tisdk-base-image-j722s-ecu1270.rootfs.wic.xz
 ## Deploy Yocto image to SD
 
 ```sh
-> xzcat tisdk-base-image-j722s-ecu1270.rootfs.wic.xz | sudo dd of=/dev/sdc bs=1M iflag=fullblock oflag=direct conv=fsync
+> xzcat tisdk-base-image-j722s-ecu1270.rootfs.wic.xz | sudo dd of=/dev/sdb bs=1M iflag=fullblock oflag=direct conv=fsync
 ```
 
 # Setup SecureBoot
