@@ -185,6 +185,8 @@ The U-Boot can boot into the fit image and reference the device tree with the fo
 # Setup RAUC for firmware update service
 
 ## Environment setup & Build
+Uncomment the line __IMAGE_INSTALL:append = " rauc adv-start "__ in file __<YOCTO_PATH>/source/meta-ecu-1270/conf/machine
+/j722s-ecu1270.conf__  
 
 Setup the RAUC layer, create a new CA, and build the image with the following commands.   
 
