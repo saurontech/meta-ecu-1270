@@ -1,0 +1,797 @@
+From b41e9b6fbfc98164d27e24406ed5a84dfb560267 Mon Sep 17 00:00:00 2001
+From: Samuel Cheng <samuelogre@gmail.com>
+Date: Wed, 12 Nov 2025 15:16:43 +0800
+Subject: [PATCH] u-boot-ti-staging init commit for ecu1270 es2(&1)
+
+---
+ arch/arm/dts/k3-j722s-evm.dts   | 358 +++++++++++++-------------------
+ arch/arm/include/asm/handoff.h  |   1 +
+ arch/arm/mach-k3/common.c       |  10 +
+ board/ti/j722s/evm.c            |  82 ++++----
+ configs/j722s_evm_a53_defconfig |  12 ++
+ include/configs/j722s_evm.h     |  77 +++++++
+ 6 files changed, 282 insertions(+), 258 deletions(-)
+
+diff --git a/arch/arm/dts/k3-j722s-evm.dts b/arch/arm/dts/k3-j722s-evm.dts
+index d799be55492..3a4f4b3812b 100644
+--- a/arch/arm/dts/k3-j722s-evm.dts
++++ b/arch/arm/dts/k3-j722s-evm.dts
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-only OR MIT
+ /*
+- * Device Tree file for the J722S EVM
++ * Device Tree file for the J722S ECU1270
+  * Copyright (C) 2024 Texas Instruments Incorporated - https://www.ti.com/
+  *
+  * Schematics: https://www.ti.com/lit/zip/sprr495
+@@ -16,15 +16,20 @@
+ 
+ / {
+ 	compatible = "ti,j722s-evm", "ti,j722s";
+-	model = "Texas Instruments J722S EVM";
++	model = "Texas Instruments J722S ECU1270";
+ 
+ 	aliases {
+ 		serial0 = &wkup_uart0;
+ 		serial2 = &main_uart0;
++        i2c0 = &main_i2c0;
++        i2c1 = &wkup_i2c0;
++        i2c3 = &main_i2c3;
+ 		mmc0 = &sdhci0;
+ 		mmc1 = &sdhci1;
+ 		usb0 = &usb0;
+ 		usb1 = &usb1;
++		gpio0 = &main_gpio0;
++		gpio1 = &main_gpio1;
+ 	};
+ 
+ 	chosen {
+@@ -32,9 +37,9 @@
+ 	};
+ 
+ 	memory@80000000 {
+-		/* 8G RAM */
++		/* 4G RAM */
+ 		reg = <0x00000000 0x80000000 0x00000000 0x80000000>,
+-		      <0x00000008 0x80000000 0x00000001 0x80000000>;
++		      <0x00000008 0x80000000 0x00000000 0x80000000>;
+ 		device_type = "memory";
+ 		bootph-all;
+ 	};
+@@ -115,7 +120,8 @@
+ 		};
+ 
+ 		rtos_ipc_memory_region: ipc-memories@a5000000 {
+-			reg = <0x00 0xa5000000 0x00 0x1c00000>;
++			reg = <0x00 0xa5000000 0x00 0x00800000>; // 2G
++			//reg = <0x00 0xa5000000 0x00 0x1c00000>; // 4G
+ 			alignment = <0x1000>;
+ 			no-map;
+ 		};
+@@ -150,8 +156,6 @@
+ 		regulator-min-microvolt = <3300000>;
+ 		regulator-max-microvolt = <3300000>;
+ 		regulator-boot-on;
+-		enable-active-high;
+-		gpio = <&exp1 15 GPIO_ACTIVE_HIGH>;
+ 		bootph-all;
+ 	};
+ 
+@@ -164,7 +168,7 @@
+ 		regulator-max-microvolt = <3300000>;
+ 		regulator-boot-on;
+ 		vin-supply = <&vsys_5v0>;
+-		gpios = <&main_gpio0 70 GPIO_ACTIVE_HIGH>;
++		gpios = <&main_gpio1 49 GPIO_ACTIVE_HIGH>;
+ 		states = <1800000 0x0>,
+ 			 <3300000 0x1>;
+ 	};
+@@ -186,6 +190,12 @@
+ 		regulator-always-on;
+ 		regulator-boot-on;
+ 	};
++
++	gpio_id: gpio-id {
++		compatible = "gpio-id";
++		gpio-id0 = <&main_gpio1 13 GPIO_ACTIVE_HIGH>;
++		bootph-all;
++	};
+ };
+ 
+ &main_pmx0 {
+@@ -198,17 +208,25 @@
+ 		bootph-all;
+ 	};
+ 
++	main_i2c3_pins_default: main-i2c3-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x0118, PIN_INPUT_PULLUP, 6) /* (H26) MMC2_CLK.I2C3_SCL */
++			J722S_IOPAD(0x0120, PIN_INPUT_PULLUP, 6) /* (F27) MMC2_CMD.I2C3_SDA */
++		>;
++		bootph-all;
++	};
++
+ 	main_uart0_pins_default: main-uart0-default-pins {
+ 		pinctrl-single,pins = <
+-			J722S_IOPAD(0x01c8, PIN_INPUT, 0)	/* (A22) UART0_RXD */
+-			J722S_IOPAD(0x01cc, PIN_OUTPUT, 0)	/* (B22) UART0_TXD */
++			J722S_IOPAD(0x01c8, PIN_INPUT, 0)	/* (F19) UART0_RXD */
++			J722S_IOPAD(0x01cc, PIN_OUTPUT, 0)	/* (F20) UART0_TXD */
+ 		>;
+ 		bootph-all;
+ 	};
+ 
+ 	vdd_sd_dv_pins_default: vdd-sd-dv-default-pins {
+ 		pinctrl-single,pins = <
+-			J722S_IOPAD(0x0120, PIN_INPUT, 7) /* (F27) MMC2_CMD.GPIO0_70 */
++			J722S_IOPAD(0x0244, PIN_OUTPUT, 7) /* (A24) MMC1_SDWP.GPIO1_49 */
+ 		>;
+ 		bootph-all;
+ 	};
+@@ -239,23 +257,6 @@
+ 		>;
+ 	};
+ 
+-	ospi0_pins_default: ospi0-default-pins {
+-		pinctrl-single,pins = <
+-			J722S_IOPAD(0x0000, PIN_OUTPUT, 0) /* (L24) OSPI0_CLK */
+-			J722S_IOPAD(0x002c, PIN_OUTPUT, 0) /* (K26) OSPI0_CSn0 */
+-			J722S_IOPAD(0x000c, PIN_INPUT, 0) /* (K27) OSPI0_D0 */
+-			J722S_IOPAD(0x0010, PIN_INPUT, 0) /* (L27) OSPI0_D1 */
+-			J722S_IOPAD(0x0014, PIN_INPUT, 0) /* (L26) OSPI0_D2 */
+-			J722S_IOPAD(0x0018, PIN_INPUT, 0) /* (L25) OSPI0_D3 */
+-			J722S_IOPAD(0x001c, PIN_INPUT, 0) /* (L21) OSPI0_D4 */
+-			J722S_IOPAD(0x0020, PIN_INPUT, 0) /* (M26) OSPI0_D5 */
+-			J722S_IOPAD(0x0024, PIN_INPUT, 0) /* (N27) OSPI0_D6 */
+-			J722S_IOPAD(0x0028, PIN_INPUT, 0) /* (M27) OSPI0_D7 */
+-			J722S_IOPAD(0x0008, PIN_INPUT, 0) /* (L22) OSPI0_DQS */
+-		>;
+-		bootph-all;
+-	};
+-
+ 	rgmii1_pins_default: rgmii1-default-pins {
+ 		pinctrl-single,pins = <
+ 			J722S_IOPAD(0x014c, PIN_INPUT, 0) /* (AC25) RGMII1_RD0 */
+@@ -272,38 +273,68 @@
+ 			J722S_IOPAD(0x012c, PIN_OUTPUT, 0) /* (AF25) RGMII1_TX_CTL */
+ 		>;
+ 	};
+-};
+ 
+-&cpsw3g {
+-	status = "okay";
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&rgmii1_pins_default>;
+-};
++	main_gpio0_pins_default: main-gpio0-default-pins {
++		pinctrl-single,pins = <
++			J722S_IOPAD(0x007c, PIN_OUTPUT_PULLUP, 7) /* (T23) GPMC0_CLK.GPIO0_31 GPIO6 DO2 */
++			J722S_IOPAD(0x0094, PIN_OUTPUT_PULLUP, 7) /* (P26) GPMC0_BE1n.GPIO0_36 GPIO7 DO3 */
+ 
+-&cpsw3g_mdio {
+-	status = "okay";
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&mdio_pins_default>;
++			// RECOVERY KEY
++			J722S_IOPAD(0x000c, PIN_INPUT, 7) /* (K27) OSPI0_D0.GPIO0_3 GPIO_RESETn */
+ 
+-	cpsw3g_phy0: ethernet-phy@0 {
+-		reg = <0>;
+-		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
+-		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
+-		ti,min-output-impedance;
++			// BOARD ID
++			J722S_IOPAD(0x00b8, PIN_INPUT, 7) /* (W27) VOUT0_DATA0.GPIO0_45 BID0 */
++			J722S_IOPAD(0x00bc, PIN_INPUT, 7) /* (W25) VOUT0_DATA1.GPIO0_46 BID1 */
++
++			J722S_IOPAD(0x00cc, PIN_INPUT, 7) /* (W21) VOUT0_DATA5.GPIO0_50 BID2 */
++			J722S_IOPAD(0x00d0, PIN_INPUT, 7) /* (Y26) VOUT0_DATA6.GPIO0_51 BID3 */
++
++			// POWER ENABLE
++			J722S_IOPAD(0x0010, PIN_OUTPUT_PULLUP, 7) /* (L27) OSPI0_D1.GPIO0_4 COM_PWR_EN */
++			J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 PWR_EN1 */
++			J722S_IOPAD(0x00c4, PIN_OUTPUT_PULLUP, 7) /* (W23) VOUT0_DATA3.GPIO0_48 PWR_EN2 */
++
++			// Reset_M.2
++			J722S_IOPAD(0x002c, PIN_INPUT, 7) /* (K26) OSPI0_CSn0.GPIO0_11 */
++
++			// PCIE_RSTN1
++			J722S_IOPAD(0x0028, PIN_INPUT, 7) /* (M27) OSPI0_D7.GPIO0_10 */
++		>;
+ 	};
+-};
+ 
+-&cpsw_port1 {
+-	phy-mode = "rgmii-rxid";
+-	phy-handle = <&cpsw3g_phy0>;
++	main_gpio1_pins_default: main-gpio1-default-pins {
++		pinctrl-single,pins = <
++			// RS232/485
++			J722S_IOPAD(0x01f0, PIN_INPUT_PULLDOWN, 7) /* (A23) EXT_REFCLK1.GPIO1_30 COM1_SEL H-232 L-485 */
++			J722S_IOPAD(0x01b0, PIN_INPUT_PULLDOWN, 7) /* (F24) MCASP0_ACLKR.GPIO1_14 COM2_SEL H-232 L-485 */
++
++			// BOARD ID
++			J722S_IOPAD(0x01a0, PIN_INPUT, 7) /* (F23) MCASP0_AXR0.GPIO1_10 */
++			J722S_IOPAD(0x019c, PIN_INPUT, 7) /* (B25) MCASP0_AXR1.GPIO1_9 */
++
++			// PWREN_M2
++			J722S_IOPAD(0x0194, PIN_INPUT, 7) /* (A25) MCASP0_AXR3.GPIO1_7 */
++
++			// MPCIE3V3_EN
++			J722S_IOPAD(0x01a8, PIN_INPUT, 7) /* (C26) MCASP0_AFSX.GPIO1_12 */
++		>;
++	};
+ };
+ 
+-&cpsw_port2 {
+-	status = "disabled";
++&main_gpio0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_gpio0_pins_default>;
+ };
+ 
+ &main_gpio1 {
+ 	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_gpio1_pins_default>;
++};
++
++&mcu_gpio0 {
++	status = "disabled";
+ };
+ 
+ &main_uart0 {
+@@ -327,8 +358,8 @@
+ 
+ 	wkup_i2c0_pins_default: wkup-i2c0-default-pins {
+ 		pinctrl-single,pins = <
+-			J722S_MCU_IOPAD(0x04c, PIN_INPUT_PULLUP, 0)	/* (C7) WKUP_I2C0_SCL */
+-			J722S_MCU_IOPAD(0x050, PIN_INPUT_PULLUP, 0)	/* (C6) WKUP_I2C1_SDA */
++			J722S_MCU_IOPAD(0x04c, PIN_INPUT_PULLUP, 0)	/* (B9) WKUP_I2C0_SCL */
++			J722S_MCU_IOPAD(0x050, PIN_INPUT_PULLUP, 0)	/* (D11) WKUP_I2C1_SDA */
+ 		>;
+ 		bootph-all;
+ 	};
+@@ -356,146 +387,6 @@
+ 	clock-frequency = <400000>;
+ 	status = "okay";
+ 	bootph-all;
+-
+-	exp1: gpio@23 {
+-		compatible = "ti,tca6424";
+-		reg = <0x23>;
+-		gpio-controller;
+-		#gpio-cells = <2>;
+-		gpio-line-names = "TRC_MUX_SEL", "OSPI/ONAND_MUX_SEL",
+-				  "MCASP1_FET_SEL", "CTRL_PM_I2C_OE#",
+-				  "CSI_VIO_SEL", "USB2.0_MUX_SEL",
+-				  "CSI01_MUX_SEL_2", "CSI23_MUX_SEL_2",
+-				  "LMK1_OE1", "LMK1_OE0",
+-				  "LMK2_OE0", "LMK2_OE1",
+-				  "GPIO_RGMII1_RST#", "GPIO_AUD_RSTn",
+-				  "GPIO_eMMC_RSTn", "GPIO_uSD_PWR_EN",
+-				  "USER_LED2", "MCAN0_STB",
+-				  "PCIe0_1L_RC_RSTz", "PCIe0_1L_PRSNT#",
+-				  "ENET1_EXP_SPARE2", "ENET1_EXP_PWRDN",
+-				  "PD_I2ENET1_I2CMUX_SELC_IRQ", "ENET1_EXP_RESETZ";
+-		bootph-all;
+-	};
+-};
+-
+-&ospi0 {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&ospi0_pins_default>;
+-	status = "okay";
+-
+-	flash@0 {
+-		compatible = "jedec,spi-nor";
+-		reg = <0x0>;
+-		spi-tx-bus-width = <8>;
+-		spi-rx-bus-width = <8>;
+-		spi-max-frequency = <25000000>;
+-		cdns,tshsl-ns = <60>;
+-		cdns,tsd2d-ns = <60>;
+-		cdns,tchsh-ns = <60>;
+-		cdns,tslch-ns = <60>;
+-		cdns,read-delay = <4>;
+-		bootph-all;
+-
+-		partitions {
+-			compatible = "fixed-partitions";
+-			#address-cells = <1>;
+-			#size-cells = <1>;
+-
+-			partition@0 {
+-				label = "ospi.tiboot3";
+-				reg = <0x00 0x80000>;
+-			};
+-
+-			partition@80000 {
+-				label = "ospi.tispl";
+-				reg = <0x80000 0x200000>;
+-			};
+-
+-			partition@280000 {
+-				label = "ospi.u-boot";
+-				reg = <0x280000 0x400000>;
+-			};
+-
+-			partition@680000 {
+-				label = "ospi.env";
+-				reg = <0x680000 0x40000>;
+-			};
+-
+-			partition@6c0000 {
+-				label = "ospi.env.backup";
+-				reg = <0x6c0000 0x40000>;
+-			};
+-
+-			partition@800000 {
+-				label = "ospi.rootfs";
+-				reg = <0x800000 0x37c0000>;
+-			};
+-
+-			partition@3fc0000 {
+-				bootph-all;
+-				label = "ospi.phypattern";
+-				reg = <0x3fc0000 0x40000>;
+-			};
+-		};
+-	};
+-
+-	ospi0_nand: nand@0 {
+-		compatible = "spi-nand";
+-		reg = <0x0>;
+-		spi-tx-bus-width = <8>;
+-		spi-rx-bus-width = <8>;
+-		spi-max-frequency = <25000000>;
+-		cdns,tshsl-ns = <60>;
+-		cdns,tsd2d-ns = <60>;
+-		cdns,tchsh-ns = <60>;
+-		cdns,tslch-ns = <60>;
+-		cdns,read-delay = <2>;
+-		#address-cells = <1>;
+-		#size-cells = <1>;
+-		bootph-all;
+-
+-		partitions {
+-			compatible = "fixed-partitions";
+-			#address-cells = <1>;
+-			#size-cells = <1>;
+-
+-			partition@0 {
+-				label = "ospi_nand.tiboot3";
+-				reg = <0x0 0x80000>;
+-			};
+-
+-			partition@80000 {
+-				label = "ospi_nand.tispl";
+-				reg = <0x80000 0x200000>;
+-			};
+-
+-			partition@280000 {
+-				label = "ospi_nand.u-boot";
+-				reg = <0x280000 0x400000>;
+-			};
+-
+-			partition@680000 {
+-				label = "ospi_nand.env";
+-				reg = <0x680000 0x40000>;
+-			};
+-
+-			partition@6c0000 {
+-				label = "ospi_nand.env.backup";
+-				reg = <0x6c0000 0x40000>;
+-			};
+-
+-			partition@2000000 {
+-				label = "ospi_nand.rootfs";
+-				reg = <0x2000000 0x5fc0000>;
+-			};
+-
+-			partition@7fc0000 {
+-				bootph-all;
+-				label = "ospi_nand.phypattern";
+-				reg = <0x7fc0000 0x40000>;
+-			};
+-		};
+-	};
+ };
+ 
+ &sdhci0 {
+@@ -520,43 +411,32 @@
+ 	bootph-all;
+ };
+ 
+-&serdes0_ln_ctrl {
+-	idle-states = <J722S_SERDES0_LANE0_USB>;
+-};
+-
+-&serdes0 {
++&cpsw3g {
+ 	status = "okay";
+-	serdes0_usb_link: phy@0 {
+-		reg = <0>;
+-		cdns,num-lanes = <1>;
+-		#phy-cells = <0>;
+-		cdns,phy-type = <PHY_TYPE_USB3>;
+-		resets = <&serdes_wiz0 1>;
+-	};
++	pinctrl-names = "default";
++	pinctrl-0 = <&rgmii1_pins_default>;
+ };
+ 
+-&usbss0 {
++&cpsw3g_mdio {
+ 	status = "okay";
+-	ti,vbus-divider;
+-};
++	pinctrl-names = "default";
++	pinctrl-0 = <&mdio_pins_default>;
+ 
+-&usb0 {
+-	dr_mode = "otg";
+-	usb-role-switch;
++	cpsw3g_phy0: ethernet-phy@0 {
++		reg = <0>;
++		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
++		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
++		ti,min-output-impedance;
++	};
+ };
+ 
+-&usbss1 {
+-	status = "okay";
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&main_usb1_pins_default>;
+-	ti,vbus-divider;
++&cpsw_port1 {
++	phy-mode = "rgmii-rxid";
++	phy-handle = <&cpsw3g_phy0>;
+ };
+ 
+-&usb1 {
+-	dr_mode = "host";
+-	maximum-speed = "super-speed";
+-	phys = <&serdes0_usb_link>;
+-	phy-names = "cdns3,usb3-phy";
++&cpsw_port2 {
++	status = "disabled";
+ };
+ 
+ &mailbox0_cluster0 {
+@@ -639,3 +519,43 @@
+ 	memory-region = <&c7x_1_dma_memory_region>,
+ 			<&c7x_1_memory_region>;
+ };
++
++&serdes0_ln_ctrl {
++	idle-states = <J722S_SERDES0_LANE0_USB>;
++};
++
++&serdes0 {
++	status = "okay";
++	serdes0_usb_link: phy@0 {
++		reg = <0>;
++		cdns,num-lanes = <1>;
++		#phy-cells = <0>;
++		cdns,phy-type = <PHY_TYPE_USB3>;
++		resets = <&serdes_wiz0 1>;
++	};
++};
++
++&usbss0 {
++	status = "okay";
++	ti,vbus-divider;
++};
++
++&usb0 {
++	dr_mode = "host";
++	usb-role-switch;
++};
++
++&usbss1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&main_usb1_pins_default>;
++	ti,vbus-divider;
++};
++
++&usb1 {
++	dr_mode = "host";
++	maximum-speed = "super-speed";
++	phys = <&serdes0_usb_link>;
++	phy-names = "cdns3,usb3-phy";
++};
++
+diff --git a/arch/arm/include/asm/handoff.h b/arch/arm/include/asm/handoff.h
+index 0790d2ab1e2..cf1e90fb438 100644
+--- a/arch/arm/include/asm/handoff.h
++++ b/arch/arm/include/asm/handoff.h
+@@ -16,6 +16,7 @@
+  */
+ struct arch_spl_handoff {
+ 	ulong usable_ram_top;
++	u32 boot_device;
+ };
+ 
+ #endif
+diff --git a/arch/arm/mach-k3/common.c b/arch/arm/mach-k3/common.c
+index a371b002863..7153a423327 100644
+--- a/arch/arm/mach-k3/common.c
++++ b/arch/arm/mach-k3/common.c
+@@ -725,3 +725,13 @@ void setup_qos(void)
+ 		writel(qos_data[i].val, (uintptr_t)qos_data[i].reg);
+ }
+ #endif
++
++#if CONFIG_IS_ENABLED(HANDOFF)
++int handoff_arch_save(struct spl_handoff *ho)
++{
++	ho->arch.boot_device = spl_boot_device();
++	printf("Current boot device id is 0x%x\n",spl_boot_device());
++	return 0;
++}
++#endif
++
+diff --git a/board/ti/j722s/evm.c b/board/ti/j722s/evm.c
+index bda761f6757..4d7f00b1b90 100644
+--- a/board/ti/j722s/evm.c
++++ b/board/ti/j722s/evm.c
+@@ -15,8 +15,9 @@
+ #include <env.h>
+ #include <fdt_support.h>
+ #include <spl.h>
+-#include "../common/fdt_ops.h"
++#include <linux/delay.h>
+ 
++#include "../common/fdt_ops.h"
+ #include "../common/k3-ddr-init.h"
+ 
+ ofnode cadence_qspi_get_subnode(struct udevice *dev)
+@@ -30,45 +31,9 @@ ofnode cadence_qspi_get_subnode(struct udevice *dev)
+ 	return dev_read_first_subnode(dev);
+ }
+ 
+-/* Enables the spi-nand dts node, if onboard mux is set to spinand */
+-static void __maybe_unused detect_enable_spinand(void *blob)
+-{
+-	if (IS_ENABLED(CONFIG_DM_GPIO) && IS_ENABLED(CONFIG_OF_LIBFDT)) {
+-		struct gpio_desc desc = {0};
+-		char *ospi_mux_sel_gpio = "gpio@23_1";
+-		int nand_offset, nor_offset;
+-
+-		if (dm_gpio_lookup_name(ospi_mux_sel_gpio, &desc))
+-			return;
+-
+-		if (dm_gpio_request(&desc, ospi_mux_sel_gpio))
+-			return;
+-
+-		if (dm_gpio_set_dir_flags(&desc, GPIOD_IS_IN))
+-			return;
+-
+-		nand_offset = fdt_node_offset_by_compatible(blob, -1, "spi-nand");
+-		if (nand_offset < 0)
+-			return;
+-
+-		nor_offset = fdt_node_offset_by_compatible(blob,
+-							   fdt_parent_offset(blob, nand_offset),
+-							   "jedec,spi-nor");
+-
+-		if (dm_gpio_get_value(&desc)) {
+-			fdt_status_okay(blob, nand_offset);
+-			fdt_del_node(blob, nor_offset);
+-		} else {
+-			fdt_del_node(blob, nand_offset);
+-		}
+-	}
+-}
+-
+ #if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+ int ft_board_setup(void *blob, struct bd_info *bd)
+ {
+-	detect_enable_spinand(blob);
+-
+ 	return 0;
+ }
+ #endif
+@@ -101,8 +66,6 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
+ 	} else {
+ 		fixup_memory_node(spl_image);
+ 	}
+-
+-	detect_enable_spinand(spl_image->fdt_addr);
+ }
+ #endif
+ 
+@@ -110,6 +73,47 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
+ int board_late_init(void)
+ {
+ 	ti_set_fdt_env(NULL, NULL);
++
++#if CONFIG_IS_ENABLED(HANDOFF)
++	/* Read peripheral SPL was loaded from */
++	if (gd->spl_handoff) {
++		switch (gd->spl_handoff->arch.boot_device) {
++			case BOOT_DEVICE_MMC1:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				env_set("mmcdev", "0");
++				break;
++			case BOOT_DEVICE_MMC2:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				env_set("mmcdev", "1");
++				break;
++			default:
++				break;
++		}
++	}
++#endif	
+ 	return 0;
+ }
+ #endif
++
++int mmc_get_env_dev(void)
++{
++	int mmcdev = 0;
++#if CONFIG_IS_ENABLED(HANDOFF)
++	/* Read peripheral SPL was loaded from */
++	if (gd->spl_handoff) {
++		switch (gd->spl_handoff->arch.boot_device) {
++			case BOOT_DEVICE_MMC1:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				mmcdev = 0;
++				break;
++			case BOOT_DEVICE_MMC2:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				mmcdev = 1;
++				break;
++			default:
++				break;
++		}
++	}
++#endif
++	return mmcdev;
++}
+diff --git a/configs/j722s_evm_a53_defconfig b/configs/j722s_evm_a53_defconfig
+index ea4bb06ff5e..ac9c9517c6d 100644
+--- a/configs/j722s_evm_a53_defconfig
++++ b/configs/j722s_evm_a53_defconfig
+@@ -7,11 +7,17 @@ CONFIG_SPL_LIBCOMMON_SUPPORT=y
+ CONFIG_SPL_LIBGENERIC_SUPPORT=y
+ CONFIG_NR_DRAM_BANKS=2
+ CONFIG_SOC_K3_J722S=y
++#CONFIG_TARGET_J722S_A53_ECU1270=y
+ CONFIG_TARGET_J722S_A53_EVM=y
+ CONFIG_HAS_CUSTOM_SYS_INIT_SP_ADDR=y
+ CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x80480000
+ CONFIG_SF_DEFAULT_SPEED=25000000
+ CONFIG_ENV_SIZE=0x40000
++CONFIG_BOOTDELAY=1
++CONFIG_AUTOBOOT_KEYED=y
++CONFIG_AUTOBOOT_PROMPT="Press ENTER to stop autoboot in %d seconds\n"
++CONFIG_AUTOBOOT_STOP_STR="\x0d"
++CONFIG_BOOT_MMC_DEV_0=y
+ CONFIG_DM_GPIO=y
+ CONFIG_SPL_DM_SPI=y
+ CONFIG_DEFAULT_DEVICE_TREE="k3-j722s-evm"
+@@ -31,6 +37,7 @@ CONFIG_SPL_LOAD_FIT_ADDRESS=0x81000000
+ CONFIG_BOOTSTD_FULL=y
+ CONFIG_BOOTSTD_DEFAULTS=y
+ CONFIG_BOARD_LATE_INIT=y
++CONFIG_BOOTCOMMAND="run envboot; run bsp_bootcmd;"
+ CONFIG_SPL_MAX_SIZE=0x58000
+ CONFIG_SPL_PAD_TO=0x0
+ CONFIG_SPL_HAS_BSS_LINKER_SECTION=y
+@@ -64,6 +71,7 @@ CONFIG_CMD_CLK=y
+ CONFIG_CMD_DFU=y
+ CONFIG_CMD_DM=y
+ CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPIO_READ=y
+ CONFIG_CMD_GPT=y
+ CONFIG_CMD_I2C=y
+ CONFIG_CMD_MMC=y
+@@ -163,10 +171,14 @@ CONFIG_SPL_SYSRESET=y
+ CONFIG_SYSRESET_TI_SCI=y
+ CONFIG_DM_THERMAL=y
+ CONFIG_USB=y
++CONFIG_USB_HOST=y
+ CONFIG_DM_USB_GADGET=y
+ CONFIG_SPL_DM_USB_GADGET=y
+ CONFIG_SPL_USB_HOST=y
+ CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_CDNS3=y
++CONFIG_SPL_USB_CDNS3_HOST=y
++CONFIG_USB_CDNS3_HOST=y
+ CONFIG_USB_DWC3=y
+ CONFIG_USB_DWC3_GENERIC=y
+ CONFIG_SPL_USB_DWC3_GENERIC=y
+diff --git a/include/configs/j722s_evm.h b/include/configs/j722s_evm.h
+index 10f2e2d3edc..c7c86a475c7 100644
+--- a/include/configs/j722s_evm.h
++++ b/include/configs/j722s_evm.h
+@@ -11,4 +11,81 @@
+ /* Now for the remaining common defines */
+ #include <configs/ti_armv7_common.h>
+ 
++#define FITIMAGEFILE_DEFAULT        "conf-ti_k3-j722s-ecu1270.dtb"
++
++/* Initial environment variables */
++
++#define CFG_RAUC_SCRIPT_SETTINGS \
++    "BOOT_ORDER=system0 system1\0" \
++    "BOOT_system0_LEFT=3\0" \
++    "BOOT_system1_LEFT=3\0" \
++    \
++    "select_rauc_mmcpart=" \
++        "setenv mmcpart;" \
++        "setenv RAUC_SLOT;" \
++        "for BOOT_SLOT in ${BOOT_ORDER}; do " \
++            "if test x${mmcpart} != x; then " \
++                "echo 'skip remaining slots';" \
++            "elif test x${BOOT_SLOT} = xsystem0; then " \
++                "if test 0x${BOOT_system0_LEFT} -gt 0; then " \
++                    "echo 'Checking if system0 exists...';" \
++                    "if ext4ls mmc ${mmcdev}:2 /; then " \
++                        "echo 'Found valid slot system0, ${BOOT_system0_LEFT} attempts remaining';" \
++                        "setexpr BOOT_system0_LEFT ${BOOT_system0_LEFT} - 1;" \
++                        "setenv mmcpart 2;" \
++                        "setenv RAUC_SLOT system0;" \
++                    "else " \
++                        "echo 'system0 not found, skipping';" \
++                    "fi;" \
++                "fi;" \
++            "elif test x${BOOT_SLOT} = xsystem1; then " \
++                "if test 0x${BOOT_system1_LEFT} -gt 0; then " \
++                    "echo 'Checking if system1 exists...';" \
++                    "if ext4ls mmc ${mmcdev}:3 /; then " \
++                        "echo 'Found valid slot system1, ${BOOT_system1_LEFT} attempts remaining';" \
++                        "setexpr BOOT_system1_LEFT ${BOOT_system1_LEFT} - 1;" \
++                        "setenv mmcpart 3;" \
++                        "setenv RAUC_SLOT system1;" \
++                    "else " \
++                        "echo 'system1 not found, skipping';" \
++                    "fi;" \
++                "fi;" \
++            "fi;" \
++        "done;\0" \
++	"set_rauc_args_mmc=" \
++        "if test -n ${mmcpart}; then " \
++            "setenv args_mmc 'setenv bootargs console=${console} root=/dev/mmcblk${mmcdev}p${mmcpart} rauc.slot=${RAUC_SLOT} rw rootfstype=ext4 rootwait; saveenv';" \
++            "saveenv;" \
++        "else " \
++            "echo 'No valid slot found, resetting tries to 3';" \
++            "setenv BOOT_system0_LEFT 3;" \
++            "setenv BOOT_system1_LEFT 3;" \
++            "saveenv;" \
++            "reset;" \
++        "fi\0" \
++    "rauc_bootcmd=" \
++        "echo 'Running RAUC bootcmd ...'; " \
++        "run select_rauc_mmcpart;" \
++		"printenv mmcpart;" \
++		"printenv BOOT_system0_LEFT;" \
++		"printenv BOOT_system1_LEFT;" \
++		"run set_rauc_args_mmc;" \
++        "echo 'Starting kernel fitImage';" \
++        "printenv args_mmc;" \
++        "run args_mmc;" \
++        "printenv loadfitimage;" \
++        "run loadfitimage;\0"        
++    
++#define CFG_RAUC_ENV_SETTINGS \
++    "name_fit_config="FITIMAGEFILE_DEFAULT"\0" \
++    "loadfitimage=ext4load mmc ${mmcdev}:${mmcpart} ${addr_fit} boot/${name_fit};bootm ${addr_fit}#${name_fit_config}\0"
++
++
++#define CFG_EXTRA_ENV_SETTINGS          \
++        CFG_RAUC_ENV_SETTINGS \
++        CFG_RAUC_SCRIPT_SETTINGS
++
++#define CONFIG_SYS_USB_FAT_BOOT_PARTITION 1
++
+ #endif /* __CONFIG_J722S_EVM_H */
++
+-- 
+2.43.0
+
