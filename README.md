@@ -194,8 +194,8 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 > cd <YOCTO_PATH>/source
 > git clone https://github.com/rauc/meta-rauc -b scarthgap
 > cd ../build
-> bitbake-layers add-layer ./meta-rauc/
-> cd ../source/meta-ecu-1270/recipes-core/rauc/files
+> bitbake-layers add-layer ../build/meta-rauc/
+> cd ../sources/meta-ecu-1270/recipes-core/rauc/files
 > openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out ca.cert.pem
 > cd <YOCTO_PATH>/build
 > bitbake -k tisdk-base-image
