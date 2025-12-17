@@ -1,0 +1,249 @@
+From 0249f3e7de6a13a84c31770d6c503f5e61e6f80f Mon Sep 17 00:00:00 2001
+From: Samuel Cheng <samuelogre@gmail.com>
+Date: Wed, 17 Dec 2025 14:06:16 +0800
+Subject: [PATCH 1/2] source code mod for ECU1270
+
+---
+ arch/arm/include/asm/handoff.h |  1 +
+ arch/arm/mach-k3/common.c      |  9 ++++
+ board/ti/j722s/evm.c           | 78 ++++++++++++++++++----------------
+ include/configs/j722s_evm.h    | 76 +++++++++++++++++++++++++++++++++
+ 4 files changed, 127 insertions(+), 37 deletions(-)
+
+diff --git a/arch/arm/include/asm/handoff.h b/arch/arm/include/asm/handoff.h
+index 0790d2ab1e2..cf1e90fb438 100644
+--- a/arch/arm/include/asm/handoff.h
++++ b/arch/arm/include/asm/handoff.h
+@@ -16,6 +16,7 @@
+  */
+ struct arch_spl_handoff {
+ 	ulong usable_ram_top;
++	u32 boot_device;
+ };
+ 
+ #endif
+diff --git a/arch/arm/mach-k3/common.c b/arch/arm/mach-k3/common.c
+index 59601908d2c..de15da23636 100644
+--- a/arch/arm/mach-k3/common.c
++++ b/arch/arm/mach-k3/common.c
+@@ -661,6 +661,15 @@ void setup_qos(void)
+ }
+ #endif
+ 
++#if CONFIG_IS_ENABLED(HANDOFF)
++int handoff_arch_save(struct spl_handoff *ho)
++{
++	ho->arch.boot_device = spl_boot_device();
++	printf("Current boot device id is 0x%x\n",spl_boot_device());
++	return 0;
++}
++#endif
++
+ int shutdown_mcu_r5_core1(void)
+ {
+ 	struct ti_sci_handle *ti_sci = get_ti_sci_handle();
+diff --git a/board/ti/j722s/evm.c b/board/ti/j722s/evm.c
+index 46d598aadb8..5ff550d566c 100644
+--- a/board/ti/j722s/evm.c
++++ b/board/ti/j722s/evm.c
+@@ -16,7 +16,6 @@
+ #include <fdt_support.h>
+ #include <spl.h>
+ #include <asm/arch/k3-ddr.h>
+-#include "../common/fdt_ops.h"
+ 
+ ofnode cadence_qspi_get_subnode(struct udevice *dev)
+ {
+@@ -29,44 +28,9 @@ ofnode cadence_qspi_get_subnode(struct udevice *dev)
+ 	return dev_read_first_subnode(dev);
+ }
+ 
+-/* Enables the spi-nand dts node, if onboard mux is set to spinand */
+-static void __maybe_unused detect_enable_spinand(void *blob)
+-{
+-	if (IS_ENABLED(CONFIG_DM_GPIO) && IS_ENABLED(CONFIG_OF_LIBFDT)) {
+-		struct gpio_desc desc = {0};
+-		char *ospi_mux_sel_gpio = "gpio@23_1";
+-		int nand_offset, nor_offset;
+-
+-		if (dm_gpio_lookup_name(ospi_mux_sel_gpio, &desc))
+-			return;
+-
+-		if (dm_gpio_request(&desc, ospi_mux_sel_gpio))
+-			return;
+-
+-		if (dm_gpio_set_dir_flags(&desc, GPIOD_IS_IN))
+-			return;
+-
+-		nand_offset = fdt_node_offset_by_compatible(blob, -1, "spi-nand");
+-		if (nand_offset < 0)
+-			return;
+-
+-		nor_offset = fdt_node_offset_by_compatible(blob,
+-							   fdt_parent_offset(blob, nand_offset),
+-							   "jedec,spi-nor");
+-
+-		if (dm_gpio_get_value(&desc)) {
+-			fdt_status_okay(blob, nand_offset);
+-			fdt_del_node(blob, nor_offset);
+-		} else {
+-			fdt_del_node(blob, nand_offset);
+-		}
+-	}
+-}
+-
+ #if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+ int ft_board_setup(void *blob, struct bd_info *bd)
+ {
+-	detect_enable_spinand(blob);
+ 
+ 	return 0;
+ }
+@@ -87,7 +51,6 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
+ 		fixup_memory_node(spl_image);
+ 	}
+ 
+-	detect_enable_spinand(spl_image->fdt_addr);
+ }
+ #endif
+ 
+@@ -95,10 +58,51 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
+ int board_late_init(void)
+ {
+ 	ti_set_fdt_env(NULL, NULL);
++
++#if CONFIG_IS_ENABLED(HANDOFF)
++	/* Read peripheral SPL was loaded from */
++	if (gd->spl_handoff) {
++		switch (gd->spl_handoff->arch.boot_device) {
++			case BOOT_DEVICE_MMC1:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				env_set("mmcdev", "0");
++				break;
++			case BOOT_DEVICE_MMC2:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				env_set("mmcdev", "1");
++				break;
++			default:
++				break;
++		}
++	}
++#endif	
+ 	return 0;
+ }
+ #endif
+ 
++int mmc_get_env_dev(void)
++{
++	int mmcdev = 0;
++#if CONFIG_IS_ENABLED(HANDOFF)
++	/* Read peripheral SPL was loaded from */
++	if (gd->spl_handoff) {
++		switch (gd->spl_handoff->arch.boot_device) {
++			case BOOT_DEVICE_MMC1:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				mmcdev = 0;
++				break;
++			case BOOT_DEVICE_MMC2:
++				printf("[uboot] Current boot device id is %x\n",gd->spl_handoff->arch.boot_device);
++				mmcdev = 1;
++				break;
++			default:
++				break;
++		}
++	}
++#endif
++	return mmcdev;
++}
++
+ #if IS_ENABLED(CONFIG_SPL_BOARD_INIT)
+ void spl_board_init(void)
+ {
+diff --git a/include/configs/j722s_evm.h b/include/configs/j722s_evm.h
+index 10f2e2d3edc..481643a1f31 100644
+--- a/include/configs/j722s_evm.h
++++ b/include/configs/j722s_evm.h
+@@ -11,4 +11,80 @@
+ /* Now for the remaining common defines */
+ #include <configs/ti_armv7_common.h>
+ 
++#define FITIMAGEFILE_DEFAULT        "conf-ti_k3-j722s-ecu1270.dtb"
++
++/* Initial environment variables */
++
++#define CFG_RAUC_SCRIPT_SETTINGS \
++    "BOOT_ORDER=system0 system1\0" \
++    "BOOT_system0_LEFT=3\0" \
++    "BOOT_system1_LEFT=3\0" \
++    \
++    "select_rauc_mmcpart=" \
++        "setenv mmcpart;" \
++        "setenv RAUC_SLOT;" \
++        "for BOOT_SLOT in ${BOOT_ORDER}; do " \
++            "if test x${mmcpart} != x; then " \
++                "echo 'skip remaining slots';" \
++            "elif test x${BOOT_SLOT} = xsystem0; then " \
++                "if test 0x${BOOT_system0_LEFT} -gt 0; then " \
++                    "echo 'Checking if system0 exists...';" \
++                    "if ext4ls mmc ${mmcdev}:2 /; then " \
++                        "echo 'Found valid slot system0, ${BOOT_system0_LEFT} attempts remaining';" \
++                        "setexpr BOOT_system0_LEFT ${BOOT_system0_LEFT} - 1;" \
++                        "setenv mmcpart 2;" \
++                        "setenv RAUC_SLOT system0;" \
++                    "else " \
++                        "echo 'system0 not found, skipping';" \
++                    "fi;" \
++                "fi;" \
++            "elif test x${BOOT_SLOT} = xsystem1; then " \
++                "if test 0x${BOOT_system1_LEFT} -gt 0; then " \
++                    "echo 'Checking if system1 exists...';" \
++                    "if ext4ls mmc ${mmcdev}:3 /; then " \
++                        "echo 'Found valid slot system1, ${BOOT_system1_LEFT} attempts remaining';" \
++                        "setexpr BOOT_system1_LEFT ${BOOT_system1_LEFT} - 1;" \
++                        "setenv mmcpart 3;" \
++                        "setenv RAUC_SLOT system1;" \
++                    "else " \
++                        "echo 'system1 not found, skipping';" \
++                    "fi;" \
++                "fi;" \
++            "fi;" \
++        "done;\0" \
++	"set_rauc_args_mmc=" \
++        "if test -n ${mmcpart}; then " \
++            "setenv args_mmc 'setenv bootargs console=${console} root=/dev/mmcblk${mmcdev}p${mmcpart} rauc.slot=${RAUC_SLOT} rw rootfstype=ext4 rootwait; saveenv';" \
++            "saveenv;" \
++        "else " \
++            "echo 'No valid slot found, resetting tries to 3';" \
++            "setenv BOOT_system0_LEFT 3;" \
++            "setenv BOOT_system1_LEFT 3;" \
++            "saveenv;" \
++            "reset;" \
++        "fi\0" \
++    "rauc_bootcmd=" \
++        "echo 'Running RAUC bootcmd ...'; " \
++        "run select_rauc_mmcpart;" \
++		"printenv mmcpart;" \
++		"printenv BOOT_system0_LEFT;" \
++		"printenv BOOT_system1_LEFT;" \
++		"run set_rauc_args_mmc;" \
++        "echo 'Starting kernel fitImage';" \
++        "printenv args_mmc;" \
++        "run args_mmc;" \
++        "printenv loadfitimage;" \
++        "run loadfitimage;\0"        
++    
++#define CFG_RAUC_ENV_SETTINGS \
++    "name_fit_config="FITIMAGEFILE_DEFAULT"\0" \
++    "loadfitimage=ext4load mmc ${mmcdev}:${mmcpart} ${addr_fit} boot/${name_fit};bootm ${addr_fit}#${name_fit_config}\0"
++
++
++#define CFG_EXTRA_ENV_SETTINGS          \
++        CFG_RAUC_ENV_SETTINGS \
++        CFG_RAUC_SCRIPT_SETTINGS
++
++#define CONFIG_SYS_USB_FAT_BOOT_PARTITION 1
++
+ #endif /* __CONFIG_J722S_EVM_H */
+-- 
+2.43.0
+
