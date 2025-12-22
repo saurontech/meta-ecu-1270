@@ -4,7 +4,9 @@ SRC_URI += " \
 	file://keys \
 "
 
-SRC_URI:append:j722s-ecu1270 = " file://0001-u-boot-ti-staging-init-commit-for-ecu1270-es2-1.patch "
+#SRC_URI:append:j722s-ecu1270 = " file://0001-u-boot-ti-staging-init-commit-for-ecu1270-es2-1.patch "
+SRC_URI:append:j722s-ecu1270 = " file://0001-source-code-mod-for-ECU1270.patch "
+SRC_URI:append:j722s-ecu1270 = " file://0002-modify-dts-for-ecu1270.patch "
 SRC_URI:append:j722s-ecu1270 = " file://rauc_env.cfg "
 
 do_configure:prepend() {
