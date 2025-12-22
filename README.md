@@ -7,7 +7,7 @@ We intend to release our changes as a yocto meta-layer on top of the standard TI
 
 ```sh
 > git clone https://git.ti.com/git/arago-project/oe-layersetup.git ti-yocto
-> cd ./ti-yocto/ && ./oe-layertool-setup.sh -f configs/processor-sdk-linux/processor-sdk-linux-10_01_08_01.txt
+> cd ./ti-yocto/ && ./oe-layertool-setup.sh -f configs/processor-sdk-linux/processor-sdk-linux-11_01_02_01.txt
 > cd ./build/ && source ./conf/setenv
 > export MACHINE=j722s-ecu1270  
 ```
@@ -64,6 +64,31 @@ The wic image is named: tisdk-base-image-j722s-ecu1270.rootfs.wic.xz
 
 ```sh
 > xzcat tisdk-base-image-j722s-ecu1270.rootfs.wic.xz | sudo dd of=/dev/sdb bs=1M iflag=fullblock oflag=direct conv=fsync
+```
+
+# Setup HDMI Display
+
+If you need desktop software and graphical services, use `tisdk-default-image` as the build target:
+
+```sh
+> bitbake tisdk-default-image
+```
+
+After the build completes, deploy the image to an SD card and boot the system. Once booted, connect an HDMI cable to a display and the system will automatically show the Weston graphical interface.
+
+> [!Note]
+> Due to Weston's pointer and keyboard operation mechanism, you must connect both a mouse and a keyboard simultaneously to properly focus on the terminal and input text normally.
+
+In the Weston desktop environment, you can open a terminal and run Qt example applications. 
+
+### Quick Testing Method
+
+```bash
+# List common test examples
+ls /usr/share/examples/widgets/widgets/
+
+# Run calculator example
+QT_QPA_PLATFORM=wayland /usr/share/examples/widgets/widgets/calculator/bin/calculator
 ```
 
 # Setup SecureBoot
