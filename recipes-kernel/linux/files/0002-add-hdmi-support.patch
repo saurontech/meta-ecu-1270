@@ -1,19 +1,19 @@
-From 191583a4da93203b3d19f70c5d7ccab8bc426a4e Mon Sep 17 00:00:00 2001
+From 618adb6408e62d58936ed5ba855877600fbda3a5 Mon Sep 17 00:00:00 2001
 From: "suricata.lu" <suricata.lu@gmail.com>
 Date: Thu, 18 Dec 2025 00:59:25 +0800
 Subject: [PATCH] add-hdmi-support
 
 ---
- arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts |  304 ++--
+ arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts |  295 ++--
  arch/arm64/configs/defconfig                |    1 +
  drivers/gpu/drm/bridge/Kconfig              |   11 +
  drivers/gpu/drm/bridge/Makefile             |    1 +
  drivers/gpu/drm/bridge/lontium-lt9611uxd.c  | 1387 +++++++++++++++++++
- 5 files changed, 1601 insertions(+), 103 deletions(-)
+ 5 files changed, 1594 insertions(+), 101 deletions(-)
  create mode 100644 drivers/gpu/drm/bridge/lontium-lt9611uxd.c
 
 diff --git a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
-index 95adcbc52352..3a535464763d 100644
+index 95adcbc52352..dd32b288ae14 100644
 --- a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
 +++ b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
 @@ -11,11 +11,12 @@
@@ -57,11 +57,10 @@ index 95adcbc52352..3a535464763d 100644
  	vsys_io_1v8: regulator-vsys-io-1v8 {
  		compatible = "regulator-fixed";
  		regulator-name = "vsys_io_1v8";
-@@ -215,6 +205,33 @@ vsys_io_1v2: regulator-vsys-io-1v2 {
+@@ -215,6 +205,31 @@ vsys_io_1v2: regulator-vsys-io-1v2 {
  		regulator-boot-on;
  	};
  
-+	 /* [HDMI] LT9611 晶片的核心電源 (1.2V) */
 +    lt9611_1v2: lt9611-vdd12-regulator {
 +        compatible = "regulator-fixed";
 +        regulator-name = "LT9611_1V2";
@@ -71,7 +70,6 @@ index 95adcbc52352..3a535464763d 100644
 +		regulator-boot-on;
 +    };
 +
-+	/* [HDMI] LT9611 晶片的 I/O 電源 (3.3V) */
 +    lt9611_3v3: lt9611-3v3-regulator {
 +        compatible = "regulator-fixed";
 +        regulator-name = "LT9611_3V3";
@@ -91,7 +89,7 @@ index 95adcbc52352..3a535464763d 100644
  	leds {
  		compatible = "gpio-leds";
  		pinctrl-names = "default";
-@@ -225,6 +242,42 @@ PL-1 {
+@@ -225,6 +240,42 @@ PL-1 {
  			gpios = <&main_gpio1 13 GPIO_ACTIVE_HIGH>;
  			default-state = "off";
  		};
@@ -134,21 +132,11 @@ index 95adcbc52352..3a535464763d 100644
  	};
  
  	transceiver0: can-phy0 {
-@@ -274,22 +327,34 @@ clk_ext_cec: clk-ext-cec {
- 		};
- 	};
- 
-+	/* [HDMI] 定義實體的 HDMI 插座 */
- 	hdmi-out {
- 		compatible = "hdmi-connector";
- 		label = "hdmi";
--		type = "a";
-+		type = "a";  /* Type A 就是標準大小的 HDMI 接頭 */
+@@ -281,15 +332,25 @@ hdmi-out {
  
  		port {
  			hdmi_connector_in: endpoint {
 -				remote-endpoint = <&adv7535_out>;
-+				/* 接到 LT9611 晶片的輸出端 (lt9611_out) */
 +				remote-endpoint = <&lt9611_out>;
  			};
  		};
@@ -173,13 +161,7 @@ index 95adcbc52352..3a535464763d 100644
  	main_i2c0_pins_default: main-i2c0-default-pins {
  		pinctrl-single,pins = <
  			J722S_IOPAD(0x01e0, PIN_INPUT_PULLUP, 0) /* (D23) I2C0_SCL */
-@@ -411,11 +476,12 @@ J722S_IOPAD(0x00b0, PIN_OUTPUT, 5) /* (P22) MCAN1_TX */
- 		>;
- 	};
- 
--	mdio_pins_default: mdio-default-pins {
-+	mdio_pins_default: mdio-default-pins {  // Management Data Input/Output => Ethernet PHY 控制介面
- 		pinctrl-single,pins = <
+@@ -416,6 +477,7 @@ mdio_pins_default: mdio-default-pins {
  			J722S_IOPAD(0x0160, PIN_OUTPUT, 0) /* (AC24) MDIO0_MDC */
  			J722S_IOPAD(0x015c, PIN_INPUT, 0) /* (AD25) MDIO0_MDIO */
  		>;
@@ -187,7 +169,7 @@ index 95adcbc52352..3a535464763d 100644
  	};
  
  	rgmii1_pins_default: rgmii1-default-pins {
-@@ -433,6 +499,7 @@ J722S_IOPAD(0x0140, PIN_OUTPUT, 0) /* (AF24) RGMII1_TD3 */
+@@ -433,6 +495,7 @@ J722S_IOPAD(0x0140, PIN_OUTPUT, 0) /* (AF24) RGMII1_TD3 */
  			J722S_IOPAD(0x0130, PIN_OUTPUT, 0) /* (AG26) RGMII1_TXC */
  			J722S_IOPAD(0x012c, PIN_OUTPUT, 0) /* (AF25) RGMII1_TX_CTL */
  		>;
@@ -195,7 +177,7 @@ index 95adcbc52352..3a535464763d 100644
  	};
  
  	rgmii2_pins_default: rgmii2-default-pins {
-@@ -454,15 +521,27 @@ J722S_IOPAD(0x00d8, PIN_INPUT, 2) /* (AA24) VOUT0_DATA8.RGMII2_TX_CTL */
+@@ -454,15 +517,27 @@ J722S_IOPAD(0x00d8, PIN_INPUT, 2) /* (AA24) VOUT0_DATA8.RGMII2_TX_CTL */
  
  	led_pins_default: led-default-pins {
  		pinctrl-single,pins = <
@@ -226,7 +208,7 @@ index 95adcbc52352..3a535464763d 100644
  		>;
  	};
  
-@@ -474,14 +553,14 @@ J722S_IOPAD(0x0258, PIN_INPUT, 0) /* (B27) USB1_DRVVBUS */
+@@ -474,14 +549,14 @@ J722S_IOPAD(0x0258, PIN_INPUT, 0) /* (B27) USB1_DRVVBUS */
  	
  	main_dsi_int_pins_default: main-dsi-int-default-pins {
  		pinctrl-single,pins = <
@@ -244,7 +226,7 @@ index 95adcbc52352..3a535464763d 100644
  
  			// BOARD ID
  			J722S_IOPAD(0x00b8, PIN_INPUT, 7) /* (W27) VOUT0_DATA0.GPIO0_45 BID0 */
-@@ -496,10 +575,10 @@ J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 PWR_EN1
+@@ -496,10 +571,10 @@ J722S_IOPAD(0x00d4, PIN_OUTPUT_PULLUP, 7) /* (Y27) VOUT0_DATA7.GPIO0_52 PWR_EN1
  			J722S_IOPAD(0x00c4, PIN_OUTPUT_PULLUP, 7) /* (W23) VOUT0_DATA3.GPIO0_48 PWR_EN2 */			
  
  			// Reset_M.2
@@ -257,7 +239,7 @@ index 95adcbc52352..3a535464763d 100644
  		>;
  	};
  
-@@ -514,18 +593,19 @@ J722S_IOPAD(0x01a0, PIN_INPUT, 7) /* (F23) MCASP0_AXR0.GPIO1_10 */
+@@ -514,18 +589,19 @@ J722S_IOPAD(0x01a0, PIN_INPUT, 7) /* (F23) MCASP0_AXR0.GPIO1_10 */
  			J722S_IOPAD(0x019c, PIN_INPUT, 7) /* (B25) MCASP0_AXR1.GPIO1_9 */
  
  			// PWREN_M2
@@ -284,7 +266,7 @@ index 95adcbc52352..3a535464763d 100644
  };
  
  &main_gpio0 {
-@@ -666,6 +746,51 @@ &wkup_i2c0 {
+@@ -666,6 +742,51 @@ &wkup_i2c0 {
  	bootph-all;
  };
  
@@ -336,7 +318,7 @@ index 95adcbc52352..3a535464763d 100644
  &main_i2c3 {
  	status = "okay";
  	pinctrl-names = "default";
-@@ -683,6 +808,11 @@ s35390a: s35390a@30 {
+@@ -683,6 +804,11 @@ s35390a: s35390a@30 {
  		reg = <0x30>;
  		status = "okay";
  	};
@@ -348,7 +330,7 @@ index 95adcbc52352..3a535464763d 100644
  };
  
  &sdhci0 {
-@@ -753,6 +883,7 @@ &cpsw3g_mdio {
+@@ -753,6 +879,7 @@ &cpsw3g_mdio {
  
  	cpsw3g_phy0: ethernet-phy@0 {
  		reg = <0>;
@@ -356,7 +338,7 @@ index 95adcbc52352..3a535464763d 100644
  		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
  		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
  		ti,min-output-impedance;
-@@ -760,6 +891,7 @@ cpsw3g_phy0: ethernet-phy@0 {
+@@ -760,6 +887,7 @@ cpsw3g_phy0: ethernet-phy@0 {
  
  	cpsw3g_phy1: ethernet-phy@9 {
  		reg = <9>;
@@ -364,7 +346,7 @@ index 95adcbc52352..3a535464763d 100644
  		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
  		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
  		ti,min-output-impedance;
-@@ -767,18 +899,23 @@ cpsw3g_phy1: ethernet-phy@9 {
+@@ -767,18 +895,23 @@ cpsw3g_phy1: ethernet-phy@9 {
  };
  
  &cpsw_port1 {
@@ -389,7 +371,7 @@ index 95adcbc52352..3a535464763d 100644
  		ti,mbox-rx = <0 0 0>;
  		ti,mbox-tx = <1 0 0>;
  	};
-@@ -786,6 +923,7 @@ mbox_r5_0: mbox-r5-0 {
+@@ -786,6 +919,7 @@ mbox_r5_0: mbox-r5-0 {
  
  &mailbox0_cluster1 {
  	status = "okay";
@@ -397,7 +379,7 @@ index 95adcbc52352..3a535464763d 100644
  	mbox_mcu_r5_0: mbox-mcu-r5-0 {
  		ti,mbox-rx = <0 0 0>;
  		ti,mbox-tx = <1 0 0>;
-@@ -794,6 +932,7 @@ mbox_mcu_r5_0: mbox-mcu-r5-0 {
+@@ -794,6 +928,7 @@ mbox_mcu_r5_0: mbox-mcu-r5-0 {
  
  &mailbox0_cluster2 {
  	status = "okay";
@@ -405,7 +387,7 @@ index 95adcbc52352..3a535464763d 100644
  	mbox_c7x_0: mbox-c7x-0 {
  		ti,mbox-rx = <0 0 0>;
  		ti,mbox-tx = <1 0 0>;
-@@ -802,6 +941,7 @@ mbox_c7x_0: mbox-c7x-0 {
+@@ -802,6 +937,7 @@ mbox_c7x_0: mbox-c7x-0 {
  
  &mailbox0_cluster3 {
  	status = "okay";
@@ -413,7 +395,7 @@ index 95adcbc52352..3a535464763d 100644
  	mbox_main_r5_0: mbox-main-r5-0 {
  		ti,mbox-rx = <0 0 0>;
  		ti,mbox-tx = <1 0 0>;
-@@ -830,7 +970,7 @@ &wkup_r5fss0 {
+@@ -830,7 +966,7 @@ &wkup_r5fss0 {
  };
  
  &wkup_r5fss0_core0 {
@@ -422,7 +404,7 @@ index 95adcbc52352..3a535464763d 100644
  	memory-region = <&wkup_r5fss0_core0_dma_memory_region>,
  			<&wkup_r5fss0_core0_memory_region>;
  };
-@@ -856,17 +996,17 @@ &main_r5fss0_core0 {
+@@ -856,17 +992,17 @@ &main_r5fss0_core0 {
  };
  
  &c7x_0 {
@@ -442,7 +424,7 @@ index 95adcbc52352..3a535464763d 100644
  };
  
  &serdes_ln_ctrl {
-@@ -874,6 +1014,10 @@ &serdes_ln_ctrl {
+@@ -874,6 +1010,10 @@ &serdes_ln_ctrl {
  		      <J722S_SERDES1_LANE0_PCIE0_LANE0>;
  };
  
@@ -453,7 +435,7 @@ index 95adcbc52352..3a535464763d 100644
  &serdes0 {
  	status = "okay";
  	serdes0_usb_link: phy@0 {
-@@ -885,7 +1029,12 @@ serdes0_usb_link: phy@0 {
+@@ -885,7 +1025,12 @@ serdes0_usb_link: phy@0 {
  	};
  };
  
@@ -466,7 +448,7 @@ index 95adcbc52352..3a535464763d 100644
  	serdes1_pcie_link: phy@0 {
  		reg = <0>;
  		cdns,num-lanes = <1>;
-@@ -895,6 +1044,13 @@ serdes1_pcie_link: phy@0 {
+@@ -895,6 +1040,13 @@ serdes1_pcie_link: phy@0 {
  	};
  };
  
@@ -480,7 +462,7 @@ index 95adcbc52352..3a535464763d 100644
  &usbss0 {
  	ti,vbus-divider;
  	status = "okay";
-@@ -919,13 +1075,7 @@ &usb1 {
+@@ -919,13 +1071,6 @@ &usb1 {
  	phy-names = "cdns3,usb3-phy";
  };
  
@@ -491,11 +473,10 @@ index 95adcbc52352..3a535464763d 100644
 -	phy-names = "pcie-phy";
 -};
 -
-+/*啟用 DSI 的物理層 (PHY)*/
  &dphy_tx0 {
  	status = "okay";
  };
-@@ -933,7 +1083,6 @@ &dphy_tx0 {
+@@ -933,7 +1078,6 @@ &dphy_tx0 {
  &dss1 {
  	status = "okay";
  
@@ -503,7 +484,7 @@ index 95adcbc52352..3a535464763d 100644
  	clocks = <&k3_clks 232 8>,
  		 <&k3_clks 232 0>,
  		 <&k3_clks 232 4>;
-@@ -945,6 +1094,12 @@ &dss1 {
+@@ -945,6 +1089,12 @@ &dss1 {
  	assigned-clock-parents = <&k3_clks 241 2>,	/* PLL 17 HDMI */
  				 <&k3_clks 240 1>,	/* PLL 18 DSI */
  				 <&k3_clks 245 2>;	/* DSS1-DPI0 */
@@ -516,7 +497,7 @@ index 95adcbc52352..3a535464763d 100644
  };
  
  &dss1_ports {
-@@ -973,7 +1128,7 @@ ports {
+@@ -973,7 +1123,7 @@ ports {
  		port@0 {
  			reg = <0>;
  			dsi0_out: endpoint {
@@ -525,7 +506,7 @@ index 95adcbc52352..3a535464763d 100644
  			};
  		};
  
-@@ -986,60 +1141,3 @@ dsi0_in: endpoint {
+@@ -986,60 +1136,3 @@ dsi0_in: endpoint {
  	};
  };
  
