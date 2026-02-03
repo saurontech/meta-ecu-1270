@@ -1,0 +1,46 @@
+From 4fc54b31dead72525b5469071241ceb5db55e0d5 Mon Sep 17 00:00:00 2001
+From: Samuel Cheng <samuelogre@gmail.com>
+Date: Tue, 3 Feb 2026 11:20:20 +0800
+Subject: [PATCH 5/5] enable phy on u-boot for SI testing
+
+---
+ dts/upstream/src/arm64/ti/k3-j722s-evm.dts | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/dts/upstream/src/arm64/ti/k3-j722s-evm.dts b/dts/upstream/src/arm64/ti/k3-j722s-evm.dts
+index 1fe93ab972b..6c888acc3f4 100644
+--- a/dts/upstream/src/arm64/ti/k3-j722s-evm.dts
++++ b/dts/upstream/src/arm64/ti/k3-j722s-evm.dts
+@@ -448,15 +448,28 @@
+ 		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
+ 		ti,min-output-impedance;
+ 	};
++
++	cpsw3g_phy1: ethernet-phy@9 {
++		reg = <9>;
++		bootph-all;
++		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
++		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
++		ti,min-output-impedance;
++	};
+ };
+ 
+ &cpsw_port1 {
++	status = "okay";
++
+ 	phy-mode = "rgmii-rxid";
+ 	phy-handle = <&cpsw3g_phy0>;
+ };
+ 
+ &cpsw_port2 {
+-	status = "disabled";
++	status = "okay";
++	
++	phy-mode = "rgmii-rxid";
++	phy-handle = <&cpsw3g_phy1>;
+ };
+ 
+ &mailbox0_cluster0 {
+-- 
+2.43.0
+

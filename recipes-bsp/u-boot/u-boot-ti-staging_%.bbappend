@@ -6,7 +6,10 @@ SRC_URI += " \
 
 #SRC_URI:append:j722s-ecu1270 = " file://0001-u-boot-ti-staging-init-commit-for-ecu1270-es2-1.patch "
 SRC_URI:append:j722s-ecu1270 = " file://0001-source-code-mod-for-ECU1270.patch "
-SRC_URI:append:j722s-ecu1270 = " file://0002-modify-dts-for-ecu1270.patch "
+src_uri:append:j722s-ecu1270 = " file://0002-modify-dts-for-ecu1270.patch "
+src_uri:append:j722s-ecu1270 = " file://0003-add-ddr-config-for-4g-version.patch "
+src_uri:append:j722s-ecu1270 = " file://0004-addd-dtsi-for-2G-DDR-used-by-sunday-powers.patch "
+src_uri:append:j722s-ecu1270 = " file://0005-enable-phy-on-u-boot-for-SI-testing.patch "
 SRC_URI:append:j722s-ecu1270 = " file://rauc_env.cfg "
 
 do_configure:prepend() {
