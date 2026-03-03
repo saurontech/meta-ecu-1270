@@ -553,7 +553,8 @@ Expand the image file to target size (e.g., 25GB):
 sudo truncate -s 25G tisdk-base-image-j722s-ecu1270.rootfs.wic
 ```
 
-> **Technical Note:** The `truncate` command expands the file size but doesn't actually allocate disk space (sparse file) until data is written.
+> [!Note]
+>  The `truncate` command expands the file size but doesn't actually allocate disk space (sparse file) until data is written.
 
 #### Step 3: Recreate Loop Device
 
@@ -579,7 +580,7 @@ Execute in parted interactive interface:
 (parted) quit
 ```
 
-> [!Notes]
+> [!Note]
 > 
 > - `resizepart` does not move the partition start point, only adjusts the end position
 > - This operation only modifies the partition table and does not affect the file system
