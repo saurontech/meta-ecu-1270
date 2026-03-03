@@ -185,6 +185,7 @@ The U-Boot can boot into the fit image and reference the device tree with the fo
 # Setup RAUC for firmware update service
 
 ## Environment setup & Build
+
 Uncomment the line __IMAGE_INSTALL:append = " rauc adv-start "__ in file __<YOCTO_PATH>/source/meta-ecu-1270/conf/machine
 /j722s-ecu1270.conf__  
 
@@ -228,23 +229,23 @@ Setup the RAUC layer, create a new CA, and build the image with the following co
 
 2. __Copy Files to SD__  
    mount the newly partitioned SD and copy files to the corresponding locations with the following commands:   
-   
+
 > [!NOTE]
 >  If the target CPU has HS(high security, wich is required for running secure boot) enabled.
 > Copy the tiboot3 marked with the **hs** tag(tiboot3-j722s-hs-evm.bin) instead.
-   
-   ```sh
-   > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
-   > cp ./tiboot3.bin <SD_MNT_PATH>/boot
-   > cp ./tispl.bin <SD_MNT_PATH>/boot
-   > cp ./u-boot.img <SD_MNT_PATH>/boot
-   > tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs0
-   > tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs1
-   ```
-   
+
+```sh
+> cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
+> cp ./tiboot3.bin <SD_MNT_PATH>/boot
+> cp ./tispl.bin <SD_MNT_PATH>/boot
+> cp ./u-boot.img <SD_MNT_PATH>/boot
+> tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs0
+> tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs1
+```
+
    unmout the SD card and it should be ready to boot.  
-   
-   ## Create RAUC bundle
+
+## Create RAUC bundle
 
 3. Installing RAUC on the host PC, referencing: https://github.com/rauc/rauc/tree/v1.14?tab=readme-ov-file#building-from-sources  
 
@@ -311,3 +312,9 @@ Activated: rootfs.1 (system1)
 === Slot Status ===
 ...
 ```
+
+# Appendex
+
+1. [Building Ubuntu/Debian root file systems.](./DebianRootfsOnTiYocto_en.md)
+
+2. 
