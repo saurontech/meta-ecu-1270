@@ -139,10 +139,6 @@ If operating on a non-ARM64 host, configure QEMU user-mode emulation:
 ```bash
 sudo cp /usr/bin/qemu-aarch64-static ~/work/ecu1270-rootfs/usr/bin/
 ```
-
-> [!Note]
-> On ARM64 native platforms (e.g., Raspberry Pi 4), this step can be skipped.
-
 #### 4.4 Configure RootFS Base System
 
 Create chroot management script `~/work/ch-rootfs.sh`:
