@@ -8,16 +8,17 @@ This document describes how to integrate the official TI Yocto Kernel with a cus
 
 This integration solution uses the following system components:
 
-| Component | Source | Description |
-|------|------|------|
-| **Bootloader** | TI Yocto | tiboot3.bin, tispl.bin, u-boot.img |
-| **Kernel** | TI Yocto | Linux Kernel 6.6.x with TI BSP, DTS, driver modules |
-| **RootFS** | Debootstrap | Debian 12 (Bookworm) / Ubuntu 24.04 (Noble) |
-| **Image Format** | TI Yocto | WIC (OpenEmbedded Image Creator) |
+| Component        | Source      | Description                                         |
+| ---------------- | ----------- | --------------------------------------------------- |
+| **Bootloader**   | TI Yocto    | tiboot3.bin, tispl.bin, u-boot.img                  |
+| **Kernel**       | TI Yocto    | Linux Kernel 6.6.x with TI BSP, DTS, driver modules |
+| **RootFS**       | Debootstrap | Debian 12 (Bookworm) / Ubuntu 24.04 (Noble)         |
+| **Image Format** | TI Yocto    | WIC (OpenEmbedded Image Creator)                    |
 
 ## Prerequisites
 
 ### Environment Requirements
+
 - Host OS: Ubuntu 20.04+ / Debian 11+ (x86_64 or ARM64)
 - Working Directory: `~/work`
 
@@ -73,10 +74,10 @@ lsblk /dev/loop2
 
 **Expected Partition Configuration:**
 
-| Partition | Type | Mount Point | Purpose |
-|------|------|--------|------|
-| loop2p1 | FAT32 | /boot | U-Boot, MLO, environment variables |
-| loop2p2 | ext4 | / | Root filesystem |
+| Partition | Type  | Mount Point | Purpose                            |
+| --------- | ----- | ----------- | ---------------------------------- |
+| loop2p1   | FAT32 | /boot       | U-Boot, MLO, environment variables |
+| loop2p2   | ext4  | /           | Root filesystem                    |
 
 ---
 
@@ -139,10 +140,10 @@ If operating on a non-ARM64 host, configure QEMU user-mode emulation:
 sudo cp /usr/bin/qemu-aarch64-static ~/work/ecu1270-rootfs/usr/bin/
 ```
 
-> **Note:** On ARM64 native platforms (e.g., Raspberry Pi 4), this step can be skipped.
+> [!Note]
+> On ARM64 native platforms (e.g., Raspberry Pi 4), this step can be skipped.
 
 #### 4.4 Configure RootFS Base System
-
 
 Create chroot management script `~/work/ch-rootfs.sh`:
 
@@ -195,7 +196,6 @@ else
  echo 1st parameter : ${1}
  echo 2nd parameter : ${2}
 fi
-
 ```
 
 Grant execute permission:
@@ -239,7 +239,8 @@ passwd
 exit
 ```
 
-> **Technical Note:** The chroot environment requires mounting `/proc`, `/sys`, `/dev` and other virtual file systems for proper operation of package managers and systemd.
+> [!Note]
+> The chroot environment requires mounting `/proc`, `/sys`, `/dev` and other virtual file systems for proper operation of package managers and systemd.
 
 ---
 
@@ -265,7 +266,8 @@ sudo cp -a /mnt/yocto_rootfs/lib/modules/${KERNEL_VER} \
     ~/work/ecu1270-rootfs/lib/modules/
 ```
 
-> **Note:** The `KERNEL_VER` variable value must match the actual output from the previous `ls` command. If the version number contains special characters, use double quotes.
+> [!Note]
+> The `KERNEL_VER` variable value must match the actual output from the previous `ls` command. If the version number contains special characters, use double quotes.
 
 #### 5.2 Rebuild Module Dependencies
 
@@ -282,6 +284,7 @@ ls -1 ~/work/ecu1270-rootfs/lib/modules/${KERNEL_VER}/ | sort
 ```
 
 **Expected Output:**
+
 ```
 kernel/
 modules.alias
@@ -310,7 +313,6 @@ sudo cp -a /mnt/yocto_rootfs/lib/firmware \
     ~/work/ecu1270-rootfs/lib/
 ```
 
-
 ---
 
 ### Step 7: Replace RootFS in WIC Image
@@ -321,7 +323,8 @@ sudo cp -a /mnt/yocto_rootfs/lib/firmware \
 sudo rm -rf /mnt/yocto_rootfs/*
 ```
 
-> **Warning:** Ensure `/mnt/yocto_rootfs` is correctly mounted to avoid deleting host system files.
+> [!Warning]
+> Ensure `/mnt/yocto_rootfs` is correctly mounted to avoid deleting host system files.
 
 #### 7.2 Deploy Debian RootFS
 
@@ -332,6 +335,7 @@ sudo rsync -a ~/work/ecu1270-rootfs/ /mnt/yocto_rootfs/
 ```
 
 **rsync Parameter Explanation:**
+
 - `-a`: archive mode, preserves permissions, timestamps, and symbolic links
 
 #### 7.3 Install FIT Image
@@ -345,10 +349,13 @@ sudo cp ~/work/ecu1270_ubuntu_dataset_nov_17/fitImage \
 sudo chmod 644 /mnt/yocto_rootfs/boot/fitImage
 ```
 
-> **Technical Detail:** TI Yocto U-Boot loads the FIT Image using the following command:
+> [!Note]
+> __TI Yocto U-Boot loads the FIT Image using the following command:__  
+> 
 > ```
 > loadfitimage=ext4load mmc ${mmcdev}:${mmcpart} ${addr_fit} boot/${name_fit};bootm ${addr_fit}#${name_fit_config}
 > ```
+> 
 > The FIT Image is loaded from the `/boot` directory of the rootfs partition (`mmcblk0p2`), not from the FAT32 boot partition.
 
 ---
@@ -413,9 +420,11 @@ sudo sync
 sudo eject /dev/sdd
 ```
 
-> **Warning:** Please ensure the `of=` parameter points to the correct device. An incorrect path will result in irreversible data loss.
+> [!Warning] 
+> Please ensure the `of=` parameter points to the correct device. An incorrect path will result in irreversible data loss.
 
 **dd Parameter Explanation:**
+
 - `bs=1M`: Use 1MB block size to improve write performance
 - `iflag=fullblock`: Ensure complete reading of input blocks
 - `oflag=direct`: Bypass kernel page cache, write directly to device
@@ -428,16 +437,17 @@ sudo eject /dev/sdd
 
 After successful deployment, the SD card contains the following components:
 
-| Component | Location | Description |
-|------|------|------|
-| **SPL/MLO** | Boot partition | TI first-stage bootloader (tiboot3.bin) |
-| **U-Boot** | Boot partition | tispl.bin, u-boot.img |
-| **FIT Image** | /boot/fitImage | Kernel + DTB + initramfs |
-| **RootFS** | / | Debian 12 / Ubuntu 24.04 |
-| **Kernel Modules** | /lib/modules | TI BSP modules (v6.6.x) |
-| **Firmware** | /lib/firmware | TI hardware firmware blobs |
+| Component          | Location       | Description                             |
+| ------------------ | -------------- | --------------------------------------- |
+| **SPL/MLO**        | Boot partition | TI first-stage bootloader (tiboot3.bin) |
+| **U-Boot**         | Boot partition | tispl.bin, u-boot.img                   |
+| **FIT Image**      | /boot/fitImage | Kernel + DTB + initramfs                |
+| **RootFS**         | /              | Debian 12 / Ubuntu 24.04                |
+| **Kernel Modules** | /lib/modules   | TI BSP modules (v6.6.x)                 |
+| **Firmware**       | /lib/firmware  | TI hardware firmware blobs              |
 
 **Boot Sequence:**
+
 1. ROM Code → tiboot3.bin (R5F SPL)
 2. tiboot3.bin → tispl.bin (A53 SPL + ATF + OPTEE)
 3. tispl.bin → u-boot.img
@@ -487,7 +497,6 @@ sudo systemctl restart networking
 sudo systemctl status networking
 ```
 
-
 ### A.3 Configure DNS Resolution
 
 **Usage:**
@@ -510,7 +519,6 @@ ip addr show eth0
 ping -c 4 8.8.8.8
 ping -c 4 google.com
 ```
-
 
 ---
 
@@ -575,7 +583,8 @@ Execute in parted interactive interface:
 (parted) quit
 ```
 
-> **Notes:**
+> [!Notes]
+> 
 > - `resizepart` does not move the partition start point, only adjusts the end position
 > - This operation only modifies the partition table and does not affect the file system
 
@@ -594,6 +603,7 @@ sudo resize2fs ${LOOP_DEV}p2
 ```
 
 **Expected Output:**
+
 ```
 resize2fs 1.47.0 (5-Feb-2023)
 Resizing the filesystem on /dev/loop2p2 to 6553600 (4k) blocks.
