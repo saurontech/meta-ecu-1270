@@ -1,0 +1,28 @@
+From 32676450df24cd43182852b0ca7d3f7b3eb27e5e Mon Sep 17 00:00:00 2001
+From: Samuel Cheng <samuelogre@gmail.com>
+Date: Tue, 24 Mar 2026 16:32:26 +0800
+Subject: [PATCH] CPU used on ecu1270 has no VPU and RTI15
+
+---
+ arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
+index dd32b288ae14..43f98851d6ff 100644
+--- a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
++++ b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
+@@ -1136,3 +1136,11 @@ dsi0_in: endpoint {
+ 	};
+ };
+ 
++&vpu {
++	status = "disabled";
++};
++
++&main_rti15 {
++	status = "disabled";
++};
++
+-- 
+2.43.0
+
