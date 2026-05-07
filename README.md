@@ -90,7 +90,23 @@ ls /usr/share/examples/widgets/widgets/
 # Run calculator example
 QT_QPA_PLATFORM=wayland /usr/share/examples/widgets/widgets/calculator/bin/calculator
 ```
+## Create SDK for Yocto
+```console
+foo@bar:~/yocto/build$ bitbake -c populate_sdk tisdk-base-imag
+foo@bar:~/yocto/build$ sh ./deploy-ti/sdk/arago-2025.01-toolchain-2025.01.sh
+Arago SDK installer version 2025.01
+===================================
+Enter target directory for SDK (default: /opt/arago-2025.01): ~/my_sdk
+You are about to install the SDK to "/home/foo/test/my_sdk". Proceed [Y/n]? y
+Extracting SDK...................................................................................................................................................................................................................done
+Setting it up...done
+SDK has been successfully set up and is ready to be used.
+Each time you wish to use the SDK in a new shell session, you need to source the environment setup script e.g.
+ $ . /home/foo/my_sdk/environment-setup-aarch64-oe-linux
+foo@bar:~/yocto/build$ . environment-setup-aarch64-oe-linux
+foo@bar:~/yocto/build$ make modules_prepare -C $SDKTARGETSYSROOT/usr/src/kernel
 
+```
 # Setup SecureBoot
 
 ## Setup environment
