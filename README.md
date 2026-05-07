@@ -92,7 +92,7 @@ QT_QPA_PLATFORM=wayland /usr/share/examples/widgets/widgets/calculator/bin/calcu
 ```
 ## Create SDK for Yocto
 ```console
-foo@bar:~/yocto/build$ bitbake -c populate_sdk tisdk-base-imag
+foo@bar:~/yocto/build$ bitbake -c populate_sdk tisdk-base-image
 foo@bar:~/yocto/build$ sh ./deploy-ti/sdk/arago-2025.01-toolchain-2025.01.sh
 Arago SDK installer version 2025.01
 ===================================
