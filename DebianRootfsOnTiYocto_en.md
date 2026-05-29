@@ -24,7 +24,7 @@ This integration solution uses the following system components:
 
 ### Preparation Materials
 
-Obtain the following files from the Yocto build system (included in `ecu1270_ubuntu_dataset_nov_17.tar.xz`):
+Obtain the following files from the Yocto build system:
 
 1. **WIC Image**: `tisdk-base-image-j722s-ecu1270.rootfs.wic.xz`
    - Contains complete partition table, bootloader, and original Yocto rootfs
