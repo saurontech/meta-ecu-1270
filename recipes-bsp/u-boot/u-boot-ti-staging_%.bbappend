@@ -10,7 +10,12 @@ SRC_URI:append:j722s-ecu1270 = " file://0002-modify-dts-for-ecu1270.patch "
 SRC_URI:append:j722s-ecu1270 = " file://0003-add-ddr-config-for-4g-version.patch "
 SRC_URI:append:j722s-ecu1270 = " file://0004-addd-dtsi-for-2G-DDR-used-by-sunday-powers.patch "
 SRC_URI:append:j722s-ecu1270 = " file://0005-enable-phy-on-u-boot-for-SI-testing.patch "
-SRC_URI:append:j722s-ecu1270 = " file://rauc_env.cfg "
+
+# Platform baseline — always. Sets default bootcmd = run normal_bootcmd.
+SRC_URI:append:j722s-ecu1270 = " file://board-base.cfg "
+
+# RAUC bootcmd override — ONLY when enabled, and AFTER board-base.cfg so it wins.
+SRC_URI:append:j722s-ecu1270 = "${@' file://rauc_env.cfg' if d.getVar('RAUC_ENABLED') == '1' else ''}"
 
 do_configure:prepend() {
 	if [[ -f "${WORKDIR}/keys/custMpk.pem" ]] && [[ -f "${WORKDIR}/keys/custMpk.crt" ]] && [[ -f "${WORKDIR}/keys/custMpk.key" ]]; then
