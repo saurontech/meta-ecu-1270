@@ -1,0 +1,14 @@
+[Unit]
+Description=RAUC environment setup (device detection, /data mount, system.conf)
+DefaultDependencies=no
+After=local-fs.target
+Before=rauc.service
+RequiresMountsFor=/
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/rauc-setup-env.sh
+
+[Install]
+WantedBy=multi-user.target

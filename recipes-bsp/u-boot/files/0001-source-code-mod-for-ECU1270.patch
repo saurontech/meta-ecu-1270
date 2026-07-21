@@ -1,14 +1,14 @@
-From 0249f3e7de6a13a84c31770d6c503f5e61e6f80f Mon Sep 17 00:00:00 2001
+From 5dfaef956b0fe88623f85d3d8c224b330faa9d57 Mon Sep 17 00:00:00 2001
 From: Samuel Cheng <samuelogre@gmail.com>
 Date: Wed, 17 Dec 2025 14:06:16 +0800
-Subject: [PATCH 1/2] source code mod for ECU1270
+Subject: [PATCH] source code mod for ECU1270
 
 ---
  arch/arm/include/asm/handoff.h |  1 +
  arch/arm/mach-k3/common.c      |  9 ++++
- board/ti/j722s/evm.c           | 78 ++++++++++++++++++----------------
- include/configs/j722s_evm.h    | 76 +++++++++++++++++++++++++++++++++
- 4 files changed, 127 insertions(+), 37 deletions(-)
+ board/ti/j722s/evm.c           | 78 +++++++++++++++--------------
+ include/configs/j722s_evm.h    | 91 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 142 insertions(+), 37 deletions(-)
 
 diff --git a/arch/arm/include/asm/handoff.h b/arch/arm/include/asm/handoff.h
 index 0790d2ab1e2..cf1e90fb438 100644
@@ -160,10 +160,10 @@ index 46d598aadb8..5ff550d566c 100644
  void spl_board_init(void)
  {
 diff --git a/include/configs/j722s_evm.h b/include/configs/j722s_evm.h
-index 10f2e2d3edc..481643a1f31 100644
+index 10f2e2d3edc..81cd1a654bc 100644
 --- a/include/configs/j722s_evm.h
 +++ b/include/configs/j722s_evm.h
-@@ -11,4 +11,80 @@
+@@ -11,4 +11,95 @@
  /* Now for the remaining common defines */
  #include <configs/ti_armv7_common.h>
  
@@ -171,6 +171,7 @@ index 10f2e2d3edc..481643a1f31 100644
 +
 +/* Initial environment variables */
 +
++/* --- RAUC A/B boot policy (env script; UNCHANGED) --------------------- */
 +#define CFG_RAUC_SCRIPT_SETTINGS \
 +    "BOOT_ORDER=system0 system1\0" \
 +    "BOOT_system0_LEFT=3\0" \
@@ -208,7 +209,7 @@ index 10f2e2d3edc..481643a1f31 100644
 +                "fi;" \
 +            "fi;" \
 +        "done;\0" \
-+	"set_rauc_args_mmc=" \
++    "set_rauc_args_mmc=" \
 +        "if test -n ${mmcpart}; then " \
 +            "setenv args_mmc 'setenv bootargs console=${console} root=/dev/mmcblk${mmcdev}p${mmcpart} rauc.slot=${RAUC_SLOT} rw rootfstype=ext4 rootwait; saveenv';" \
 +            "saveenv;" \
@@ -222,23 +223,37 @@ index 10f2e2d3edc..481643a1f31 100644
 +    "rauc_bootcmd=" \
 +        "echo 'Running RAUC bootcmd ...'; " \
 +        "run select_rauc_mmcpart;" \
-+		"printenv mmcpart;" \
-+		"printenv BOOT_system0_LEFT;" \
-+		"printenv BOOT_system1_LEFT;" \
-+		"run set_rauc_args_mmc;" \
++        "printenv mmcpart;" \
++        "printenv BOOT_system0_LEFT;" \
++        "printenv BOOT_system1_LEFT;" \
++        "run set_rauc_args_mmc;" \
 +        "echo 'Starting kernel fitImage';" \
 +        "printenv args_mmc;" \
 +        "run args_mmc;" \
 +        "printenv loadfitimage;" \
-+        "run loadfitimage;\0"        
-+    
-+#define CFG_RAUC_ENV_SETTINGS \
++        "run loadfitimage;\0"
++
++/* --- Common env shared by BOTH boot paths (RENAMED from CFG_RAUC_ENV_SETTINGS) --- */
++#define CFG_COMMON_ENV_SETTINGS \
 +    "name_fit_config="FITIMAGEFILE_DEFAULT"\0" \
 +    "loadfitimage=ext4load mmc ${mmcdev}:${mmcpart} ${addr_fit} boot/${name_fit};bootm ${addr_fit}#${name_fit_config}\0"
 +
++/* --- Normal (non-RAUC) single-rootfs boot --- */
++#define CFG_NORMAL_SCRIPT_SETTINGS \
++    "set_normal_args_mmc=" \
++        "setenv bootargs console=${console} " \
++            "root=/dev/mmcblk${mmcdev}p${mmcpart} " \
++            "rw rootfstype=ext4 rootwait\0" \
++    "normal_bootcmd=" \
++        "echo 'Running NORMAL bootcmd ...'; " \
++        "setenv mmcpart 2; " \
++        "run set_normal_args_mmc; " \
++        "printenv bootargs; " \
++        "run loadfitimage;\0"
 +
-+#define CFG_EXTRA_ENV_SETTINGS          \
-+        CFG_RAUC_ENV_SETTINGS \
++#define CFG_EXTRA_ENV_SETTINGS \
++        CFG_COMMON_ENV_SETTINGS \
++        CFG_NORMAL_SCRIPT_SETTINGS \
 +        CFG_RAUC_SCRIPT_SETTINGS
 +
 +#define CONFIG_SYS_USB_FAT_BOOT_PARTITION 1
