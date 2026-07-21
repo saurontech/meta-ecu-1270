@@ -1,0 +1,7 @@
+# Devices udev's automounter (/etc/udev/scripts/mount.sh) must never touch.
+# On this board mmcblk0 is eMMC and mmcblk1 is the SD card; neither is
+# removable media. Both hold the RAUC A/B slots, which must stay unmounted so
+# `rauc install` can write to the inactive slot, and /data, which is mounted
+# by rauc-setup-env.service instead. USB storage (/dev/sd*) is unaffected and
+# still automounts.
+/dev/mmcblk
