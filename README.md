@@ -223,139 +223,245 @@ The U-Boot can boot into the fit image and reference the device tree with the fo
 > bootm 0x90000000#conf-ti_k3-j722s-ecu1270.dtb
 ```
 
-# Setup RAUC for firmware update service
+# RAUC OTA (A/B update)
 
-## Environment setup & Build
-
-Uncomment the line __IMAGE_INSTALL:append = " rauc adv-start "__ in file __<YOCTO_PATH>/source/meta-ecu-1270/conf/machine
-/j722s-ecu1270.conf__  
-
-Setup the RAUC layer, create a new CA, and build the image with the following commands.   
-
-```sh
-> cd <YOCTO_PATH>/source
-> git clone https://github.com/rauc/meta-rauc -b scarthgap
-> cd ../build
-> bitbake-layers add-layer ../build/meta-rauc/
-> cd ../sources/meta-ecu-1270/recipes-core/rauc/files
-> openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out ca.cert.pem
-> cd <YOCTO_PATH>/build
-> bitbake -k tisdk-base-image
-```
-
-## Prepare Bootable SD card
-
-> [!Caution]
-> the following demo assumes that __sdb__ is the SD card,  
-> change according to your system setup.
+`meta-ecu-1270` includes built-in RAUC A/B OTA support. All RAUC-related variables are centralized in `conf/include/j722s-ecu1270-rauc.inc`. A single toggle in `local.conf`, combined with a one-time key generation, is all that is needed to build and deploy OTA bundles — there is no manual partitioning, `manifest.raucm`, or `rauc bundle` step anymore.
 
 > [!NOTE]
-> The same procedure can be modifed to prepare the eMMC.  
-> boot the device with a bootble SD card, and switch "/dev/sdb" to "/dev/mmcblk0", and "/dev/sdb*" to "/dev/mmcblk0p*".  
+> RAUC lives in the separate `meta-rauc` layer. If you have not added it yet:
+> ```sh
+> > cd <YOCTO_PATH>/sources
+> > git clone https://github.com/rauc/meta-rauc -b scarthgap
+> > cd <YOCTO_PATH>/build
+> > bitbake-layers add-layer ../sources/meta-rauc/
+> ```
 
-1. __Partition and Formate SD__
-   
-   ```sh
-   > umount /dev/sdb*
-   > parted -s /dev/sdb mklabel msdos
-   > parted -s /dev/sdb mkpart primary fat16 1049kB 135MB
-   > parted -s /dev/sdb mkpart primary ext4 135MB 3135MB
-   > parted -s /dev/sdb mkpart primary ext4 3135MB 6135MB
-   > mkfs.vfat /dev/sdb1 -n boot
-   > mkfs.ext4 /dev/sdb2 -L rootfs0
-   > mkfs.ext4 /dev/sdb3 -L rootfs1
-   > parted -s /dev/sdb set 1 lba on
-   > parted -s /dev/sdb set 1 boot on
-   ```
+## 1. Enable / Disable RAUC
 
-2. __Copy Files to SD__  
-   mount the newly partitioned SD and copy files to the corresponding locations with the following commands:   
-
-> [!NOTE]
->  If the target CPU has HS(high security, wich is required for running secure boot) enabled.
-> Copy the tiboot3 marked with the **hs** tag(tiboot3-j722s-hs-evm.bin) instead.
+Edit `build/conf/local.conf`:
 
 ```sh
-> cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
-> cp ./tiboot3.bin <SD_MNT_PATH>/boot
-> cp ./tispl.bin <SD_MNT_PATH>/boot
-> cp ./u-boot.img <SD_MNT_PATH>/boot
-> tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs0
-> tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C <SD_MNT_PATH>/rootfs1
+# Enable RAUC OTA (default: disabled)
+RAUC_ENABLED = "1"
 ```
 
-   unmout the SD card and it should be ready to boot.  
+When disabled, U-Boot boots via `normal_bootcmd` (a fixed single rootfs on `p2`); when enabled, U-Boot boots via `rauc_bootcmd` (A/B slot selection with a try-counter).
 
-## Create RAUC bundle
+## 2. One-time: Generate signing keys (**never store inside the layer**)
 
-3. Installing RAUC on the host PC, referencing: https://github.com/rauc/rauc/tree/v1.14?tab=readme-ov-file#building-from-sources  
+Keys are kept outside the layer at `${HOME}/.config/rauc-keys-ecu1270/` to prevent accidental commits or leaks. Only the public CA certificate (`ca.cert.pem`) is copied into the layer; the private signing key never enters version control.
 
-4. Generate rootfs.ext4  
-   Create a EXT4 image with the following commands:  
-   
-   ```sh
-   > cd <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270
-   > mkdir mountpoint
-   > mkdir content-dir
-   > mkdir rootfs
-   > tar Jxf tisdk-base-image-j722s-ecu1270.rootfs.tar.xz -C rootfs
-   > sudo dd if=/dev/zero of=./rootfs.ext4 bs=1M count=1024
-   > sudo mkfs.ext4 ./rootfs.ext4
-   > sudo mount -t ext4 rootfs.ext4 mountpoint
-   > sudo cp -r rootfs/* mountpoint
-   > sudo umount mountpoint
-   > sudo mv ./rootfs.ext4 ./content-dir
-   ```
+```console
+foo@bar:~$ export KEYS=${HOME}/.config/rauc-keys-ecu1270
+foo@bar:~$ mkdir -p ${KEYS} && chmod 700 ${KEYS}
+foo@bar:~$ cd ${KEYS} && bash <YOCTO_PATH>/sources/meta-rauc/scripts/openssl-ca.sh
+foo@bar:~/.config/rauc-keys-ecu1270$ cp openssl-ca/dev/ca.cert.pem                    ca.cert.pem
+foo@bar:~/.config/rauc-keys-ecu1270$ cp openssl-ca/dev/development-1.cert.pem         dev.cert.pem
+foo@bar:~/.config/rauc-keys-ecu1270$ cp openssl-ca/dev/private/development-1.key.pem  dev.key.pem
+foo@bar:~/.config/rauc-keys-ecu1270$ chmod 600 *.key.pem
+foo@bar:~/.config/rauc-keys-ecu1270$ cp ca.cert.pem <YOCTO_PATH>/sources/meta-ecu-1270/recipes-core/rauc/files/ca.cert.pem
+```
 
-5. Generate manifest.raucm & bundle  
-   
-   ```sh
-   > cat >> content-dir/manifest.raucm << EOF
-   [update]
-   compatible=Advantech
-   version=$version
-   [bundle]
-   format=verity
-   [image.rootfs]
-   filename=rootfs.ext4
-   EOF
-   > rauc --cert ca.cert.pem --key key.pem bundle content-dir/ update.raucb -d
-   ```
+> The bundle recipe (`recipes-core/bundles/update-bundle.bb`) defaults to
+> `${HOME}/.config/rauc-keys-ecu1270/` via `?=`. To use a different path (CI / HSM),
+> override `RAUC_KEYS_DIR = "..."` in `local.conf`.
 
-## Firmware Upate with RAUC(on the embedded device)
+## 3. Build the A/B image and bundle
 
- The following commands demonstrate a remote firmware update via http on a SD booting from system0, ready to update to system1 
+```console
+foo@bar:~/yocto/build$ bitbake tisdk-base-image   # includes rauc, rauc-conf, libubootenv-bin, A/B config
+foo@bar:~/yocto/build$ bitbake update-bundle      # produces the signed .raucb bundle
+```
+
+Build artifacts (in `build/deploy-ti/images/j722s-ecu1270/`):
+- rootfs tarball: `tisdk-base-image-j722s-ecu1270.rootfs.tar.xz`
+- bootloader:     `tiboot3.bin`, `tispl.bin`, `u-boot.img`  (TI K3 boot chain — not a single `imx-boot` blob)
+- kernel FIT:     `fitImage`
+- OTA bundle:     `update-bundle-j722s-ecu1270.raucb`
+
+> [!IMPORTANT]
+> The default `*.wic.xz` produced by `tisdk-base-image` is a **single-rootfs** layout and is
+> **not** compatible with RAUC A/B. To produce the required **4-partition** layout —
+> `p1 = FAT boot` / `p2 = rootfs A` / `p3 = rootfs B` / `p4 = /data` — on SD or eMMC, use
+> `tools/flash/j722s-ecu1270_flash.sh --rauc` instead of `dd`/`bmaptool`/wic (see step 4).
+> (Note: ECU-1270 has a **separate FAT boot partition** on TI K3, so it is 4 partitions
+> vs. ECU-150v2's 3.)
+
+Verify the bundle signature on the build host:
+
+```console
+foo@bar:~$ rauc info --keyring=${KEYS}/ca.cert.pem \
+    <YOCTO_PATH>/build/deploy-ti/images/j722s-ecu1270/update-bundle-j722s-ecu1270.raucb
+```
+
+## 4. Flash the A/B layout to SD / eMMC
+
+> [!NOTE]
+> On ECU-1270 (TI J722S), the on-board eMMC is `mmcblk0` and the SD card slot is `mmcblk1`
+> — this is the **opposite** of the NXP-based ECU-150v2. The correct device is detected at
+> runtime from `/proc/cmdline` by `rauc-setup-env.service`, so nothing here is hard-coded.
+
+`tools/flash/j722s-ecu1270_flash.sh --rauc` creates `p1 boot (FAT)` / `p2 rootfs A` / `p3 rootfs B` / `p4 /data` (rootfs/data all ext4), copies the TI boot chain (`tiboot3.bin` / `tispl.bin` / `u-boot.img`) onto the FAT boot partition, and extracts the rootfs tarball into slot A. Slot B is left **empty** for the first OTA install, and any `.raucb` passed via `--bundle` is pre-staged onto `/data`.
+
+```console
+foo@bar:~/yocto$ sudo ./scripts/flash-sd/j722s-ecu1270_flash.sh \
+    --rauc \
+    --disk   /dev/sdX \
+    --images build/deploy-ti/images/j722s-ecu1270 \
+    --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz \
+    --bundle update-bundle-j722s-ecu1270.raucb
+```
+
+> [!CAUTION]
+> Replace `/dev/sdX` with the actual target device (`/dev/sdb` for a USB SD reader, or
+> `/dev/mmcblk0` when writing to the on-board eMMC from a device already booted off SD).
+> Double-check the device — the script wipes the entire disk.
+
+> [!NOTE]
+> If the target CPU is fused to **HS (High Security)**, pass `--hs-se` so the script uses the
+> `tiboot3-j722s-hs-evm.bin` boot binary instead of the default HS-FS one. Run the script with
+> `--help` to see all options (partition sizes, overlay data partition, Ubuntu base rootfs, etc.).
+
+## 5. OTA install on target
+
+Copy the bundle to the target (or serve it over HTTP — see the Adaptive Update section),
+then install it:
+
+```console
+foo@bar:~$ scp update-bundle-j722s-ecu1270.raucb root@<target>:/tmp/
+```
+
+```console
+root@j722s-ecu1270:~$ rauc status                       # confirm current slot (e.g. booted from system0 / A)
+root@j722s-ecu1270:~$ rauc install /tmp/update-bundle-j722s-ecu1270.raucb
+root@j722s-ecu1270:~$ fw_printenv BOOT_ORDER            # inactive slot moved to the front
+root@j722s-ecu1270:~$ reboot
+```
+
+After reboot, the U-Boot console prints `Running RAUC bootcmd ...` followed by the selected
+slot. Once Linux is up, confirm the new slot is active:
+
+```console
+root@j722s-ecu1270:~$ rauc status                       # booted from the newly installed slot
+```
+
+If the new slot fails to boot, the U-Boot try-counter (`BOOT_system0_LEFT` / `BOOT_system1_LEFT`, default 3 attempts each) automatically rolls back to the previously good slot. Use `rauc status mark-good` after a successful boot to reset the counter.
+
+## 6. Identifying bundle versions
+
+The bundle recipe defaults to `RAUC_BUNDLE_VERSION = "${DATETIME}"`. After installation, `rauc status` displays the `bundle-version` per slot. To embed additional metadata (e.g. git hash, build ID), edit `recipes-core/bundles/update-bundle.bb`.
+
+---
+
+# RAUC Adaptive Update (delta OTA via HTTP streaming)
+
+Adaptive update is an optional extension on top of the standard A/B OTA. When enabled, RAUC compares the incoming bundle against the **currently installed slot** and only transfers the changed 4 KiB blocks over the network — significantly reducing bandwidth and install time for incremental updates.
+
+## Prerequisites
+
+- `RAUC_ENABLED = "1"` must already be set (adaptive is an extension of the base RAUC feature).
+- The target SD/eMMC must already be flashed with the RAUC A/B layout — same as
+  [step 4 of the RAUC OTA section](#4-flash-the-ab-layout-to-sd--emmc), using
+  `tools/flash/j722s-ecu1270_flash.sh --rauc`. Adaptive update only changes how the bundle is
+  *transferred*, not how the SD card is initially prepared, so there is no separate flashing
+  procedure here.
+- The HTTP server serving the bundle **must support Range Requests** (responds with HTTP `206`).
+  Use nginx — it supports Range Requests out of the box and is the recommended server for this
+  workflow.
+- The kernel needs `dm-verity`, `loop`, `squashfs`, and `NBD` support. These are already
+  provided by the resident `recipes-kernel/linux/files/rauc.cfg` fragment.
+
+## 1. Enable adaptive update
+
+Edit `build/conf/local.conf`:
 
 ```sh
-> rauc status 
-=== System Info ===
-Compatible: Advantech
-Variant:
-Booted from: rootfs.0 (system0)
+# Enable RAUC OTA (required base)
+RAUC_ENABLED = "1"
 
-=== Bootloader ===
-Activated: rootfs.0 (system0)
- ... 
+# Enable adaptive delta update (default: disabled)
+RAUC_ADAPTIVE_ENABLED = "1"
+```
 
-> umount /dev/mmcblk1p3
-> rauc install -d http://IP_ADDR/update.raucb 
-> e2fsck -f /dev/mmcblk1p3
-> resize2fs /dev/mmcblk1p3
-> rauc status
-=== System Info ===
-Compatible: Advantech
-Variant:
-Booted from: rootfs.0 (system0)
+Enabling adaptive automatically switches the bundle format to `verity` and sets `IMAGE_ROOTFS_ALIGNMENT = "4"`. (A guard in the SSOT fails the build if `RAUC_ADAPTIVE_ENABLED=1` is set without `RAUC_ENABLED=1`.)
 
-=== Bootloader ===
-Activated: rootfs.1 (system1)
+## 2. Build the adaptive bundle
 
-=== Slot Status ===
+No changes to the build commands — the toggle is fully transparent:
+
+```console
+foo@bar:~/yocto/build$ bitbake tisdk-base-image
+foo@bar:~/yocto/build$ bitbake update-bundle
+```
+
+Verify the bundle contains the adaptive metadata (`${KEYS}` — see RAUC OTA step 2):
+
+```console
+foo@bar:~$ rauc info --keyring=${KEYS}/ca.cert.pem \
+    build/deploy-ti/images/j722s-ecu1270/update-bundle-j722s-ecu1270.raucb
+```
+
+## 3. Serve the bundle over HTTP
+
+The bundle must be served by an HTTP server that supports Range Requests. The recommended
+approach is nginx:
+
+```console
+foo@bar:~$ sudo apt-get install -y nginx
+foo@bar:~$ sudo tee /etc/nginx/sites-available/rauc-bundle <<'EOF'
+server {
+    listen 8080;
+    root /path/to/build/deploy-ti/images/j722s-ecu1270;
+    location / { sendfile off; autoindex on; }
+}
+EOF
+foo@bar:~$ sudo ln -sf /etc/nginx/sites-available/rauc-bundle \
+               /etc/nginx/sites-enabled/rauc-bundle
+foo@bar:~$ sudo rm -f /etc/nginx/sites-enabled/default
+foo@bar:~$ sudo nginx -t && sudo systemctl restart nginx
+```
+
+## 4. Install via streaming on target
+
+Replace `<server-ip>` with the build host's IP address. The `:8080` port must match the `listen` directive in the nginx config above.
+
+```console
+root@j722s-ecu1270:~$ rauc status                       # confirm current slot before install
+root@j722s-ecu1270:~$ rauc install http://<server-ip>:8080/update-bundle-j722s-ecu1270.raucb
 ...
+99% Copying image to rootfs.1 done.
+99% Updating slots done.
+100% Installing done.
+idle
+Installing `http://<server-ip>:8080/update-bundle-j722s-ecu1270.raucb` succeeded
+root@j722s-ecu1270:~$ fw_printenv BOOT_ORDER            # inactive slot moved to the front
+root@j722s-ecu1270:~$ reboot
 ```
+
+After reboot, confirm the new slot is active:
+
+```console
+root@j722s-ecu1270:~$ rauc status                       # booted from the newly installed slot
+```
+
+## 5. Verify delta transfer (optional)
+
+On the build host, inspect the nginx access log while the install is in progress. A successful adaptive install produces many `206` lines — one per fetched block range — rather than a single large `200` transfer:
+
+```console
+foo@bar:~$ tail -f /var/log/nginx/access.log
+# expect lines like:  "GET /update-bundle-j722s-ecu1270.raucb HTTP/1.1" 206 4096
+```
+
+On the target, run with `--debug` to see the reused / fetched block counts reported by RAUC:
+
+```console
+root@j722s-ecu1270:~$ rauc --debug install http://<server-ip>:8080/update-bundle-j722s-ecu1270.raucb \
+    2>&1 | tee /tmp/rauc-adaptive.log
+```
+
+---
 
 # Appendex
 
 1. [Building Ubuntu/Debian root file systems.](./DebianRootfsOnTiYocto_en.md)
-
-2. 
