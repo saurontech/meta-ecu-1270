@@ -25,19 +25,24 @@
 #   HS-FS (default)  tiboot3-j722s-hs-fs-evm.bin  — field-securable boards
 #   HS-SE (--hs-se)  tiboot3-j722s-hs-evm.bin      — production locked boards
 #
-# Partition layouts:
+# Partition layouts (MBR: only 4 primary partitions):
 #
 #   non-RAUC (default):
 #     p1  FAT16  boot (128 MiB)  tiboot3.bin, tispl.bin, u-boot.img
 #     p2  ext4   rootfs          (/boot/fitImage lives here)
-#     p3  ext4   overlay rwdata  (optional, --overlay-data; else tmpfs)
+#     p3  ext4   appdata         (optional, --appdata)
+#     p4  ext4   overlay rwdata  (optional, --overlay-data; else tmpfs)
 #
 #   RAUC (--rauc):
 #     p1  FAT16  boot (128 MiB)  tiboot3.bin, tispl.bin, u-boot.img
 #     p2  ext4   rootfs A        (populated by this script)
 #     p3  ext4   rootfs B        (left empty; filled later by 'rauc install')
 #     p4  ext4   /data           (RAUC status + adaptive cache, A/B shared)
-#     p5  ext4   overlay rwdata  (optional, --overlay-data; else tmpfs)
+#
+#   NOTE: MBR holds only 4 primary partitions. --rauc already uses all four,
+#   so it cannot be combined with --appdata or --overlay-data. A 5th
+#   partition needs a different partition table (GPT/extended), which this
+#   script does not do.
 #
 # The /data partition is required for RAUC adaptive update: the slot hash
 # index cache and status file must survive A/B slot switches.
@@ -58,7 +63,6 @@
 #                  (default: u-boot-j722s-ecu1270-*.img or u-boot.img)
 #   --fitimage     fitImage     -> rootfs /boot/fitImage
 #                  (default: fitImage--*-j722s-ecu1270*.bin or fitImage)
-#   --bundle       *.raucb      -> /data partition (optional; RAUC only)
 #
 # Examples:
 #   # DEFAULT: non-RAUC, Yocto rootfs base, auto-detect all artifacts:
@@ -74,13 +78,12 @@
 #   sudo ./j722s-ecu1270_flash.sh -d /dev/sdb -i ~/deploy --overlay-data \
 #       --yocto tisdk-base-image-j722s-ecu1270.rootfs.tar.xz
 #
-#   # RAUC A/B + /data (pre-stage a bundle):
+#   # RAUC A/B (4 partitions: boot, rootfsA, rootfsB, /data):
 #   sudo ./j722s-ecu1270_flash.sh -d /dev/sdb -i ~/deploy --rauc \
-#       --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz \
-#       --bundle update-bundle-j722s-ecu1270.raucb
+#       --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz
 #
-#   # RAUC A/B + /data + overlay rwdata:
-#   sudo ./j722s-ecu1270_flash.sh -d /dev/sdb -i ~/deploy --rauc --overlay-data \
+#   # non-RAUC + dedicated appdata partition:
+#   sudo ./j722s-ecu1270_flash.sh -d /dev/sdb -i ~/deploy --appdata \
 #       --yocto tisdk-base-image-j722s-ecu1270.rootfs.tar.xz
 #
 #   # HS-SE secure-boot board (use hs-evm tiboot3 variant):
@@ -97,6 +100,7 @@ PROG="${0##*/}"
 BOOT_SIZE="128MiB"          # FAT boot partition size (p1)
 ROOTFS_SIZE="5GiB"          # size of EACH rootfs partition
 DATA_SIZE="15GiB"           # RAUC /data partition size
+APPDATA_SIZE="2GiB"         # non-RAUC appdata partition size
 RWDATA_LABEL="rwdata"       # filesystem label of the overlay data partition
 WIPE_MIB=16                 # zero the first N MiB to clear old tables
 
@@ -104,9 +108,9 @@ TIBOOT3=""                  # tiboot3.bin path; auto-detected when empty
 TISPL=""                    # tispl.bin path; auto-detected when empty
 UBOOT_IMG=""                # u-boot.img path; auto-detected when empty
 FITIMAGE=""                 # fitImage path; auto-detected when empty
-BUNDLE=""                   # optional *.raucb to pre-stage on /data
 
 RAUC=0                      # 1 = RAUC A/B layout
+APPDATA=0                   # 1 = add ext4 appdata partition (non-RAUC only)
 OVERLAY_DATA=0              # 1 = add ext4 overlay rwdata partition (last)
 HS_SE=0                     # 1 = prefer tiboot3-j722s-hs-evm.bin (HS-SE)
 
@@ -136,9 +140,9 @@ Optional:
   --tispl <file>          tispl.bin    (default: auto-detect tispl.bin-j722s-ecu1270-*)
   --uboot-img <file>      u-boot.img   (default: auto-detect u-boot-j722s-ecu1270-*.img)
   -f, --fitimage <file>   fitImage     (default: auto-detect fitImage--*-j722s-ecu1270*)
-  --bundle <file>         *.raucb to pre-stage on /data (--rauc only, optional)
   --hs-se                 use HS-SE tiboot3 (tiboot3-j722s-hs-evm.bin) for locked boards
   -R, --rauc              RAUC A/B layout (p1 boot, p2 rootfsA, p3 rootfsB, p4 /data)
+  -A, --appdata[=SIZE]    add an ext4 appdata partition (non-RAUC only; default: 2GiB)
   -O, --overlay-data      add an ext4 overlay rwdata partition (last partition)
   --boot-size <sz>        FAT boot partition size (default: 128MiB)
   --rootfs-size <sz>      size of each rootfs partition (default: 5GiB)
@@ -146,19 +150,23 @@ Optional:
   -y, --yes               do not prompt for confirmation
   -h, --help              show this help
 
-Partition layouts:
+Partition layouts (MBR: only 4 primary partitions):
 
   non-RAUC (default):
     p1  FAT16  boot (128 MiB)  tiboot3.bin, tispl.bin, u-boot.img
     p2  ext4   rootfs          (/boot/fitImage)
-    p3  ext4   overlay rwdata  (only with --overlay-data)
+    p3  ext4   appdata         (only with --appdata)
+    p4  ext4   overlay rwdata  (only with --overlay-data)
 
   RAUC (--rauc):
     p1  FAT16  boot (128 MiB)  tiboot3.bin, tispl.bin, u-boot.img
     p2  ext4   rootfs A        (flashed now)
     p3  ext4   rootfs B        (empty; populated by 'rauc install')
     p4  ext4   /data           (RAUC status + adaptive cache)
-    p5  ext4   overlay rwdata  (only with --overlay-data)
+
+  NOTE: --rauc already fills all four MBR primary slots, so it cannot be
+  combined with --appdata or --overlay-data. A 5th partition needs a
+  different partition table (GPT/extended), which this script does not do.
 
 TI K3 boot chain:  tiboot3.bin -> tispl.bin -> u-boot.img  (all on p1 FAT)
 fitImage:          lives in rootfs /boot/fitImage (loaded by U-Boot via ext4load)
@@ -283,14 +291,71 @@ cleanup() {
 }
 
 # ----------------------------------------------------------------------------
-# Partition the disk
+# Partition plan
 #
-# TI J722S layout always starts with a FAT16 boot partition (p1) for the
-# K3 bootloader chain. The rootfs partition(s) follow from p2 onwards.
+# Built once by build_part_plan() into PART_NAMES/PART_FS/PART_SIZE, then used
+# by the confirmation preview, partition_disk() and the final summary, so the
+# printed partition numbers can never drift from the real layout.
 #
-#   non-RAUC: p1 FAT boot | p2 rootfs [| p3 overlay]
-#   RAUC:     p1 FAT boot | p2 rootfsA | p3 rootfsB | p4 /data [| p5 overlay]
+# ORDER IS THE CONTRACT: the Yocto side names the LUKS target by partition
+# NUMBER (LUKS_DATA_DEVICE = "part:N"), and that number is this list's index
+# + 1. Do not reorder to save space -- nothing would error, the target would
+# just silently move to a different partition.
+#
+#   non-RAUC: p1 boot | p2 rootfs [| p3 appdata] [| pN overlay]
+#   RAUC:     p1 boot | p2 rootfsA | p3 rootfsB | p4 /data   (fills MBR; no
+#             room left for --appdata or --overlay-data)
 # ----------------------------------------------------------------------------
+PART_NAMES=(); PART_FS=(); PART_SIZE=()
+
+build_part_plan() {
+    PART_NAMES=(); PART_FS=(); PART_SIZE=()
+
+    PART_NAMES+=(BOOT);   PART_FS+=(vfat); PART_SIZE+=("$(to_mib "$BOOT_SIZE")")
+    if [[ $RAUC -eq 1 ]]; then
+        PART_NAMES+=(rootfs0); PART_FS+=(ext4); PART_SIZE+=("$(to_mib "$ROOTFS_SIZE")")
+        PART_NAMES+=(rootfs1); PART_FS+=(ext4); PART_SIZE+=("$(to_mib "$ROOTFS_SIZE")")
+        PART_NAMES+=(data);    PART_FS+=(ext4); PART_SIZE+=("$(to_mib "$DATA_SIZE")")
+    else
+        PART_NAMES+=(rootfs);  PART_FS+=(ext4); PART_SIZE+=("$(to_mib "$ROOTFS_SIZE")")
+    fi
+    if [[ $APPDATA -eq 1 ]]; then
+        PART_NAMES+=(appdata); PART_FS+=(ext4); PART_SIZE+=("$(to_mib "$APPDATA_SIZE")")
+    fi
+    if [[ $OVERLAY_DATA -eq 1 ]]; then
+        PART_NAMES+=("$RWDATA_LABEL"); PART_FS+=(ext4); PART_SIZE+=(0)
+    fi
+
+    # The last partition always takes the remaining space (unchanged from
+    # before this refactor, so existing flag combinations produce a
+    # byte-identical layout).
+    PART_SIZE[$(( ${#PART_NAMES[@]} - 1 ))]="REST"
+
+    # Guard G1: check the MBR budget before touching the disk. Without this,
+    # parted only fails on the 5th mkpart, leaving a half-written partition
+    # table behind.
+    if [[ ${#PART_NAMES[@]} -gt 4 ]]; then
+        die "MBR holds only 4 primary partitions; these flags need ${#PART_NAMES[@]} (${PART_NAMES[*]}).
+
+  This script supports two layouts, both inside the 4-primary budget:
+    --appdata    p1 boot | p2 rootfs  | p3 appdata                (3)
+    --rauc       p1 boot | p2 rootfs0 | p3 rootfs1 | p4 data      (4)
+
+  --rauc already fills all four slots, so it cannot be combined with
+  --appdata or --overlay-data. A 5th partition means redesigning the
+  partition table (GPT or extended/logical), which this script does not do."
+    fi
+}
+
+# Partition name -> 1-based partition number, or 0 if not in the current plan.
+part_num() {
+    local i
+    for i in "${!PART_NAMES[@]}"; do
+        [[ "${PART_NAMES[$i]}" == "$1" ]] && { echo $(( i + 1 )); return 0; }
+    done
+    echo 0
+}
+
 partition_disk() {
     local disk="$1"
 
@@ -301,45 +366,23 @@ partition_disk() {
     dd if=/dev/zero of="$disk" bs=1M count="$WIPE_MIB" conv=fsync status=none
     sync
 
-    local boot_mib rootfs_mib data_mib
-    boot_mib="$(to_mib "$BOOT_SIZE")"
-    rootfs_mib="$(to_mib "$ROOTFS_SIZE")"
-    data_mib="$(to_mib "$DATA_SIZE")"
-
-    # All sizes in MiB; parted uses MiB boundaries.
-    # Use 1 MiB start to align with erase blocks (the original scripts start
-    # at 1049 kB ≈ 1 MiB; we use an exact MiB boundary for simplicity).
-    local boot_start=1
-    local boot_end=$(( boot_start + boot_mib ))        # p1 end
-    local rs_end=$(( boot_end + rootfs_mib ))           # end of first rootfs (p2)
-
+    log "layout (msdos): ${#PART_NAMES[@]} partitions -> ${PART_NAMES[*]}"
     parted -s "$disk" mklabel msdos
 
-    if [[ $RAUC -eq 1 ]]; then
-        local rb_end=$(( rs_end + rootfs_mib ))          # end of rootfs B (p3)
-        local data_end=$(( rb_end + data_mib ))          # end of /data (p4)
-        log "RAUC layout: p1 boot (${BOOT_SIZE}), p2 rootfsA (${ROOTFS_SIZE}), p3 rootfsB (${ROOTFS_SIZE}), p4 /data (${DATA_SIZE})$([[ $OVERLAY_DATA -eq 1 ]] && echo ', p5 overlay (rest)')"
-        parted -s "$disk" mkpart primary fat16 "${boot_start}MiB" "${boot_end}MiB"   # p1 boot
-        parted -s "$disk" mkpart primary ext4  "${boot_end}MiB"   "${rs_end}MiB"     # p2 rootfsA
-        parted -s "$disk" mkpart primary ext4  "${rs_end}MiB"     "${rb_end}MiB"     # p3 rootfsB
-        if [[ $OVERLAY_DATA -eq 1 ]]; then
-            parted -s "$disk" mkpart primary ext4 "${rb_end}MiB"   "${data_end}MiB"  # p4 /data
-            parted -s "$disk" mkpart primary ext4 "${data_end}MiB" 100%              # p5 overlay
+    # All sizes in MiB; parted uses MiB boundaries. Use 1 MiB start to align
+    # with erase blocks.
+    local start=1 i ptype end
+    for i in "${!PART_NAMES[@]}"; do
+        [[ "${PART_FS[$i]}" == "vfat" ]] && ptype=fat16 || ptype=ext4
+        if [[ "${PART_SIZE[$i]}" == "REST" ]]; then
+            parted -s "$disk" mkpart primary "$ptype" "${start}MiB" 100%
         else
-            parted -s "$disk" mkpart primary ext4 "${rb_end}MiB" 100%                # p4 /data
+            end=$(( start + PART_SIZE[i] ))
+            parted -s "$disk" mkpart primary "$ptype" "${start}MiB" "${end}MiB"
+            start=$end
         fi
-    else
-        if [[ $OVERLAY_DATA -eq 1 ]]; then
-            log "non-RAUC layout: p1 boot (${BOOT_SIZE}), p2 rootfs (${ROOTFS_SIZE}), p3 overlay (rest)"
-            parted -s "$disk" mkpart primary fat16 "${boot_start}MiB" "${boot_end}MiB"  # p1 boot
-            parted -s "$disk" mkpart primary ext4  "${boot_end}MiB"   "${rs_end}MiB"    # p2 rootfs
-            parted -s "$disk" mkpart primary ext4  "${rs_end}MiB"     100%              # p3 overlay
-        else
-            log "non-RAUC layout: p1 boot (${BOOT_SIZE}), p2 rootfs (rest)"
-            parted -s "$disk" mkpart primary fat16 "${boot_start}MiB" "${boot_end}MiB"  # p1 boot
-            parted -s "$disk" mkpart primary ext4  "${boot_end}MiB"   100%              # p2 rootfs
-        fi
-    fi
+    done
+
     parted -s "$disk" set 1 boot on
     parted -s "$disk" set 1 lba on
 
@@ -348,31 +391,16 @@ partition_disk() {
     udevadm settle 2>/dev/null || true
     sleep 1
 
-    log "formatting p1 (FAT16, label BOOT)"
-    mkfs.vfat -F 16 "${disk}${P}1" -n BOOT
-
-    if [[ $RAUC -eq 1 ]]; then
-        log "formatting p2 rootfsA (ext4, label rootfs0)"
-        mkfs.ext4 -F -L rootfs0 "${disk}${P}2"
-        log "formatting p3 rootfsB (ext4, label rootfs1)"
-        mkfs.ext4 -F -L rootfs1 "${disk}${P}3"
-        if [[ $OVERLAY_DATA -eq 1 ]]; then
-            log "formatting p4 /data (ext4, label data)"
-            mkfs.ext4 -F -L data "${disk}${P}4"
-            log "formatting p5 overlay rwdata (ext4, label ${RWDATA_LABEL})"
-            mkfs.ext4 -F -L "$RWDATA_LABEL" "${disk}${P}5"
+    for i in "${!PART_NAMES[@]}"; do
+        local n=$(( i + 1 )) name="${PART_NAMES[$i]}"
+        if [[ "${PART_FS[$i]}" == "vfat" ]]; then
+            log "formatting p${n} ${name} (FAT16)"
+            mkfs.vfat -F 16 "${disk}${P}${n}" -n "$name"
         else
-            log "formatting p4 /data (ext4, label data)"
-            mkfs.ext4 -F -L data "${disk}${P}4"
+            log "formatting p${n} ${name} (ext4)"
+            mkfs.ext4 -F -L "$name" "${disk}${P}${n}"
         fi
-    else
-        log "formatting p2 rootfs (ext4, label rootfs)"
-        mkfs.ext4 -F -L rootfs "${disk}${P}2"
-        if [[ $OVERLAY_DATA -eq 1 ]]; then
-            log "formatting p3 overlay rwdata (ext4, label ${RWDATA_LABEL})"
-            mkfs.ext4 -F -L "$RWDATA_LABEL" "${disk}${P}3"
-        fi
-    fi
+    done
 }
 
 # ----------------------------------------------------------------------------
@@ -502,17 +530,6 @@ populate_rootfs() {
 }
 
 # ----------------------------------------------------------------------------
-# Pre-stage a RAUC bundle on the /data partition (optional convenience)
-# ----------------------------------------------------------------------------
-populate_data_partition() {
-    local mnt="$1"
-    [[ -n "$BUNDLE" ]] || return 0
-    log "pre-staging RAUC bundle on /data: ${BUNDLE##*/}"
-    cp -L "$BUNDLE" "$mnt/"
-    ok "bundle copied to /data/${BUNDLE##*/}"
-}
-
-# ----------------------------------------------------------------------------
 # Argument parsing + main
 # ----------------------------------------------------------------------------
 DISK=""
@@ -535,9 +552,10 @@ main() {
             --tispl)                TISPL="${2:-}"; shift 2 ;;
             --uboot-img)            UBOOT_IMG="${2:-}"; shift 2 ;;
             -f|--fitimage)          FITIMAGE="${2:-}"; shift 2 ;;
-            --bundle)               BUNDLE="${2:-}"; shift 2 ;;
             --hs-se)                HS_SE=1; shift ;;
             -R|--rauc)              RAUC=1; shift ;;
+            -A|--appdata)           APPDATA=1; shift ;;
+            --appdata=*)            APPDATA=1; APPDATA_SIZE="${1#*=}"; shift ;;
             -O|--overlay-data)      OVERLAY_DATA=1; shift ;;
             --boot-size)            BOOT_SIZE="${2:-}"; shift 2 ;;
             --rootfs-size)          ROOTFS_SIZE="${2:-}"; shift 2 ;;
@@ -624,13 +642,6 @@ main() {
         fi
     fi
 
-    # ---- Resolve bundle ----
-    if [[ -n "$BUNDLE" ]]; then
-        BUNDLE="$(resolve_artifact "$BUNDLE")"
-        [[ -f "$BUNDLE" ]] || die "RAUC bundle not found: $BUNDLE"
-        [[ $RAUC -eq 1 ]] || die "--bundle requires --rauc (bundle goes on the /data partition)"
-    fi
-
     # ---- Disk ----
     [[ -n "$DISK" ]] || DISK="$(select_disk)"
     [[ -n "$DISK" ]] || die "no target disk selected"
@@ -638,6 +649,11 @@ main() {
 
     # Partition node suffix: mmcblk0p1 / nvme0n1p1 vs sdb1.
     if [[ "$DISK" =~ [0-9]$ ]]; then P="p"; else P=""; fi
+
+    # Build the partition plan now (and enforce the MBR 4-primary budget,
+    # guard G1) before showing the confirmation prompt, let alone touching
+    # the disk.
+    build_part_plan
 
     # ---- Confirmation ----
     echo "" >&2
@@ -653,19 +669,14 @@ main() {
     printf "  u-boot.img    : %s\n"  "$UBOOT_IMG" >&2
     printf "  fitImage      : %s\n"  "${FITIMAGE:-(from rootfs tarball)}" >&2
     printf "  secure-boot   : %s\n"  "$([[ $HS_SE -eq 1 ]] && echo 'HS-SE' || echo 'HS-FS (default)')" >&2
-    if [[ -n "$BUNDLE" ]]; then
-        printf "  RAUC bundle   : %s\n" "$BUNDLE" >&2
-    fi
-    if [[ $RAUC -eq 1 ]]; then
-        printf "  partitions    : p1 boot (%s FAT), p2 rootfsA (%s), p3 rootfsB (%s), p4 /data (%s)%s\n" \
-            "$BOOT_SIZE" "$ROOTFS_SIZE" "$ROOTFS_SIZE" "$DATA_SIZE" \
-            "$([[ $OVERLAY_DATA -eq 1 ]] && echo ", p5 rwdata (rest)")" >&2
-    elif [[ $OVERLAY_DATA -eq 1 ]]; then
-        printf "  partitions    : p1 boot (%s FAT), p2 rootfs (%s), p3 rwdata (rest, label %s)\n" \
-            "$BOOT_SIZE" "$ROOTFS_SIZE" "$RWDATA_LABEL" >&2
-    else
-        printf "  partitions    : p1 boot (%s FAT), p2 rootfs (rest)\n" "$BOOT_SIZE" >&2
-    fi
+    local i
+    printf "  partitions    : " >&2
+    for i in "${!PART_NAMES[@]}"; do
+        [[ $i -gt 0 ]] && printf ", " >&2
+        printf "p%d %s (%s)" "$(( i + 1 ))" "${PART_NAMES[$i]}" \
+            "$([[ "${PART_SIZE[$i]}" == REST ]] && echo rest || echo "${PART_SIZE[$i]}MiB")" >&2
+    done
+    printf "\n" >&2
     echo "==================================================" >&2
     warn "this will DESTROY ALL DATA on $DISK"
     if [[ $ASSUME_YES -ne 1 ]]; then
@@ -704,48 +715,31 @@ main() {
     log "syncing and unmounting rootfs"
     sync; umount "$mnt_rootfs"
 
-    # ---- RAUC: populate /data (p4) ----
-    if [[ $RAUC -eq 1 ]]; then
-        local mnt_data="$WORKDIR/mnt_data"
-        mkdir -p "$mnt_data"
-        log "mounting ${DISK}${P}4 (/data) -> $mnt_data"
-        mount "${DISK}${P}4" "$mnt_data"
-        populate_data_partition "$mnt_data"
-        log "syncing and unmounting /data"
-        sync; umount "$mnt_data"
-    fi
-
     log "flushing disk caches"
     blockdev --flushbufs "$DISK" 2>/dev/null || true
     sync
 
     ok "done — ECU-1270 SD/eMMC ready (KVER=${KVER:-unknown})"
     echo "" >&2
-    echo "  Layout:" >&2
-    echo "    ${DISK}${P}1 (FAT16) : boot — tiboot3.bin, tispl.bin, u-boot.img" >&2
-    if [[ $RAUC -eq 1 ]]; then
-        echo "    ${DISK}${P}2 (ext4)  : rootfs A, /boot/fitImage (active slot)" >&2
-        echo "    ${DISK}${P}3 (ext4)  : rootfs B (empty; 'rauc install' populates it)" >&2
-        if [[ $OVERLAY_DATA -eq 1 ]]; then
-            echo "    ${DISK}${P}4 (ext4)  : /data (RAUC status + adaptive cache)" >&2
-            echo "    ${DISK}${P}5 (ext4)  : overlay rwdata (label ${RWDATA_LABEL})" >&2
-            echo "" >&2
-            echo "  For overlay root, set kernel cmdline: overlayrwdev=/dev/mmcblkXp5" >&2
-        else
-            echo "    ${DISK}${P}4 (ext4)  : /data (RAUC status + adaptive cache)" >&2
-        fi
-        if [[ -n "$BUNDLE" ]]; then
-            echo "" >&2
-            echo "  RAUC bundle pre-staged on /data: ${BUNDLE##*/}" >&2
-            echo "  To install: rauc install /data/${BUNDLE##*/}" >&2
-        fi
-    else
-        echo "    ${DISK}${P}2 (ext4)  : rootfs, /boot/fitImage" >&2
-        if [[ $OVERLAY_DATA -eq 1 ]]; then
-            echo "    ${DISK}${P}3 (ext4)  : overlay rwdata (label ${RWDATA_LABEL})" >&2
-            echo "" >&2
-            echo "  For overlay root, set kernel cmdline: overlayrwdev=/dev/mmcblkXp3" >&2
-        fi
+    echo "  Layout (msdos):" >&2
+    local n
+    for i in "${!PART_NAMES[@]}"; do
+        n=$(( i + 1 ))
+        printf "    %s%s%d (%-5s): %s\n" "$DISK" "$P" "$n" "${PART_FS[$i]}" "${PART_NAMES[$i]}" >&2
+    done
+
+    # The Yocto side names the LUKS/appdata target by NUMBER, so print the
+    # number this flash actually produced, together with the flags that
+    # produced it. (Deliberately no "LUKS"/"crypt" wording here -- this tool
+    # only states which slot got which number; see the flash-sd README.)
+    local dn an on
+    dn=$(part_num data); an=$(part_num appdata); on=$(part_num "$RWDATA_LABEL")
+    echo "" >&2
+    [[ $dn -ne 0 ]] && echo "  data is partition ${dn} (flags: --rauc)" >&2
+    [[ $an -ne 0 ]] && echo "  appdata is partition ${an} (flags: --appdata)" >&2
+    if [[ $on -ne 0 ]]; then
+        echo "  overlay rwdata is partition ${on} (label ${RWDATA_LABEL})" >&2
+        echo "  For overlay root, set kernel cmdline: overlayrwdev=/dev/mmcblkXp${on}" >&2
     fi
     echo "" >&2
     echo "  U-Boot bootcmd:" >&2

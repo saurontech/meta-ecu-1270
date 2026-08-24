@@ -8,8 +8,17 @@ A single script covers every layout combination currently supported by
 - **Rootfs base**: pure Yocto rootfs, or an external Ubuntu/Debian rootfs with the
   Yocto kernel modules / firmware overlaid on top.
 - **Boot mode**: plain single-rootfs, or RAUC A/B (`--rauc`).
+- **Data partition**: none (default), a dedicated `appdata` partition for
+  application data (`--appdata`, non-RAUC only), or RAUC's own `/data` (`--rauc`).
 - **Secure boot**: HS-FS (field-securable, default) or HS-SE (`--hs-se`, production
   locked boards) `tiboot3` variant.
+
+> [!NOTE]
+> MBR only holds 4 primary partitions, and the TI J722S boot partition (`p1`)
+> always takes one. `--rauc` uses the other three (`p2`/`p3`/`p4`), so it
+> cannot be combined with `--appdata` or `--overlay-data` — there is no room
+> left. A 5th partition would need a different partition table
+> (GPT/extended), which this script does not support.
 
 > [!NOTE]
 > The script also accepts `-O, --overlay-data`, which adds a trailing ext4
@@ -59,7 +68,7 @@ build/deploy-ti/images/j722s-ecu1270/
 ├── tispl.bin-j722s-ecu1270-*                        # A53 SPL (auto-detected)
 ├── u-boot-j722s-ecu1270-*.img                       # U-Boot proper (auto-detected)
 ├── fitImage--*-j722s-ecu1270*.bin                   # signed kernel+dtb FIT (auto-detected)
-└── update-bundle-j722s-ecu1270.raucb                # RAUC bundle (only if built; see --bundle)
+└── ...
 ```
 
 The external **Ubuntu/Debian** rootfs tarball (e.g.
@@ -81,9 +90,9 @@ and pass it with `--ubuntu`.
 | `--tispl <file>` | A53 SPL (default: auto-detect `tispl.bin-j722s-ecu1270-*`). |
 | `--uboot-img <file>` | U-Boot proper (default: auto-detect `u-boot-j722s-ecu1270-*.img`). |
 | `-f, --fitimage <file>` | Signed kernel+dtb FIT image, installed as rootfs `/boot/fitImage` (default: auto-detect `fitImage--*-j722s-ecu1270*`). |
-| `--bundle <file>` | `*.raucb` to pre-stage on `/data` (`--rauc` only, optional). |
 | `--hs-se` | Use the HS-SE `tiboot3` variant for production-locked boards. |
-| `-R, --rauc` | RAUC A/B layout (`p1` boot, `p2` rootfs A, `p3` rootfs B, `p4` `/data`). |
+| `-R, --rauc` | RAUC A/B layout (`p1` boot, `p2` rootfs A, `p3` rootfs B, `p4` `/data`). Fills all 4 MBR primary slots — cannot combine with `--appdata`. |
+| `-A, --appdata[=SIZE]` | Non-RAUC only. Add a dedicated ext4 `appdata` partition, sized `SIZE` (default `2GiB`). See [Scenario 4](#scenario-4--yocto-rootfs--appdata-partition). |
 | `--boot-size <sz>` | FAT boot partition size (default `128MiB`). |
 | `--rootfs-size <sz>` | Size of each rootfs partition (default `5GiB`). |
 | `--data-size <sz>` | RAUC `/data` partition size (default `15GiB` — sized for the RAUC adaptive-update block-hash cache). |
@@ -176,25 +185,37 @@ section.
 
 ---
 
-## Scenario 4 — Yocto rootfs + RAUC A/B + pre-staged bundle
+## Scenario 4 — Yocto rootfs + appdata partition
 
-Same as Scenario 3, but also copies a signed `.raucb` bundle onto `/data` so
-the first OTA install doesn't require a separate `scp`.
+Non-RAUC layout with an extra ext4 partition for application data.
+
+```
+p1  FAT16  boot (128 MiB)  tiboot3.bin, tispl.bin, u-boot.img
+p2  ext4   rootfs          (/boot/fitImage lives here)
+p3  ext4   appdata         (empty; for application data)
+```
 
 ```console
 foo@bar:~/yocto$ sudo ./tools/flash/j722s-ecu1270_flash.sh \
     --disk   /dev/sdX \
     --images "$IMAGES_DIR" \
-    --rauc \
-    --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz \
-    --bundle update-bundle-j722s-ecu1270.raucb
+    --appdata \
+    --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz
 ```
 
-On the target:
+Nothing is written to `p3` beyond the ext4 format — what it becomes is up to
+whoever owns it. Pass `--appdata=SIZE` (e.g. `--appdata=4GiB`) to override the
+default `2GiB`.
 
-```console
-root@j722s-ecu1270:~$ rauc install /data/update-bundle-j722s-ecu1270.raucb
-```
+> [!TIP]
+> This partition can be LUKS-encrypted: set `LUKS_DATA_DEVICE = "part:3"` and
+> `RAUC_ENABLED = "0"` in `local.conf`. The flash tool has no part in this —
+> `cryptsetup luksFormat` overwrites the plain ext4 on first boot.
+
+> [!NOTE]
+> `--rauc` cannot be combined with `--appdata`: MBR only holds 4 primary
+> partitions, and RAUC's own `p1`–`p4` already use all of them. RAUC layouts
+> encrypt their own `/data` (`p4`) instead — see Scenario 3.
 
 ---
 
@@ -219,12 +240,12 @@ foo@bar:~/yocto$ sudo ./tools/flash/j722s-ecu1270_flash.sh \
 
 ## Scenario matrix
 
-| # | Scenario | `--ubuntu` | `--rauc` | `--bundle` | `--hs-se` | Partitions |
+| # | Scenario | `--ubuntu` | `--rauc` | `--appdata` | `--hs-se` | Partitions |
 | --- | --- | :---: | :---: | :---: | :---: | --- |
 | 1 | Yocto (plain) | | | | | `p1 p2` |
 | 2 | Ubuntu + Yocto modules | yes | | | | `p1 p2` |
 | 3 | Yocto + RAUC | | yes | | | `p1 p2 p3 p4` |
-| 4 | Yocto + RAUC + bundle | | yes | yes | | `p1 p2 p3 p4` |
+| 4 | Yocto + appdata | | | yes | | `p1 p2 p3` |
 | 5 | HS-SE (+ RAUC) | | optional | | yes | `p1 p2` or `p1 p2 p3 p4` |
 
 `--yocto/--bsp <rootfs tarball>` is required in **all** scenarios (it
