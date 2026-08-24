@@ -1,4 +1,4 @@
-From 532215bd8766593c5e964289a3a6f2b0daa3558a Mon Sep 17 00:00:00 2001
+From 9028a557f3baf5d539556babc0e98cfaefcad766 Mon Sep 17 00:00:00 2001
 From: Samuel Cheng <samuelogre@gmail.com>
 Date: Fri, 7 Nov 2025 15:34:27 +0800
 Subject: [PATCH] add dts for ecu-1270 ES2 hardware
@@ -7,16 +7,16 @@ fix reboot issue on ECU-1270 in dts
 
 the CPU dosn't have RTI_WDT15
 ---
- arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts | 1045 +++++++++++++++++++
- 1 file changed, 1045 insertions(+)
+ arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts | 1048 +++++++++++++++++++
+ 1 file changed, 1048 insertions(+)
  create mode 100644 arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
 
 diff --git a/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
 new file mode 100644
-index 000000000000..95adcbc52352
+index 000000000000..71ac29291e3a
 --- /dev/null
 +++ b/arch/arm64/boot/dts/ti/k3-j722s-ecu1270.dts
-@@ -0,0 +1,1045 @@
+@@ -0,0 +1,1048 @@
 +// SPDX-License-Identifier: GPL-2.0-only OR MIT
 +/*
 + * Device Tree file for the J722S ECU1270
@@ -691,10 +691,13 @@ index 000000000000..95adcbc52352
 +	pinctrl-0 = <&main_i2c3_pins_default>;
 +	clock-frequency = <400000>;
 +
-+	st33htpi: st33htpi@2e {
-+        compatible = "infineon,slb9673";
++	/* TPM 2.0. Other Advantech product lines use the "st33htpi" node name,
++	 * which is misleading -- the part is an Infineon SLB9673, not an ST
++	 * ST33. Always read `compatible`, never the node name.
++	 */
++	tpm: tpm@2e {
++		compatible = "infineon,slb9673", "tcg,tpm-tis-i2c";
 +		reg = <0x2e>;
-+        clock-frequency = <400000>;
 +	};
 +
 +	s35390a: s35390a@30 {
