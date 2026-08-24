@@ -9,13 +9,15 @@
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI += "${@' file://rauc-slots.ignorelist' if d.getVar('RAUC_ENABLED') == '1' else ''}"
+SRC_URI += "${@' file://rauc-slots.ignorelist' \
+    if d.getVar('RAUC_ENABLED') == '1' or d.getVar('LUKS_DATA_ENABLED') == '1' else ''}"
+
 
 # RAUC_ENABLED is set per-machine, so the resulting package is machine-specific.
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 do_install:append() {
-    if [ "${RAUC_ENABLED}" = "1" ]; then
+    if [ "${RAUC_ENABLED}" = "1" ] || [ "${LUKS_DATA_ENABLED}" = "1" ]; then
         install -d ${D}${sysconfdir}/udev/mount.ignorelist.d
         install -m 0644 ${WORKDIR}/rauc-slots.ignorelist \
             ${D}${sysconfdir}/udev/mount.ignorelist.d/rauc-slots.ignorelist

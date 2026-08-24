@@ -1,0 +1,15 @@
+[Unit]
+Description=Unlock and mount the encrypted data partition
+DefaultDependencies=no
+After=local-fs.target systemd-udevd.service
+ConditionPathExists=/proc/cmdline
+# Deliberately NO Before=rauc-setup-env.service: whoever needs this mount point
+# declares it themselves (see 10-luks-data.conf). Providers do not know consumers.
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/ecu1270-luks-data.sh
+
+[Install]
+WantedBy=multi-user.target

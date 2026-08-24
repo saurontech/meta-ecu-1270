@@ -462,6 +462,76 @@ root@j722s-ecu1270:~$ rauc --debug install http://<server-ip>:8080/update-bundle
 
 ---
 
+# LUKS + TPM (encrypted `/data` or `/appdata`)
+
+`meta-ecu-1270` includes optional LUKS2 encryption for a data partition, unlocked
+automatically at boot. All variables are centralized in
+`conf/include/j722s-ecu1270-luks.inc`.
+
+> [!NOTE]
+> TPM unlock (`LUKS_DATA_KEY_MODE = "tpm"`, the default) requires the
+> `meta-security/meta-tpm` layer. If you have not added it yet:
+> ```sh
+> > cd <YOCTO_PATH>/sources
+> > git clone https://github.com/YoeDistro/meta-security -b scarthgap
+> > cd <YOCTO_PATH>/build
+> > bitbake-layers add-layer ../sources/meta-security/meta-tpm/
+> ```
+
+## 1. Enable / Disable
+
+Edit `build/conf/local.conf`:
+
+```sh
+# Enable LUKS encryption (default: disabled)
+LUKS_DATA_ENABLED  = "1"
+# Which partition to encrypt -- NO DEFAULT
+LUKS_DATA_DEVICE   = "part:N"
+# The default mountpoint for the decrypted partition (default: /appdata)
+LUKS_DATA_MOUNT    = "/appdata"
+```
+
+> [!IMPORTANT]
+> If `LUKS_DATA_DEVICE` targets the **same partition RAUC uses for `/data`**
+> (`part:4` in the `--rauc` layout), you **must** also set `LUKS_DATA_MOUNT = "/data"`
+> in `local.conf`. `rauc-setup-env.sh` hardcodes that partition to mount at `/data`;
+> leaving `LUKS_DATA_MOUNT` at its default (`/appdata`) does **not** fail silently —
+> a `bb.fatal` guard in `j722s-ecu1270-luks.inc` rejects this exact mismatch at
+> parse time, before the build even starts.
+
+## 2. Build and flash
+
+```console
+foo@bar:~/yocto/build$ bitbake tisdk-base-image
+```
+
+Flash a card by following the below command. This is the simplest test (see [`tools/flash/README.md`](tools/flash/README.md)):
+
+```console
+foo@bar:~/yocto$ sudo ./tools/flash/j722s-ecu1270_flash.sh \
+    --disk   /dev/sdX \
+    --images build/deploy-ti/images/j722s-ecu1270 \
+    --appdata \
+    --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz
+```
+
+## 3. First boot and verification
+
+With the default `LUKS_DATA_AUTO_PROVISION = "1"`, the partition is formatted
+and enrolled automatically on first boot — no manual step needed:
+
+```console
+root@j722s-ecu1270:~$ journalctl -u ecu1270-luks-data       # provisioning done
+root@j722s-ecu1270:~$ mountpoint /appdata                   # or /data, per LUKS_DATA_MOUNT
+root@j722s-ecu1270:~$ cryptsetup isLuks --type luks2 <target-partition> && echo "is LUKS"
+root@j722s-ecu1270:~$ cryptsetup close data && cryptsetup open <target-partition> data
+# "data" here is the mapper name (LUKS_DATA_MAPPER, default "data" ->
+# /dev/mapper/data), not a placeholder. In keyfile mode this re-opens without a
+# password; in tpm mode, no password prompt = the TPM unlock is working.
+```
+
+---
+
 # Appendex
 
 1. [Building Ubuntu/Debian root file systems.](./DebianRootfsOnTiYocto_en.md)
