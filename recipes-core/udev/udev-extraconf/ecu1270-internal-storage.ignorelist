@@ -1,0 +1,9 @@
+# Devices udev's automounter (/etc/udev/scripts/mount.sh) must never touch.
+#
+# On this board mmcblk0 is eMMC and mmcblk1 is the SD slot, and BOTH are boot
+# media: the flash tool writes the same boot/rootfs-A/rootfs-B/data layout to
+# either one, and rauc-setup-env.sh supports running from either (see its
+# mmcblk0/mmcblk1 cases).
+#
+# USB storage (/dev/sd*) is unaffected and still automounts.
+/dev/mmcblk
