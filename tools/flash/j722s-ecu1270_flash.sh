@@ -522,6 +522,11 @@ populate_rootfs() {
     if [[ -n "$FITIMAGE" ]]; then
         log "installing fitImage -> /boot/fitImage: ${FITIMAGE##*/}"
         install -d "$mnt/boot"
+        # An older rootfs tarball (built with INITRAMFS_IMAGE_BUNDLE=1 before the
+        # layer gained its /boot/fitImage fixup) ships this path as a dangling
+        # symlink, and cp refuses to write through one. This script owns the file
+        # either way, so clear the destination first.
+        rm -f "$mnt/boot/fitImage"
         cp -L "$FITIMAGE" "$mnt/boot/fitImage"
     else
         warn "fitImage not provided; /boot/fitImage will come from the Yocto rootfs tarball"

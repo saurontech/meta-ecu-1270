@@ -462,6 +462,139 @@ root@j722s-ecu1270:~$ rauc --debug install http://<server-ip>:8080/update-bundle
 
 ---
 
+# Immutable OS (overlayfs via initramfs)
+
+`meta-ecu-1270` includes optional OverlayFS-root support. When enabled, the real rootfs is
+mounted read-only as the overlay lower layer, and all writes land on a volatile tmpfs by
+default (wiped on reboot).
+
+It is implemented with a standard initramfs + `switch_root` flow: an `overlay-init` script
+(PID 1) mounts the read-only rootfs, stacks an overlayfs on top, then hands off to the real
+`/sbin/init`. The initramfs is bundled **inside the signed `fitImage`** (kernel image node), so
+U-Boot keeps using the same `bootm ${addr_fit}#conf-...dtb` command — no U-Boot changes at all.
+
+All overlay-related variables are centralized in `conf/include/j722s-ecu1270-overlay.inc`. A
+single toggle in `local.conf` is all that is needed.
+
+## 1. Enable / Disable OverlayFS root
+
+Edit `build/conf/local.conf`:
+
+```sh
+# Enable OverlayFS root via initramfs (default: disabled)
+OVERLAY_ROOT_ENABLED = "1"
+```
+
+This single switch does two things automatically:
+
+- Builds `initramfs-overlay-image` (provides `/init`) and bundles it into the kernel
+  (`INITRAMFS_IMAGE_BUNDLE = "1"`).
+- Adds the `overlayfs.cfg` kernel fragment, forcing `CONFIG_OVERLAY_FS=y` (the TI defconfig
+  ships it as `=m`, which is useless inside an initramfs with no module tree).
+
+Set back to `"0"` to remove the initramfs from the kernel entirely — the kernel then mounts the
+rootfs read-write directly, exactly like today.
+
+## 2. Build
+
+```console
+foo@bar:~/yocto/build$ bitbake tisdk-base-image
+```
+
+> [!TIP]
+> If you only flipped `OVERLAY_ROOT_ENABLED`, do a clean kernel rebuild first so the fragment
+> and the bundled initramfs are picked up:
+> ```console
+> foo@bar:~/yocto/build$ bitbake -c cleansstate virtual/kernel
+> foo@bar:~/yocto/build$ bitbake tisdk-base-image
+> ```
+
+Unlike a plain `Image`+initrd BSP, **the deployed filename does not change** — it is still
+`fitImage--*-j722s-ecu1270*.bin` / `fitImage`. Only the kernel image node inside it grows by the
+size of the initramfs (a few MB), and the whole thing stays covered by the existing
+`custMpk` FIT signature.
+
+## 3. Verify the bundled fitImage before flashing
+
+```console
+foo@bar:~/yocto/build$ cd deploy-ti/images/j722s-ecu1270
+foo@bar:~/.../j722s-ecu1270$ dumpimage -l fitImage-j722s-ecu1270.bin | head -20
+# expect: Image 0 (kernel-1) Data Size noticeably larger than a non-bundled build,
+#         and Sign algo still sha512,rsa4096 / key-name-hint = custMpk
+```
+
+## 4. Flash and boot
+
+Flashing is unchanged — the same `j722s-ecu1270_flash.sh` invocation auto-detects the (now
+bundled) `fitImage`:
+
+```console
+foo@bar:~/yocto$ sudo ./tools/flash/j722s-ecu1270_flash.sh \
+    --disk   /dev/sdX \
+    --images build/deploy-ti/images/j722s-ecu1270 \
+    --yocto  tisdk-base-image-j722s-ecu1270.rootfs.tar.xz
+```
+
+The kernel runs `/init` (the overlay script) from the initramfs instead of the real rootfs
+`/sbin/init` automatically — U-Boot's `bootm` command is untouched. By default, overlay writes
+land on a volatile tmpfs and are wiped on every reboot.
+
+## 5. Verify on the target
+
+After boot, confirm the overlay is active:
+
+```console
+root@j722s-ecu1270:~$ mount | grep ' / '
+# overlay on / type overlay (rw,...,lowerdir=/run/rootfs/lower,upperdir=/run/rwdata/upper,...)
+
+root@j722s-ecu1270:~$ mount | grep ' /ro '
+# /dev/mmcblk1p2 on /ro type ext4 (ro,relatime)    <-- real rootfs, read-only
+
+root@j722s-ecu1270:~$ df -h /rw
+# tmpfs mounted at /rw — this is where writes actually land
+
+root@j722s-ecu1270:~$ cat /proc/cmdline
+# root=/dev/mmcblk1p2 and (if RAUC is on) rauc.slot=system0 are both still present and
+# untouched -- overlay-init reads root=, RAUC reads rauc.slot=, neither interferes with the other
+```
+
+Confirm writes are volatile (the key property — they vanish on reboot):
+
+```console
+root@j722s-ecu1270:~$ echo test > /overlay_write_test && sync && reboot
+# after reboot:
+root@j722s-ecu1270:~$ ls /overlay_write_test
+# ls: cannot access '/overlay_write_test': No such file or directory
+```
+
+The boot log should also show `overlay-init` taking over:
+
+```
+Run /init as init process
+overlay-init: lower (read-only rootfs): /dev/mmcblk1p2 (ext4)
+overlay-init: upper/work on volatile tmpfs
+overlay-init: switching to overlay root, real init: /sbin/init
+```
+
+## 6. Development backdoor
+
+To temporarily boot with a normal read-write rootfs (e.g. to modify the rootfs in place during
+development) without rebuilding, interrupt U-Boot and append `overlayroot=disabled` to the
+kernel command line:
+
+```sh
+=> setenv bootargs ${bootargs} overlayroot=disabled
+=> run loadfitimage
+```
+
+The `overlay-init` script will skip the overlay and mount the real rootfs read-write.
+
+> [!NOTE]
+> This is a development convenience only. Production images should always boot with the overlay
+> active so the rootfs stays immutable and power-loss-safe.
+
+---
+
 # LUKS + TPM (encrypted `/data` or `/appdata`)
 
 `meta-ecu-1270` includes optional LUKS2 encryption for a data partition, unlocked
