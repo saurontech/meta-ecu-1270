@@ -1,0 +1,172 @@
+#!/bin/sh
+# overlay-init — initramfs /init that builds an overlayfs root.
+# Target: Advantech ECU-1270 (TI J722S), meta-ecu-1270.
+#
+# Mountpoint layout (standard lower/upper/work/merged names, under /run/):
+#   /run/rootfs/lower    real rootfs, read-only          (lowerdir)
+#   /run/rootfs/merged   combined view, switch_root here (the new /)
+#   /run/rwdata          writable storage: tmpfs or a real partition
+#     upper              all writes land here            (upperdir)
+#     work               overlayfs internal scratch      (workdir)
+#
+# Boot flow (TI K3):
+#   tiboot3 -> tispl -> u-boot -> ext4load boot/fitImage -> bootm
+#     -> kernel (initramfs bundled inside the signed kernel image node)
+#       -> /init (this script, PID 1)
+#         -> mount real rootfs read-only as lower
+#         -> mount tmpfs (or overlayrwdev) for upper/work
+#         -> mount overlayfs as merged
+#         -> switch_root (frees ALL initramfs RAM) -> real init
+#
+# Recognized kernel cmdline parameters:
+#   root=DEV               read-only rootfs device, the lower layer (required)
+#                          U-Boot always gives /dev/mmcblk<0|1>p<2|3> here
+#   rootfstype=TYPE        lower filesystem type      (default: ext4)
+#   rootdelay=SECS         max wait for root device   (default: 10)
+#   init=PATH              real init to hand off to   (default: /sbin/init)
+#   overlayrwdev=SPEC      persistent storage for upper/work. Anything busybox
+#                          mount accepts: /dev/..., LABEL=..., UUID=...
+#                          (default: unset -> tmpfs, volatile, wiped on reboot)
+#   overlayroot=disabled   skip overlay, boot real rootfs read-write
+#                          (development backdoor)
+#
+# NOT parsed on purpose: rauc.slot=. There is exactly ONE writable layer, so
+# there is nothing to key on a slot name. rauc.slot= stays in /proc/cmdline
+# untouched and RAUC keeps reading it itself.
+
+log() { echo "overlay-init: $*"; }
+
+rescue() {
+    echo "overlay-init: FATAL: $*" >&2
+    echo "overlay-init: dropping to rescue shell" >&2
+    exec /bin/sh
+}
+
+# --- 1. kernel virtual filesystems ------------------------------------
+# NOTE: even with CONFIG_DEVTMPFS_MOUNT=y (which the TI defconfig does set)
+# the kernel does NOT auto-mount devtmpfs inside an initramfs — we must do
+# it ourselves, or /dev/mmcblk* will not exist.
+mount -t proc     proc     /proc || rescue "cannot mount /proc"
+mount -t sysfs    sysfs    /sys  || rescue "cannot mount /sys"
+mount -t devtmpfs devtmpfs /dev  || rescue "cannot mount /dev"
+
+# --- 2. parse kernel command line --------------------------------------
+ROOT=""
+FSTYPE="ext4"
+DELAY=10
+REAL_INIT="/sbin/init"
+RWDEV=""
+OVERLAY="enabled"
+
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in
+        root=*)         ROOT="${arg#root=}" ;;
+        rootfstype=*)   FSTYPE="${arg#rootfstype=}" ;;
+        rootdelay=*)    DELAY="${arg#rootdelay=}" ;;
+        init=*)         REAL_INIT="${arg#init=}" ;;
+        overlayrwdev=*) RWDEV="${arg#overlayrwdev=}" ;;
+        overlayroot=*)  OVERLAY="${arg#overlayroot=}" ;;
+    esac
+done
+
+[ -n "$ROOT" ] || rescue "root= not found in cmdline"
+
+# --- 3. mount helper: retry until it works (replaces kernel's rootwait) -
+# We are the ones mounting root now, so we do the waiting.
+#
+# Everything is handed to `mount` verbatim and we just retry, which means this
+# script never has to know HOW the device is named. busybox mount resolves
+# LABEL= / UUID= by itself (resolve_mount_spec(), enabled by
+# CONFIG_FEATURE_MOUNT_LABEL=y in this build), so a device path and a label
+# spec are equally valid here - no findfs applet, no /dev/... assumption, no
+# partition-number table.
+mount_retry() {
+    _i=0
+    until mount "$@" 2>/dev/null; do
+        [ "$_i" -lt $((DELAY * 10)) ] || return 1
+        sleep 0.1
+        _i=$((_i + 1))
+    done
+}
+
+log "lower (read-only rootfs): $ROOT ($FSTYPE)"
+
+# --- 4. development backdoor: overlayroot=disabled ----------------------
+# No layers at all here: the real rootfs is mounted rw straight onto the
+# switch_root target, so there is no lower/upper/work and no /ro or /rw
+# afterwards - writes land on flash. /etc/fstab is deliberately NOT rewritten
+# on this path (unlike step 6): here the target IS the real filesystem and it
+# is mounted rw, so editing it would permanently modify the rootfs.
+if [ "$OVERLAY" = "disabled" ]; then
+    log "overlay DISABLED via cmdline — booting real rootfs read-write"
+    mkdir -p /run/rootfs/merged
+    mount_retry -t "$FSTYPE" -o rw "$ROOT" /run/rootfs/merged \
+        || rescue "cannot mount '$ROOT' rw (device late/absent, or wrong rootfstype)"
+    mount --move /proc /run/rootfs/merged/proc 2>/dev/null
+    mount --move /sys  /run/rootfs/merged/sys  2>/dev/null
+    mount --move /dev  /run/rootfs/merged/dev  2>/dev/null
+    exec switch_root /run/rootfs/merged "$REAL_INIT"
+    rescue "switch_root failed"
+fi
+
+# --- 5. mount the layers ------------------------------------------------
+# overlayfs must be available. The TI defconfig ships CONFIG_OVERLAY_FS=m,
+# so meta-ecu-1270 adds an overlayfs.cfg fragment forcing =y. The
+# modprobe below is a belt-and-braces fallback if someone drops the fragment
+# AND ships kernel-module-overlay in the initramfs.
+modprobe overlay 2>/dev/null
+grep -qw overlay /proc/filesystems || rescue "kernel lacks overlayfs support"
+
+mkdir -p /run/rootfs/lower /run/rootfs/merged /run/rwdata
+
+# lower: the real rootfs, mounted read-only — never written again
+mount_retry -t "$FSTYPE" -o ro "$ROOT" /run/rootfs/lower \
+    || rescue "cannot mount '$ROOT' ro (device late/absent, wrong rootfstype, or empty slot)"
+
+# writable storage for upper/work:
+#   - overlayrwdev= given -> persistent storage (survives reboot)
+#   - otherwise           -> tmpfs in RAM (volatile, wiped on reboot)
+if [ -n "$RWDEV" ]; then
+    mount_retry "$RWDEV" /run/rwdata || rescue "cannot mount rw storage '$RWDEV'"
+    log "upper/work on persistent device: $RWDEV"
+else
+    mount -t tmpfs -o mode=0755 tmpfs /run/rwdata || rescue "cannot mount tmpfs"
+    log "upper/work on volatile tmpfs"
+fi
+# One writable layer, fixed names. Subdirs (not the mount root itself) so a
+# persistent partition's lost+found never shows up in /.
+mkdir -p /run/rwdata/upper /run/rwdata/work
+
+# merged: what the system will see as /
+mount -t overlay overlay \
+    -o lowerdir=/run/rootfs/lower,upperdir=/run/rwdata/upper,workdir=/run/rwdata/work \
+    /run/rootfs/merged || rescue "cannot mount overlayfs"
+
+# --- 6. prepare the merged root -----------------------------------------
+MERGED=/run/rootfs/merged
+
+# Drop the root entry from fstab so systemd does not try to remount / from a
+# block device. base-files ships "/dev/root / auto defaults 1 1" and /dev/root
+# does not exist once the kernel is not the one mounting root.
+# Overlay copy only — the on-disk fstab in the rootfs stays intact.
+if [ -f /run/rootfs/lower/etc/fstab ]; then
+    awk '$1 ~ /^#/ || $2 != "/"' /run/rootfs/lower/etc/fstab > "$MERGED/etc/fstab"
+    echo "# root entry removed by overlay-init (overlay root active)" \
+        >> "$MERGED/etc/fstab"
+fi
+
+# Keep the layers reachable from inside the new root (debug / OTA access).
+# Use root-level /ro and /rw so systemd's tmpfs on /run does not shadow them.
+mkdir -p "$MERGED/ro" "$MERGED/rw"
+mount --move /run/rootfs/lower "$MERGED/ro" || rescue "cannot move lower to /ro"
+mount --move /run/rwdata       "$MERGED/rw" || rescue "cannot move rwdata to /rw"
+
+# --- 7. hand off --------------------------------------------------------
+# busybox switch_root does not move API filesystems for us (util-linux does)
+mount --move /proc "$MERGED/proc" 2>/dev/null
+mount --move /sys  "$MERGED/sys"  2>/dev/null
+mount --move /dev  "$MERGED/dev"  2>/dev/null
+
+log "switching to overlay root, real init: $REAL_INIT"
+exec switch_root "$MERGED" "$REAL_INIT"
+rescue "switch_root failed"

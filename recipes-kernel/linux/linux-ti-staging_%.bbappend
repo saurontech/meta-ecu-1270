@@ -7,10 +7,16 @@ SRC_URI:append:j722s-ecu1270 = " file://0004-enable-gpio-wdt.patch"
 SRC_URI:append:j722s-ecu1270 = " file://rauc.cfg"
 SRC_URI:append:j722s-ecu1270 = " file://gpio_wdt.cfg"
 SRC_URI:append:j722s-ecu1270 = " file://uart.cfg"
+SRC_URI:append:j722s-ecu1270 = " file://tpm.cfg"
+SRC_URI:append:j722s-ecu1270 = " file://luks.cfg"
+SRC_URI:append:j722s-ecu1270 = " file://overlayfs.cfg"
 
 KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/rauc.cfg"
 KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/uart.cfg"
 KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/gpio_wdt.cfg"
+KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/tpm.cfg"
+KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/luks.cfg"
+KERNEL_CONFIG_FRAGMENTS += " ${WORKDIR}/overlayfs.cfg"
 
 # The following patches are eventpoll-related patches from the Linux kernel mailing list that 
 # fix a use-after-free bug in the ep_remove() function. They are applied in order to ensure that
