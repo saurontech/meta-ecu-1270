@@ -1,0 +1,67 @@
+From 07cc70cde78b79caf063008be1bd49f90ee2d383 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Mon, 26 Jan 2026 11:44:08 +0200
+Subject: [PATCH 142/420] mmc: renesas_sdhi: Switch to
+ SYSTEM_SLEEP_PM_OPS()/RUNTIME_PM_OPS() and pm_ptr()
+
+commit 50371ef025a433f782c04dfdd3b59251831a8be3 upstream.
+
+SET_SYSTEM_SLEEP_PM_OPS() and SET_RUNTIME_PM_OPS() require __maybe_unused
+or #ifdefs protection against unused function warnings. The usage of
+pm_ptr() and SYSTEM_SLEEP_PM_OPS()/RUNTIME_PM_OPS() allows the compiler to
+see the functions, thus suppressing the warning. Drop the #ifdefs.
+
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/mmc/host/renesas_sdhi_internal_dmac.c | 11 +++++------
+ drivers/mmc/host/tmio_mmc.h                   |  2 --
+ 2 files changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_internal_dmac.c b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+index 5652979e09ed..ec475d427421 100644
+--- a/drivers/mmc/host/renesas_sdhi_internal_dmac.c
++++ b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+@@ -599,18 +599,17 @@ static int renesas_sdhi_internal_dmac_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct dev_pm_ops renesas_sdhi_internal_dmac_dev_pm_ops = {
+-	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
+-				pm_runtime_force_resume)
+-	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
+-			   tmio_mmc_host_runtime_resume,
+-			   NULL)
++	SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend, pm_runtime_force_resume)
++	RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
++		       tmio_mmc_host_runtime_resume,
++		       NULL)
+ };
+ 
+ static struct platform_driver renesas_internal_dmac_sdhi_driver = {
+ 	.driver		= {
+ 		.name	= "renesas_sdhi_internal_dmac",
+ 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+-		.pm	= &renesas_sdhi_internal_dmac_dev_pm_ops,
++		.pm	= pm_ptr(&renesas_sdhi_internal_dmac_dev_pm_ops),
+ 		.of_match_table = renesas_sdhi_internal_dmac_of_match,
+ 	},
+ 	.probe		= renesas_sdhi_internal_dmac_probe,
+diff --git a/drivers/mmc/host/tmio_mmc.h b/drivers/mmc/host/tmio_mmc.h
+index a7263eb10450..572078c9f2d4 100644
+--- a/drivers/mmc/host/tmio_mmc.h
++++ b/drivers/mmc/host/tmio_mmc.h
+@@ -209,10 +209,8 @@ void tmio_mmc_enable_mmc_irqs(struct tmio_mmc_host *host, u32 i);
+ void tmio_mmc_disable_mmc_irqs(struct tmio_mmc_host *host, u32 i);
+ irqreturn_t tmio_mmc_irq(int irq, void *devid);
+ 
+-#ifdef CONFIG_PM
+ int tmio_mmc_host_runtime_suspend(struct device *dev);
+ int tmio_mmc_host_runtime_resume(struct device *dev);
+-#endif
+ 
+ static inline u16 sd_ctrl_read16(struct tmio_mmc_host *host, int addr)
+ {

@@ -1,0 +1,73 @@
+From 9df89c6f6fcc2318fe50e19e9435cf8ba7229ce7 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Wed, 28 Jan 2026 13:26:43 +0000
+Subject: [PATCH 149/420] thermal/drivers/renesas/rzg3e: Add thermal driver for
+ the Renesas RZ/G3E SoC
+
+commit 19d3a401a617c68e9487f55b9f2efe213f8f949d upstream.
+
+The RZ/G3E SoC integrates a Temperature Sensor Unit (TSU) block designed
+to monitor the chip's junction temperature. This sensor is connected to
+channel 1 of the APB port clock/reset and provides temperature measurements.
+
+It also requires calibration values stored in the system controller registers
+for accurate temperature measurement. Add a driver for the Renesas RZ/G3E TSU.
+
+[ dlezcano: Fixed conflict with "renesas: Add support for RZ/G3S" ]
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250917170202.197929-3-john.madieu.xa@bp.renesas.com
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ MAINTAINERS                      | 7 +++++++
+ drivers/thermal/renesas/Kconfig  | 7 +++++++
+ drivers/thermal/renesas/Makefile | 2 ++
+ 3 files changed, 16 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5a169a7212db..7b3afd158dba 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19774,6 +19774,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/thermal/renesas,r9a08g045-tsu.yaml
+ F:	drivers/thermal/renesas/rzg3s_thermal.c
+ 
++RENESAS RZ/G3E THERMAL SENSOR UNIT DRIVER
++M:	John Madieu <john.madieu.xa@bp.renesas.com>
++L:	linux-pm@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
++F:	drivers/thermal/renesas/rzg3e_thermal.c
++
+ RESET CONTROLLER FRAMEWORK
+ M:	Philipp Zabel <p.zabel@pengutronix.de>
+ S:	Maintained
+diff --git a/drivers/thermal/renesas/Kconfig b/drivers/thermal/renesas/Kconfig
+index 566478797095..7780d80ca1fe 100644
+--- a/drivers/thermal/renesas/Kconfig
++++ b/drivers/thermal/renesas/Kconfig
+@@ -34,3 +34,10 @@ config RZG3S_THERMAL
+ 	help
+ 	  Enable this to plug the RZ/G3S thermal sensor driver into the Linux
+ 	  thermal framework.
++
++config RZG3E_THERMAL
++	tristate "Renesas RZ/G3E thermal driver"
++	depends on ARCH_RENESAS || COMPILE_TEST
++	help
++	  Enable this to plug the RZ/G3E thermal sensor driver into the Linux
++	  thermal framework.
+diff --git a/drivers/thermal/renesas/Makefile b/drivers/thermal/renesas/Makefile
+index 1feb5ab78827..0ea592247572 100644
+--- a/drivers/thermal/renesas/Makefile
++++ b/drivers/thermal/renesas/Makefile
+@@ -3,4 +3,6 @@
+ obj-$(CONFIG_RCAR_GEN3_THERMAL)	+= rcar_gen3_thermal.o
+ obj-$(CONFIG_RCAR_THERMAL)	+= rcar_thermal.o
+ obj-$(CONFIG_RZG2L_THERMAL)	+= rzg2l_thermal.o
++obj-$(CONFIG_RZG3E_THERMAL)	+= rzg3e_thermal.o
+ obj-$(CONFIG_RZG3S_THERMAL)	+= rzg3s_thermal.o
++

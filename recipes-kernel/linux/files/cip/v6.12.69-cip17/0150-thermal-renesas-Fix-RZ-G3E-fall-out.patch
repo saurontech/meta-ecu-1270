@@ -1,0 +1,91 @@
+From a92464e33ecf551f319b098556772b045a97f215 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Wed, 28 Jan 2026 13:26:44 +0000
+Subject: [PATCH 150/420] thermal: renesas: Fix RZ/G3E fall-out
+
+commit e649c3662b4fd9d4e01607c91a0facc7d9005570 upstream.
+
+ - Restore sort order in MAINTAINERS and Kconfig,
+ - Remove empty trailing line from Makefile.
+
+Fixes: 19d3a401a617c68e ("thermal/drivers/renesas/rzg3e: Add thermal driver for the Renesas RZ/G3E SoC")
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ MAINTAINERS                      | 14 +++++++-------
+ drivers/thermal/renesas/Kconfig  | 14 +++++++-------
+ drivers/thermal/renesas/Makefile |  1 -
+ 3 files changed, 14 insertions(+), 15 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7b3afd158dba..50f44b9d6e8d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19767,13 +19767,6 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/iio/potentiometer/renesas,x9250.yaml
+ F:	drivers/iio/potentiometer/x9250.c
+ 
+-RENESAS RZ/G3S THERMAL SENSOR UNIT DRIVER
+-M:	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+-L:	linux-pm@vger.kernel.org
+-S:	Maintained
+-F:	Documentation/devicetree/bindings/thermal/renesas,r9a08g045-tsu.yaml
+-F:	drivers/thermal/renesas/rzg3s_thermal.c
+-
+ RENESAS RZ/G3E THERMAL SENSOR UNIT DRIVER
+ M:	John Madieu <john.madieu.xa@bp.renesas.com>
+ L:	linux-pm@vger.kernel.org
+@@ -19781,6 +19774,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+ F:	drivers/thermal/renesas/rzg3e_thermal.c
+ 
++RENESAS RZ/G3S THERMAL SENSOR UNIT DRIVER
++M:	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
++L:	linux-pm@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/thermal/renesas,r9a08g045-tsu.yaml
++F:	drivers/thermal/renesas/rzg3s_thermal.c
++
+ RESET CONTROLLER FRAMEWORK
+ M:	Philipp Zabel <p.zabel@pengutronix.de>
+ S:	Maintained
+diff --git a/drivers/thermal/renesas/Kconfig b/drivers/thermal/renesas/Kconfig
+index 7780d80ca1fe..d55ea77c2eec 100644
+--- a/drivers/thermal/renesas/Kconfig
++++ b/drivers/thermal/renesas/Kconfig
+@@ -27,6 +27,13 @@ config RZG2L_THERMAL
+ 	  Enable this to plug the RZ/G2L thermal sensor driver into the Linux
+ 	  thermal framework.
+ 
++config RZG3E_THERMAL
++	tristate "Renesas RZ/G3E thermal driver"
++	depends on ARCH_RENESAS || COMPILE_TEST
++	help
++	  Enable this to plug the RZ/G3E thermal sensor driver into the Linux
++	  thermal framework.
++
+ config RZG3S_THERMAL
+ 	tristate "Renesas RZ/G3S thermal driver"
+ 	depends on ARCH_R9A08G045 || COMPILE_TEST
+@@ -34,10 +41,3 @@ config RZG3S_THERMAL
+ 	help
+ 	  Enable this to plug the RZ/G3S thermal sensor driver into the Linux
+ 	  thermal framework.
+-
+-config RZG3E_THERMAL
+-	tristate "Renesas RZ/G3E thermal driver"
+-	depends on ARCH_RENESAS || COMPILE_TEST
+-	help
+-	  Enable this to plug the RZ/G3E thermal sensor driver into the Linux
+-	  thermal framework.
+diff --git a/drivers/thermal/renesas/Makefile b/drivers/thermal/renesas/Makefile
+index 0ea592247572..8f5ae9af277c 100644
+--- a/drivers/thermal/renesas/Makefile
++++ b/drivers/thermal/renesas/Makefile
+@@ -5,4 +5,3 @@ obj-$(CONFIG_RCAR_THERMAL)	+= rcar_thermal.o
+ obj-$(CONFIG_RZG2L_THERMAL)	+= rzg2l_thermal.o
+ obj-$(CONFIG_RZG3E_THERMAL)	+= rzg3e_thermal.o
+ obj-$(CONFIG_RZG3S_THERMAL)	+= rzg3s_thermal.o
+-

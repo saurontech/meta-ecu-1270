@@ -1,0 +1,2 @@
+# action commit patch reason
+skip 4d733efd584b 0302-dmaengine-ti-k3-udma-Enable-second-resource-range-fo.patch Equivalent change exists: 2a22ced08c02 (FROMLIST: dmaengine: ti: k3-udma: Enable second resource range for BCDMA and PKTDMA) is the same change, its +/- lines are identical to this patch. TI's 0e92f439b72f (PENDING: drivers: dma: ti: Refactor TI K3 UDMA driver) later moved bcdma_setup_resources() and pktdma_setup_resources() to k3-udma-common.c, where all added lines are present, so the patch no longer finds its context in k3-udma.c.

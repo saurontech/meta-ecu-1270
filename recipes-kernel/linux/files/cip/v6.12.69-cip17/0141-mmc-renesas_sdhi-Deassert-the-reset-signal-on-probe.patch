@@ -1,0 +1,35 @@
+From c5f3ebd03522bcc0f7adf0581baa9b2930534610 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Mon, 26 Jan 2026 11:44:07 +0200
+Subject: [PATCH 141/420] mmc: renesas_sdhi: Deassert the reset signal on probe
+
+commit 15213383a3d9195db582729ab3feb923605b6f63 upstream.
+
+Deassert the reset signal of the SDHI controller during probe to avoid
+relying on the previous bootloaders. Without deasserting the reset signal,
+the SDHI controller will not function.
+
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/mmc/host/renesas_sdhi_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 8b898d0229c8..bc1d6a877c0e 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -1071,7 +1071,7 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 	if (IS_ERR(priv->clk_cd))
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(priv->clk_cd), "cannot get cd clock");
+ 
+-	priv->rstc = devm_reset_control_get_optional_exclusive(&pdev->dev, NULL);
++	priv->rstc = devm_reset_control_get_optional_exclusive_deasserted(&pdev->dev, NULL);
+ 	if (IS_ERR(priv->rstc))
+ 		return PTR_ERR(priv->rstc);
+ 

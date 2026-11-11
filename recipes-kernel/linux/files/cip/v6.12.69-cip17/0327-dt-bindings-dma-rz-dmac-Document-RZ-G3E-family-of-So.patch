@@ -1,0 +1,42 @@
+From 783104cefa316c746f4b824c211f99e41462b5b9 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 28 Jan 2026 17:00:46 +0100
+Subject: [PATCH 327/420] dt-bindings: dma: rz-dmac: Document RZ/G3E family of
+ SoCs
+
+commit cc0bacac6de7763a038550cf43cb94634d8be9cd upstream.
+
+The DMAC block on the RZ/G3E SoC is identical to the one found on the
+RZ/V2H(P) SoC.
+
+No driver changes are required, as `renesas,r9a09g057-dmac` will be used
+as a fallback compatible string on the RZ/G3E SoC.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250801084825.471011-3-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml b/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
+index 52c247dc5fde..a43b6f29a688 100644
+--- a/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
++++ b/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
+@@ -20,6 +20,11 @@ properties:
+               - renesas,r9a08g045-dmac # RZ/G3S
+           - const: renesas,rz-dmac
+ 
++      - items:
++          - enum:
++              - renesas,r9a09g047-dmac # RZ/G3E
++          - const: renesas,r9a09g057-dmac
++
+       - const: renesas,r9a09g057-dmac # RZ/V2H(P)
+ 
+   reg:
