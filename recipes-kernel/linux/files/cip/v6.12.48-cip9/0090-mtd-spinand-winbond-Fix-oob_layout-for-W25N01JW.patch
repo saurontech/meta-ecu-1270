@@ -1,0 +1,44 @@
+From 044ba8d23889ccdfdf817b70cc6d13687e5ab05b Mon Sep 17 00:00:00 2001
+From: Santhosh Kumar K <s-k6@ti.com>
+Date: Sat, 13 Sep 2025 12:19:24 -0400
+Subject: [PATCH] mtd: spinand: winbond: Fix oob_layout for W25N01JW
+
+[ Upstream commit 4550d33e18112a11a740424c4eec063cd58e918c ]
+
+Fix the W25N01JW's oob_layout according to the datasheet [1]
+
+[1] https://www.winbond.com/hq/product/code-storage-flash-memory/qspinand-flash/?__locale=en&partNo=W25N01JW
+
+Fixes: 6a804fb72de5 ("mtd: spinand: winbond: add support for serial NAND flash")
+Cc: Sridharan S N <quic_sridsn@quicinc.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Santhosh Kumar K <s-k6@ti.com>
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+[ Adjust context ]
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/mtd/nand/spi/winbond.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mtd/nand/spi/winbond.c b/drivers/mtd/nand/spi/winbond.c
+index bd89a4b5c475..bda9907ff794 100644
+--- a/drivers/mtd/nand/spi/winbond.c
++++ b/drivers/mtd/nand/spi/winbond.c
+@@ -155,8 +155,14 @@ static int w25n01jw_ooblayout_free(struct mtd_info *mtd, int section,
+ 	if (section > 3)
+ 		return -ERANGE;
+ 
+-	region->offset = (16 * section) + 2;
+-	region->length = 10;
++	region->offset = (16 * section);
++	region->length = 12;
++
++	/* Extract BBM */
++	if (!section) {
++		region->offset += 2;
++		region->length -= 2;
++	}
+ 
+ 	return 0;
+ }
