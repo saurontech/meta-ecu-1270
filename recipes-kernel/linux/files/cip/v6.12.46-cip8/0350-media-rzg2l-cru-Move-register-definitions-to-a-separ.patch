@@ -1,0 +1,219 @@
+From 4c39c2e7dac5c07ba138c251a506afe62efd36b3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:28 +0200
+Subject: [PATCH 350/643] media: rzg2l-cru: Move register definitions to a
+ separate file
+
+commit c0fc8dd01ffc37f3ce4132b7b2b579fbf64aaca7 upstream.
+
+Move the RZ/G2L CRU register definitions from `rzg2l-video.c` to a
+dedicated header file, `rzg2l-cru-regs.h`. Separating these definitions
+into their own file improves the readability of the code.
+
+Suggested-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-23-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../renesas/rzg2l-cru/rzg2l-cru-regs.h        | 80 +++++++++++++++++++
+ .../platform/renesas/rzg2l-cru/rzg2l-cru.h    |  2 -
+ .../platform/renesas/rzg2l-cru/rzg2l-ip.c     |  1 +
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c  | 69 +---------------
+ 4 files changed, 82 insertions(+), 70 deletions(-)
+ create mode 100644 drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h
+new file mode 100644
+index 000000000000..1c9f22118a5d
+--- /dev/null
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h
+@@ -0,0 +1,80 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * rzg2l-cru-regs.h--RZ/G2L (and alike SoCs) CRU Registers Definitions
++ *
++ * Copyright (C) 2024 Renesas Electronics Corp.
++ */
++
++#ifndef __RZG2L_CRU_REGS_H__
++#define __RZG2L_CRU_REGS_H__
++
++/* HW CRU Registers Definition */
++
++/* CRU Control Register */
++#define CRUnCTRL			0x0
++#define CRUnCTRL_VINSEL(x)		((x) << 0)
++
++/* CRU Interrupt Enable Register */
++#define CRUnIE				0x4
++#define CRUnIE_EFE			BIT(17)
++
++/* CRU Interrupt Status Register */
++#define CRUnINTS			0x8
++#define CRUnINTS_SFS			BIT(16)
++
++/* CRU Reset Register */
++#define CRUnRST				0xc
++#define CRUnRST_VRESETN			BIT(0)
++
++/* Memory Bank Base Address (Lower) Register for CRU Image Data */
++#define AMnMBxADDRL(x)			(0x100 + ((x) * 8))
++
++/* Memory Bank Base Address (Higher) Register for CRU Image Data */
++#define AMnMBxADDRH(x)			(0x104 + ((x) * 8))
++
++/* Memory Bank Enable Register for CRU Image Data */
++#define AMnMBVALID			0x148
++#define AMnMBVALID_MBVALID(x)		GENMASK(x, 0)
++
++/* Memory Bank Status Register for CRU Image Data */
++#define AMnMBS				0x14c
++#define AMnMBS_MBSTS			0x7
++
++/* AXI Master Transfer Setting Register for CRU Image Data */
++#define AMnAXIATTR			0x158
++#define AMnAXIATTR_AXILEN_MASK		GENMASK(3, 0)
++#define AMnAXIATTR_AXILEN		(0xf)
++
++/* AXI Master FIFO Pointer Register for CRU Image Data */
++#define AMnFIFOPNTR			0x168
++#define AMnFIFOPNTR_FIFOWPNTR		GENMASK(7, 0)
++#define AMnFIFOPNTR_FIFORPNTR_Y		GENMASK(23, 16)
++
++/* AXI Master Transfer Stop Register for CRU Image Data */
++#define AMnAXISTP			0x174
++#define AMnAXISTP_AXI_STOP		BIT(0)
++
++/* AXI Master Transfer Stop Status Register for CRU Image Data */
++#define AMnAXISTPACK			0x178
++#define AMnAXISTPACK_AXI_STOP_ACK	BIT(0)
++
++/* CRU Image Processing Enable Register */
++#define ICnEN				0x200
++#define ICnEN_ICEN			BIT(0)
++
++/* CRU Image Processing Main Control Register */
++#define ICnMC				0x208
++#define ICnMC_CSCTHR			BIT(5)
++#define ICnMC_INF(x)			((x) << 16)
++#define ICnMC_VCSEL(x)			((x) << 22)
++#define ICnMC_INF_MASK			GENMASK(21, 16)
++
++/* CRU Module Status Register */
++#define ICnMS				0x254
++#define ICnMS_IA			BIT(2)
++
++/* CRU Data Output Mode Register */
++#define ICnDMR				0x26c
++#define ICnDMR_YCMODE_UYVY		(1 << 4)
++
++#endif /* __RZG2L_CRU_REGS_H__ */
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index c40754732576..a83e78d9b0be 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -31,8 +31,6 @@
+ #define RZG2L_CRU_MIN_INPUT_HEIGHT	240
+ #define RZG2L_CRU_MAX_INPUT_HEIGHT	4095
+ 
+-#define ICnDMR_YCMODE_UYVY		(1 << 4)
+-
+ enum rzg2l_csi2_pads {
+ 	RZG2L_CRU_IP_SINK = 0,
+ 	RZG2L_CRU_IP_SOURCE,
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index 982c996cc777..d935d981f9d3 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -9,6 +9,7 @@
+ #include <media/mipi-csi2.h>
+ 
+ #include "rzg2l-cru.h"
++#include "rzg2l-cru-regs.h"
+ 
+ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 	{
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index a686a5cd4f59..a4dc3689599c 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -20,74 +20,7 @@
+ #include <media/videobuf2-dma-contig.h>
+ 
+ #include "rzg2l-cru.h"
+-
+-/* HW CRU Registers Definition */
+-
+-/* CRU Control Register */
+-#define CRUnCTRL			0x0
+-#define CRUnCTRL_VINSEL(x)		((x) << 0)
+-
+-/* CRU Interrupt Enable Register */
+-#define CRUnIE				0x4
+-#define CRUnIE_EFE			BIT(17)
+-
+-/* CRU Interrupt Status Register */
+-#define CRUnINTS			0x8
+-#define CRUnINTS_SFS			BIT(16)
+-
+-/* CRU Reset Register */
+-#define CRUnRST				0xc
+-#define CRUnRST_VRESETN			BIT(0)
+-
+-/* Memory Bank Base Address (Lower) Register for CRU Image Data */
+-#define AMnMBxADDRL(x)			(0x100 + ((x) * 8))
+-
+-/* Memory Bank Base Address (Higher) Register for CRU Image Data */
+-#define AMnMBxADDRH(x)			(0x104 + ((x) * 8))
+-
+-/* Memory Bank Enable Register for CRU Image Data */
+-#define AMnMBVALID			0x148
+-#define AMnMBVALID_MBVALID(x)		GENMASK(x, 0)
+-
+-/* Memory Bank Status Register for CRU Image Data */
+-#define AMnMBS				0x14c
+-#define AMnMBS_MBSTS			0x7
+-
+-/* AXI Master Transfer Setting Register for CRU Image Data */
+-#define AMnAXIATTR			0x158
+-#define AMnAXIATTR_AXILEN_MASK		GENMASK(3, 0)
+-#define AMnAXIATTR_AXILEN		(0xf)
+-
+-/* AXI Master FIFO Pointer Register for CRU Image Data */
+-#define AMnFIFOPNTR			0x168
+-#define AMnFIFOPNTR_FIFOWPNTR		GENMASK(7, 0)
+-#define AMnFIFOPNTR_FIFORPNTR_Y		GENMASK(23, 16)
+-
+-/* AXI Master Transfer Stop Register for CRU Image Data */
+-#define AMnAXISTP			0x174
+-#define AMnAXISTP_AXI_STOP		BIT(0)
+-
+-/* AXI Master Transfer Stop Status Register for CRU Image Data */
+-#define AMnAXISTPACK			0x178
+-#define AMnAXISTPACK_AXI_STOP_ACK	BIT(0)
+-
+-/* CRU Image Processing Enable Register */
+-#define ICnEN				0x200
+-#define ICnEN_ICEN			BIT(0)
+-
+-/* CRU Image Processing Main Control Register */
+-#define ICnMC				0x208
+-#define ICnMC_CSCTHR			BIT(5)
+-#define ICnMC_INF(x)			((x) << 16)
+-#define ICnMC_VCSEL(x)			((x) << 22)
+-#define ICnMC_INF_MASK			GENMASK(21, 16)
+-
+-/* CRU Module Status Register */
+-#define ICnMS				0x254
+-#define ICnMS_IA			BIT(2)
+-
+-/* CRU Data Output Mode Register */
+-#define ICnDMR				0x26c
++#include "rzg2l-cru-regs.h"
+ 
+ #define RZG2L_TIMEOUT_MS		100
+ #define RZG2L_RETRIES			10

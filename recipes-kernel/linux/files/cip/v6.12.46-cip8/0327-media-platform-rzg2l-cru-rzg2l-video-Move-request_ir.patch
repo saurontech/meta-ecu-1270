@@ -1,0 +1,152 @@
+From e7964ab986dee0415793416fc581a13598a0177f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:05 +0200
+Subject: [PATCH 327/643] media: platform: rzg2l-cru: rzg2l-video: Move
+ request_irq() to probe()
+
+commit 0c200daa5780f3d0ba6fff4b6bf9e4bb924fa5ca upstream.
+
+Move request_irq() to probe(), in order to avoid requesting IRQ during
+device start which happens frequently. As this function is in probe(), it
+is better to replace it with its devm variant for managing the resource
+efficiently.
+
+While at it, drop the IRQF_SHARED flag as currently there is a single user
+for this IRQ.
+
+Suggested-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../media/platform/renesas/rzg2l-cru/rzg2l-core.c | 13 +++++++++----
+ .../media/platform/renesas/rzg2l-cru/rzg2l-cru.h  |  6 ++----
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c      | 15 ++-------------
+ 3 files changed, 13 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index 280efd2a8185..19e0ba9596c9 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -242,7 +242,7 @@ static int rzg2l_cru_media_init(struct rzg2l_cru_dev *cru)
+ static int rzg2l_cru_probe(struct platform_device *pdev)
+ {
+ 	struct rzg2l_cru_dev *cru;
+-	int ret;
++	int irq, ret;
+ 
+ 	cru = devm_kzalloc(&pdev->dev, sizeof(*cru), GFP_KERNEL);
+ 	if (!cru)
+@@ -270,9 +270,14 @@ static int rzg2l_cru_probe(struct platform_device *pdev)
+ 	cru->dev = &pdev->dev;
+ 	cru->info = of_device_get_match_data(&pdev->dev);
+ 
+-	cru->image_conv_irq = platform_get_irq(pdev, 0);
+-	if (cru->image_conv_irq < 0)
+-		return cru->image_conv_irq;
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return irq;
++
++	ret = devm_request_irq(&pdev->dev, irq, rzg2l_cru_irq, 0,
++			       KBUILD_MODNAME, cru);
++	if (ret)
++		return dev_err_probe(&pdev->dev, ret, "failed to request irq\n");
+ 
+ 	platform_set_drvdata(pdev, cru);
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index a5a99b004322..174760239548 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -8,6 +8,7 @@
+ #ifndef __RZG2L_CRU__
+ #define __RZG2L_CRU__
+ 
++#include <linux/irqreturn.h>
+ #include <linux/reset.h>
+ 
+ #include <media/v4l2-async.h>
+@@ -68,8 +69,6 @@ struct rzg2l_cru_ip {
+  *
+  * @vclk:		CRU Main clock
+  *
+- * @image_conv_irq:	Holds image conversion interrupt number
+- *
+  * @vdev:		V4L2 video device associated with CRU
+  * @v4l2_dev:		V4L2 device
+  * @num_buf:		Holds the current number of buffers enabled
+@@ -105,8 +104,6 @@ struct rzg2l_cru_dev {
+ 
+ 	struct clk *vclk;
+ 
+-	int image_conv_irq;
+-
+ 	struct video_device vdev;
+ 	struct v4l2_device v4l2_dev;
+ 	u8 num_buf;
+@@ -141,6 +138,7 @@ void rzg2l_cru_dma_unregister(struct rzg2l_cru_dev *cru);
+ 
+ int rzg2l_cru_video_register(struct rzg2l_cru_dev *cru);
+ void rzg2l_cru_video_unregister(struct rzg2l_cru_dev *cru);
++irqreturn_t rzg2l_cru_irq(int irq, void *data);
+ 
+ const struct v4l2_format_info *rzg2l_cru_format_from_pixel(u32 format);
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index b16b8af6e8f8..e80bfb9fc1af 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -527,7 +527,7 @@ static void rzg2l_cru_stop_streaming(struct rzg2l_cru_dev *cru)
+ 	rzg2l_cru_set_stream(cru, 0);
+ }
+ 
+-static irqreturn_t rzg2l_cru_irq(int irq, void *data)
++irqreturn_t rzg2l_cru_irq(int irq, void *data)
+ {
+ 	struct rzg2l_cru_dev *cru = data;
+ 	unsigned int handled = 0;
+@@ -637,13 +637,6 @@ static int rzg2l_cru_start_streaming_vq(struct vb2_queue *vq, unsigned int count
+ 		goto assert_aresetn;
+ 	}
+ 
+-	ret = request_irq(cru->image_conv_irq, rzg2l_cru_irq,
+-			  IRQF_SHARED, KBUILD_MODNAME, cru);
+-	if (ret) {
+-		dev_err(cru->dev, "failed to request irq\n");
+-		goto assert_presetn;
+-	}
+-
+ 	/* Allocate scratch buffer. */
+ 	cru->scratch = dma_alloc_coherent(cru->dev, cru->format.sizeimage,
+ 					  &cru->scratch_phys, GFP_KERNEL);
+@@ -651,7 +644,7 @@ static int rzg2l_cru_start_streaming_vq(struct vb2_queue *vq, unsigned int count
+ 		return_unused_buffers(cru, VB2_BUF_STATE_QUEUED);
+ 		dev_err(cru->dev, "Failed to allocate scratch buffer\n");
+ 		ret = -ENOMEM;
+-		goto free_image_conv_irq;
++		goto assert_presetn;
+ 	}
+ 
+ 	cru->sequence = 0;
+@@ -670,9 +663,6 @@ static int rzg2l_cru_start_streaming_vq(struct vb2_queue *vq, unsigned int count
+ 	if (ret)
+ 		dma_free_coherent(cru->dev, cru->format.sizeimage, cru->scratch,
+ 				  cru->scratch_phys);
+-free_image_conv_irq:
+-	free_irq(cru->image_conv_irq, cru);
+-
+ assert_presetn:
+ 	reset_control_assert(cru->presetn);
+ 
+@@ -698,7 +688,6 @@ static void rzg2l_cru_stop_streaming_vq(struct vb2_queue *vq)
+ 	dma_free_coherent(cru->dev, cru->format.sizeimage,
+ 			  cru->scratch, cru->scratch_phys);
+ 
+-	free_irq(cru->image_conv_irq, cru);
+ 	return_unused_buffers(cru, VB2_BUF_STATE_ERROR);
+ 
+ 	reset_control_assert(cru->presetn);

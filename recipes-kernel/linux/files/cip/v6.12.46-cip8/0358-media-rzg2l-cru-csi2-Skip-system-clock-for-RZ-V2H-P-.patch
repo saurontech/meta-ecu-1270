@@ -1,0 +1,63 @@
+From a61c8d2c845371a79eae50aad88c06a78bb85f8a Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:36 +0200
+Subject: [PATCH 358/643] media: rzg2l-cru: csi2: Skip system clock for
+ RZ/V2H(P) SoC
+
+commit ed472263fcc48f72e32cb494061bf8b8c333891a upstream.
+
+The RZ/V2H(P) SoC does not require a `system` clock for the CSI-2
+interface. To accommodate this, introduce a `has_system_clk` bool flag
+in the `rzg2l_csi2_info` structure and update the rzg2l_csi2_probe() to
+conditionally request the clock only when needed.
+
+This patch is in preparation for adding support for RZ/V2H(P) SoC.
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-10-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../media/platform/renesas/rzg2l-cru/rzg2l-csi2.c    | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index e02e8107a33a..88f904b2eef2 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -127,6 +127,7 @@ struct rzg2l_csi2 {
+ struct rzg2l_csi2_info {
+ 	int (*dphy_enable)(struct rzg2l_csi2 *csi2);
+ 	int (*dphy_disable)(struct rzg2l_csi2 *csi2);
++	bool has_system_clk;
+ };
+ 
+ struct rzg2l_csi2_timings {
+@@ -364,6 +365,7 @@ static int rzg2l_csi2_dphy_enable(struct rzg2l_csi2 *csi2)
+ static const struct rzg2l_csi2_info rzg2l_csi2_info = {
+ 	.dphy_enable = rzg2l_csi2_dphy_enable,
+ 	.dphy_disable = rzg2l_csi2_dphy_disable,
++	.has_system_clk = true,
+ };
+ 
+ static int rzg2l_csi2_dphy_setting(struct v4l2_subdev *sd, bool on)
+@@ -801,10 +803,12 @@ static int rzg2l_csi2_probe(struct platform_device *pdev)
+ 		return dev_err_probe(dev, PTR_ERR(csi2->presetn),
+ 				     "Failed to get cpg presetn\n");
+ 
+-	csi2->sysclk = devm_clk_get(dev, "system");
+-	if (IS_ERR(csi2->sysclk))
+-		return dev_err_probe(dev, PTR_ERR(csi2->sysclk),
+-				     "Failed to get system clk\n");
++	if (csi2->info->has_system_clk) {
++		csi2->sysclk = devm_clk_get(dev, "system");
++		if (IS_ERR(csi2->sysclk))
++			return dev_err_probe(dev, PTR_ERR(csi2->sysclk),
++					     "Failed to get system clk\n");
++	}
+ 
+ 	csi2->vclk = devm_clk_get(dev, "video");
+ 	if (IS_ERR(csi2->vclk))

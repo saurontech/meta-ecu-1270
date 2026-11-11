@@ -1,0 +1,109 @@
+From 25e0961218bc1073a4aa6f31dbc9dfb9b516363b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:12 +0200
+Subject: [PATCH 334/643] media: rzg2l-cru: Retrieve virtual channel
+ information
+
+commit d7d72dae81d5d77c4167d793aacb73c77a13172a upstream.
+
+The RZ/G2L CRU needs to configure the ICnMC.VCSEL bits to specify which
+virtual channel should be processed from the four available VCs. To
+retrieve this information from the connected subdevice, the
+.get_frame_desc() function is called.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-7-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-cru.h    |  5 +++
+ .../platform/renesas/rzg2l-cru/rzg2l-ip.c     |  5 ---
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c  | 34 +++++++++++++++++++
+ 3 files changed, 39 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 174760239548..8fbd45c43763 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -31,6 +31,11 @@
+ #define RZG2L_CRU_MIN_INPUT_HEIGHT	240
+ #define RZG2L_CRU_MAX_INPUT_HEIGHT	4095
+ 
++enum rzg2l_csi2_pads {
++	RZG2L_CRU_IP_SINK = 0,
++	RZG2L_CRU_IP_SOURCE,
++};
++
+ /**
+  * enum rzg2l_cru_dma_state - DMA states
+  * @RZG2L_CRU_DMA_STOPPED:   No operation in progress
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index 700d8b704689..aee7d4ba70b0 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -18,11 +18,6 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 	{ .code = MEDIA_BUS_FMT_UYVY8_1X16,	.datatype = 0x1e, .bpp = 16 },
+ };
+ 
+-enum rzg2l_csi2_pads {
+-	RZG2L_CRU_IP_SINK = 0,
+-	RZG2L_CRU_IP_SOURCE,
+-};
+-
+ static const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code)
+ {
+ 	unsigned int i;
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index bbf4674f888d..7cd33eb1939c 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -433,12 +433,46 @@ void rzg2l_cru_stop_image_processing(struct rzg2l_cru_dev *cru)
+ 	spin_unlock_irqrestore(&cru->qlock, flags);
+ }
+ 
++static int rzg2l_cru_get_virtual_channel(struct rzg2l_cru_dev *cru)
++{
++	struct v4l2_mbus_frame_desc fd = { };
++	struct media_pad *remote_pad;
++	int ret;
++
++	remote_pad = media_pad_remote_pad_unique(&cru->ip.pads[RZG2L_CRU_IP_SINK]);
++	ret = v4l2_subdev_call(cru->ip.remote, pad, get_frame_desc, remote_pad->index, &fd);
++	if (ret < 0 && ret != -ENOIOCTLCMD) {
++		dev_err(cru->dev, "get_frame_desc failed on IP remote subdev\n");
++		return ret;
++	}
++	/* If remote subdev does not implement .get_frame_desc default to VC0. */
++	if (ret == -ENOIOCTLCMD)
++		return 0;
++
++	if (fd.type != V4L2_MBUS_FRAME_DESC_TYPE_CSI2) {
++		dev_err(cru->dev, "get_frame_desc returned invalid bus type %d\n", fd.type);
++		return -EINVAL;
++	}
++
++	if (!fd.num_entries) {
++		dev_err(cru->dev, "get_frame_desc returned zero entries\n");
++		return -EINVAL;
++	}
++
++	return fd.entry[0].bus.csi2.vc;
++}
++
+ int rzg2l_cru_start_image_processing(struct rzg2l_cru_dev *cru)
+ {
+ 	struct v4l2_mbus_framefmt *fmt = rzg2l_cru_ip_get_src_fmt(cru);
+ 	unsigned long flags;
+ 	int ret;
+ 
++	ret = rzg2l_cru_get_virtual_channel(cru);
++	if (ret < 0)
++		return ret;
++	cru->csi.channel = ret;
++
+ 	spin_lock_irqsave(&cru->qlock, flags);
+ 
+ 	/* Select a video input */

@@ -1,0 +1,44 @@
+From 03c3d6080b8db1b537bb3b7084b3246b2062afc4 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:09 +0200
+Subject: [PATCH 331/643] media: rzg2l-cru: csi2: Mark sink and source pad with
+ MUST_CONNECT flag
+
+commit a4e014bfdaa029223429c02b6fb0aa39c34e06e7 upstream.
+
+Mark the sink and source pad with the MEDIA_PAD_FL_MUST_CONNECT flag to
+ensure pipeline validation fails if it is not connected.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index c7fdee347ac8..2f4c87ede8bf 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -795,13 +795,15 @@ static int rzg2l_csi2_probe(struct platform_device *pdev)
+ 	csi2->subdev.entity.function = MEDIA_ENT_F_VID_IF_BRIDGE;
+ 	csi2->subdev.entity.ops = &rzg2l_csi2_entity_ops;
+ 
+-	csi2->pads[RZG2L_CSI2_SINK].flags = MEDIA_PAD_FL_SINK;
++	csi2->pads[RZG2L_CSI2_SINK].flags = MEDIA_PAD_FL_SINK |
++					    MEDIA_PAD_FL_MUST_CONNECT;
+ 	/*
+ 	 * TODO: RZ/G2L CSI2 supports 4 virtual channels, as virtual
+ 	 * channels should be implemented by streams API which is under
+ 	 * development lets hardcode to VC0 for now.
+ 	 */
+-	csi2->pads[RZG2L_CSI2_SOURCE].flags = MEDIA_PAD_FL_SOURCE;
++	csi2->pads[RZG2L_CSI2_SOURCE].flags = MEDIA_PAD_FL_SOURCE |
++					      MEDIA_PAD_FL_MUST_CONNECT;
+ 	ret = media_entity_pads_init(&csi2->subdev.entity, 2, csi2->pads);
+ 	if (ret)
+ 		goto error_pm;

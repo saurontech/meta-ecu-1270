@@ -1,0 +1,63 @@
+From 8e936f72a8c1450ccaf3d8fb0b8ace4d513c788a Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:20 +0200
+Subject: [PATCH 342/643] media: rzg2l-cru: Inline calculating bytesperline
+
+commit 7e58132ca2bca4f46533604877b4fac080274699 upstream.
+
+Remove the `rzg2l_cru_format_bytesperline()` function and inline the
+calculation of `bytesperline` directly in `rzg2l_cru_format_align()`.
+This simplifies the code by removing an unnecessary function call and
+directly multiplying the image width by the `bpp` (bytes per pixel)
+from the format structure.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-15-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c     | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index a0fa4542ac43..8932fab7c656 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -812,20 +812,16 @@ int rzg2l_cru_dma_register(struct rzg2l_cru_dev *cru)
+  * V4L2 stuff
+  */
+ 
+-static u32 rzg2l_cru_format_bytesperline(struct v4l2_pix_format *pix)
++static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
++				   struct v4l2_pix_format *pix)
+ {
+ 	const struct rzg2l_cru_ip_format *fmt;
+ 
+ 	fmt = rzg2l_cru_ip_format_to_fmt(pix->pixelformat);
+-
+-	return pix->width * fmt->bpp;
+-}
+-
+-static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+-				   struct v4l2_pix_format *pix)
+-{
+-	if (!rzg2l_cru_ip_format_to_fmt(pix->pixelformat))
++	if (!fmt) {
+ 		pix->pixelformat = RZG2L_CRU_DEFAULT_FORMAT;
++		fmt = rzg2l_cru_ip_format_to_fmt(pix->pixelformat);
++	}
+ 
+ 	switch (pix->field) {
+ 	case V4L2_FIELD_TOP:
+@@ -844,7 +840,7 @@ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 	v4l_bound_align_image(&pix->width, 320, RZG2L_CRU_MAX_INPUT_WIDTH, 1,
+ 			      &pix->height, 240, RZG2L_CRU_MAX_INPUT_HEIGHT, 2, 0);
+ 
+-	pix->bytesperline = rzg2l_cru_format_bytesperline(pix);
++	pix->bytesperline = pix->width * fmt->bpp;
+ 	pix->sizeimage = pix->bytesperline * pix->height;
+ 
+ 	dev_dbg(cru->dev, "Format %ux%u bpl: %u size: %u\n",

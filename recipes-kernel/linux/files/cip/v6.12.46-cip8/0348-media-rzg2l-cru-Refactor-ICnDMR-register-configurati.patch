@@ -1,0 +1,109 @@
+From 8ef8a570a0ffb6f32937324cd1aa14868d434dbd Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:26 +0200
+Subject: [PATCH 348/643] media: rzg2l-cru: Refactor ICnDMR register
+ configuration
+
+commit c6ed80fd67438c113928f4d0d883f24d63874794 upstream.
+
+Refactor the ICnDMR register configuration in
+`rzg2l_cru_initialize_image_conv()` by adding a new member `icndmr` in the
+`rzg2l_cru_ip_format` structure.
+
+Suggested-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-21-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h |  4 ++++
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c  |  1 +
+ .../media/platform/renesas/rzg2l-cru/rzg2l-video.c   | 12 ++++--------
+ 3 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 327516272e53..c40754732576 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -31,6 +31,8 @@
+ #define RZG2L_CRU_MIN_INPUT_HEIGHT	240
+ #define RZG2L_CRU_MAX_INPUT_HEIGHT	4095
+ 
++#define ICnDMR_YCMODE_UYVY		(1 << 4)
++
+ enum rzg2l_csi2_pads {
+ 	RZG2L_CRU_IP_SINK = 0,
+ 	RZG2L_CRU_IP_SOURCE,
+@@ -67,12 +69,14 @@ struct rzg2l_cru_ip {
+  * @code: Media bus code
+  * @datatype: MIPI CSI2 data type
+  * @format: 4CC format identifier (V4L2_PIX_FMT_*)
++ * @icndmr: ICnDMR register value
+  * @bpp: bytes per pixel
+  */
+ struct rzg2l_cru_ip_format {
+ 	u32 code;
+ 	u32 datatype;
+ 	u32 format;
++	u32 icndmr;
+ 	u8 bpp;
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index 07859c89be77..ad470de440ad 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -16,6 +16,7 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.datatype = MIPI_CSI2_DT_YUV422_8B,
+ 		.format = V4L2_PIX_FMT_UYVY,
+ 		.bpp = 2,
++		.icndmr = ICnDMR_YCMODE_UYVY,
+ 	},
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index df6114cbe5c7..a686a5cd4f59 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -88,7 +88,6 @@
+ 
+ /* CRU Data Output Mode Register */
+ #define ICnDMR				0x26c
+-#define ICnDMR_YCMODE_UYVY		(1 << 4)
+ 
+ #define RZG2L_TIMEOUT_MS		100
+ #define RZG2L_RETRIES			10
+@@ -279,18 +278,15 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 					   u8 csi_vc)
+ {
+ 	const struct v4l2_format_info *src_finfo, *dst_finfo;
++	const struct rzg2l_cru_ip_format *cru_video_fmt;
+ 	const struct rzg2l_cru_ip_format *cru_ip_fmt;
+-	u32 icndmr;
+ 
+ 	cru_ip_fmt = rzg2l_cru_ip_code_to_fmt(ip_sd_fmt->code);
+ 	rzg2l_cru_csi2_setup(cru, cru_ip_fmt, csi_vc);
+ 
+ 	/* Output format */
+-	switch (cru->format.pixelformat) {
+-	case V4L2_PIX_FMT_UYVY:
+-		icndmr = ICnDMR_YCMODE_UYVY;
+-		break;
+-	default:
++	cru_video_fmt = rzg2l_cru_ip_format_to_fmt(cru->format.pixelformat);
++	if (!cru_video_fmt) {
+ 		dev_err(cru->dev, "Invalid pixelformat (0x%x)\n",
+ 			cru->format.pixelformat);
+ 		return -EINVAL;
+@@ -308,7 +304,7 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 				rzg2l_cru_read(cru, ICnMC) & (~ICnMC_CSCTHR));
+ 
+ 	/* Set output data format */
+-	rzg2l_cru_write(cru, ICnDMR, icndmr);
++	rzg2l_cru_write(cru, ICnDMR, cru_video_fmt->icndmr);
+ 
+ 	return 0;
+ }

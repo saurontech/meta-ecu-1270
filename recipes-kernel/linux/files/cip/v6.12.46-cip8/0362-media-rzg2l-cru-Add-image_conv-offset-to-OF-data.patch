@@ -1,0 +1,98 @@
+From f1db9af76171350bb2fad9560a0895ef8d2b120e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:40 +0200
+Subject: [PATCH 362/643] media: rzg2l-cru: Add image_conv offset to OF data
+
+commit 48ce5920da1d65f22b4808564f6f5c9c4ff9d976 upstream.
+
+Add `image_conv` field to the `rzg2l_cru_info` structure to store the
+register offset for image conversion control. RZ/G2L uses `ICnMC`, while
+RZ/G3E and RZ/V2H(P) use `ICnIPMC_C0`.
+
+Update `rzg2l_cru_initialize_image_conv()` and `rzg2l_cru_csi2_setup()`
+to use this `image_conv` offset from the OF data, facilitating future
+support for RZ/G3E and RZ/V2H(P) SoCs.
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-14-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../media/platform/renesas/rzg2l-cru/rzg2l-core.c  |  1 +
+ .../media/platform/renesas/rzg2l-cru/rzg2l-cru.h   |  1 +
+ .../media/platform/renesas/rzg2l-cru/rzg2l-video.c | 14 ++++++++------
+ 3 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index 6c3e6c20ac6a..254afe5e594a 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -354,6 +354,7 @@ static const u16 rzg2l_cru_regs[] = {
+ static const struct rzg2l_cru_info rzgl2_cru_info = {
+ 	.max_width = 2800,
+ 	.max_height = 4095,
++	.image_conv = ICnMC,
+ 	.regs = rzg2l_cru_regs,
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 6a621073948a..ca156772b949 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -81,6 +81,7 @@ struct rzg2l_cru_ip_format {
+ struct rzg2l_cru_info {
+ 	unsigned int max_width;
+ 	unsigned int max_height;
++	u16 image_conv;
+ 	const u16 *regs;
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 83e8af1d7ef2..d9135e2825fe 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -246,20 +246,22 @@ static void rzg2l_cru_csi2_setup(struct rzg2l_cru_dev *cru,
+ 				 const struct rzg2l_cru_ip_format *ip_fmt,
+ 				 u8 csi_vc)
+ {
++	const struct rzg2l_cru_info *info = cru->info;
+ 	u32 icnmc = ICnMC_INF(ip_fmt->datatype);
+ 
+-	icnmc |= (rzg2l_cru_read(cru, ICnMC) & ~ICnMC_INF_MASK);
++	icnmc |= rzg2l_cru_read(cru, info->image_conv) & ~ICnMC_INF_MASK;
+ 
+ 	/* Set virtual channel CSI2 */
+ 	icnmc |= ICnMC_VCSEL(csi_vc);
+ 
+-	rzg2l_cru_write(cru, ICnMC, icnmc);
++	rzg2l_cru_write(cru, info->image_conv, icnmc);
+ }
+ 
+ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 					   struct v4l2_mbus_framefmt *ip_sd_fmt,
+ 					   u8 csi_vc)
+ {
++	const struct rzg2l_cru_info *info = cru->info;
+ 	const struct rzg2l_cru_ip_format *cru_video_fmt;
+ 	const struct rzg2l_cru_ip_format *cru_ip_fmt;
+ 
+@@ -276,11 +278,11 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 
+ 	/* If input and output use same colorspace, do bypass mode */
+ 	if (cru_ip_fmt->yuv == cru_video_fmt->yuv)
+-		rzg2l_cru_write(cru, ICnMC,
+-				rzg2l_cru_read(cru, ICnMC) | ICnMC_CSCTHR);
++		rzg2l_cru_write(cru, info->image_conv,
++				rzg2l_cru_read(cru, info->image_conv) | ICnMC_CSCTHR);
+ 	else
+-		rzg2l_cru_write(cru, ICnMC,
+-				rzg2l_cru_read(cru, ICnMC) & (~ICnMC_CSCTHR));
++		rzg2l_cru_write(cru, info->image_conv,
++				rzg2l_cru_read(cru, info->image_conv) & ~ICnMC_CSCTHR);
+ 
+ 	/* Set output data format */
+ 	rzg2l_cru_write(cru, ICnDMR, cru_video_fmt->icndmr);

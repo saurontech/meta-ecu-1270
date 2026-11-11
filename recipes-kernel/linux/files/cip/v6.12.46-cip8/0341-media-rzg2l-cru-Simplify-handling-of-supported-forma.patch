@@ -1,0 +1,164 @@
+From ab80fc6ce03bde97298155aeed7bb3aa6d32abc4 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:19 +0200
+Subject: [PATCH 341/643] media: rzg2l-cru: Simplify handling of supported
+ formats
+
+commit 8853467c41e8edd77a1dceb22c085d1d483946c3 upstream.
+
+Refactor the handling of supported formats in the RZ/G2L CRU driver by
+adding `pixelformat` and `bpp` members to the `rzg2l_cru_ip_format`
+structure.
+
+New helper functions, `rzg2l_cru_ip_format_to_fmt()` and
+`rzg2l_cru_ip_index_to_fmt()`, are added to retrieve format information
+based on 4CC format and index, respectively. These helpers allow the
+removal of the now redundant `rzg2l_cru_format_from_pixel()` function.
+
+The new helpers are used in `rzg2l_cru_format_bytesperline()`,
+`rzg2l_cru_format_align()`, and `rzg2l_cru_enum_fmt_vid_cap()`,
+streamlining the handling of supported formats and improving code
+maintainability.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-14-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-cru.h    |  6 ++++
+ .../platform/renesas/rzg2l-cru/rzg2l-ip.c     | 22 +++++++++++++
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c  | 33 +++++--------------
+ 3 files changed, 37 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 9b1ba015df3b..327516272e53 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -66,10 +66,14 @@ struct rzg2l_cru_ip {
+  * struct rzg2l_cru_ip_format - CRU IP format
+  * @code: Media bus code
+  * @datatype: MIPI CSI2 data type
++ * @format: 4CC format identifier (V4L2_PIX_FMT_*)
++ * @bpp: bytes per pixel
+  */
+ struct rzg2l_cru_ip_format {
+ 	u32 code;
+ 	u32 datatype;
++	u32 format;
++	u8 bpp;
+ };
+ 
+ /**
+@@ -161,5 +165,7 @@ void rzg2l_cru_ip_subdev_unregister(struct rzg2l_cru_dev *cru);
+ struct v4l2_mbus_framefmt *rzg2l_cru_ip_get_src_fmt(struct rzg2l_cru_dev *cru);
+ 
+ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code);
++const struct rzg2l_cru_ip_format *rzg2l_cru_ip_format_to_fmt(u32 format);
++const struct rzg2l_cru_ip_format *rzg2l_cru_ip_index_to_fmt(u32 index);
+ 
+ #endif
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index 8f9683bf31fa..a40b0184b955 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -14,6 +14,8 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 	{
+ 		.code = MEDIA_BUS_FMT_UYVY8_1X16,
+ 		.datatype = MIPI_CSI2_DT_YUV422_8B,
++		.format = V4L2_PIX_FMT_UYVY,
++		.bpp = 2,
+ 	},
+ };
+ 
+@@ -28,6 +30,26 @@ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code)
+ 	return NULL;
+ }
+ 
++const struct rzg2l_cru_ip_format *rzg2l_cru_ip_format_to_fmt(u32 format)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(rzg2l_cru_ip_formats); i++) {
++		if (rzg2l_cru_ip_formats[i].format == format)
++			return &rzg2l_cru_ip_formats[i];
++	}
++
++	return NULL;
++}
++
++const struct rzg2l_cru_ip_format *rzg2l_cru_ip_index_to_fmt(u32 index)
++{
++	if (index >= ARRAY_SIZE(rzg2l_cru_ip_formats))
++		return NULL;
++
++	return &rzg2l_cru_ip_formats[index];
++}
++
+ struct v4l2_mbus_framefmt *rzg2l_cru_ip_get_src_fmt(struct rzg2l_cru_dev *cru)
+ {
+ 	struct v4l2_subdev_state *state;
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 6a4f0455dc9c..a0fa4542ac43 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -812,37 +812,19 @@ int rzg2l_cru_dma_register(struct rzg2l_cru_dev *cru)
+  * V4L2 stuff
+  */
+ 
+-static const struct v4l2_format_info rzg2l_cru_formats[] = {
+-	{
+-		.format = V4L2_PIX_FMT_UYVY,
+-		.bpp[0] = 2,
+-	},
+-};
+-
+-const struct v4l2_format_info *rzg2l_cru_format_from_pixel(u32 format)
+-{
+-	unsigned int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(rzg2l_cru_formats); i++)
+-		if (rzg2l_cru_formats[i].format == format)
+-			return rzg2l_cru_formats + i;
+-
+-	return NULL;
+-}
+-
+ static u32 rzg2l_cru_format_bytesperline(struct v4l2_pix_format *pix)
+ {
+-	const struct v4l2_format_info *fmt;
++	const struct rzg2l_cru_ip_format *fmt;
+ 
+-	fmt = rzg2l_cru_format_from_pixel(pix->pixelformat);
++	fmt = rzg2l_cru_ip_format_to_fmt(pix->pixelformat);
+ 
+-	return pix->width * fmt->bpp[0];
++	return pix->width * fmt->bpp;
+ }
+ 
+ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 				   struct v4l2_pix_format *pix)
+ {
+-	if (!rzg2l_cru_format_from_pixel(pix->pixelformat))
++	if (!rzg2l_cru_ip_format_to_fmt(pix->pixelformat))
+ 		pix->pixelformat = RZG2L_CRU_DEFAULT_FORMAT;
+ 
+ 	switch (pix->field) {
+@@ -934,10 +916,13 @@ static int rzg2l_cru_g_fmt_vid_cap(struct file *file, void *priv,
+ static int rzg2l_cru_enum_fmt_vid_cap(struct file *file, void *priv,
+ 				      struct v4l2_fmtdesc *f)
+ {
+-	if (f->index >= ARRAY_SIZE(rzg2l_cru_formats))
++	const struct rzg2l_cru_ip_format *fmt;
++
++	fmt = rzg2l_cru_ip_index_to_fmt(f->index);
++	if (!fmt)
+ 		return -EINVAL;
+ 
+-	f->pixelformat = rzg2l_cru_formats[f->index].format;
++	f->pixelformat = fmt->format;
+ 
+ 	return 0;
+ }

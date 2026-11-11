@@ -1,0 +1,36 @@
+From 85ab07ddf79149b2be063495473965b5641b54d3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:25 +0200
+Subject: [PATCH 347/643] media: rzg2l-cru: csi2: Use rzg2l_csi2_formats array
+ in enum_frame_size
+
+commit cd559c80ddbf4819f697f3e3e16db15977298cab upstream.
+
+Make use of `rzg2l_csi2_formats` array in rzg2l_csi2_enum_frame_size() to
+validate if the `fse->code` is supported.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-20-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index 7b76d495cfe4..e21142d3b67d 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -573,6 +573,9 @@ static int rzg2l_csi2_enum_frame_size(struct v4l2_subdev *sd,
+ 	if (fse->index != 0)
+ 		return -EINVAL;
+ 
++	if (!rzg2l_csi2_code_to_fmt(fse->code))
++		return -EINVAL;
++
+ 	fse->min_width = RZG2L_CSI2_MIN_WIDTH;
+ 	fse->min_height = RZG2L_CSI2_MIN_HEIGHT;
+ 	fse->max_width = RZG2L_CSI2_MAX_WIDTH;

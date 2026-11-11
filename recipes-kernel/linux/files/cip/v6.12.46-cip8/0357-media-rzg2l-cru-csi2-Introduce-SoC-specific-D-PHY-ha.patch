@@ -1,0 +1,102 @@
+From dbc83c49d8c9b5763ba314b9cc3170781e9d2014 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:35 +0200
+Subject: [PATCH 357/643] media: rzg2l-cru: csi2: Introduce SoC-specific D-PHY
+ handling
+
+commit 15cef2dc7d688d5fc4919aa3c5c272931a8cd087 upstream.
+
+In preparation for adding support for the RZ/V2H(P) SoC, where the D-PHY
+differs from the existing RZ/G2L implementation, introduce a new
+rzg2l_csi2_info structure. This structure provides function pointers for
+SoC-specific D-PHY enable and disable operations.
+
+Modify rzg2l_csi2_dphy_setting() to use these function pointers instead of
+calling rzg2l_csi2_dphy_enable() and rzg2l_csi2_dphy_disable() directly.
+Update the device match table to store the appropriate function pointers
+for each compatible SoC.
+
+This change prepares the driver for future extensions without affecting
+the current functionality for RZ/G2L.
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-9-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-csi2.c   | 24 ++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index d7c8022fc9b7..e02e8107a33a 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -107,6 +107,7 @@ struct rzg2l_csi2 {
+ 	void __iomem *base;
+ 	struct reset_control *presetn;
+ 	struct reset_control *cmn_rstb;
++	const struct rzg2l_csi2_info *info;
+ 	struct clk *sysclk;
+ 	struct clk *vclk;
+ 	unsigned long vclk_rate;
+@@ -123,6 +124,11 @@ struct rzg2l_csi2 {
+ 	bool dphy_enabled;
+ };
+ 
++struct rzg2l_csi2_info {
++	int (*dphy_enable)(struct rzg2l_csi2 *csi2);
++	int (*dphy_disable)(struct rzg2l_csi2 *csi2);
++};
++
+ struct rzg2l_csi2_timings {
+ 	u32 t_init;
+ 	u32 tclk_miss;
+@@ -355,14 +361,19 @@ static int rzg2l_csi2_dphy_enable(struct rzg2l_csi2 *csi2)
+ 	return ret;
+ }
+ 
++static const struct rzg2l_csi2_info rzg2l_csi2_info = {
++	.dphy_enable = rzg2l_csi2_dphy_enable,
++	.dphy_disable = rzg2l_csi2_dphy_disable,
++};
++
+ static int rzg2l_csi2_dphy_setting(struct v4l2_subdev *sd, bool on)
+ {
+ 	struct rzg2l_csi2 *csi2 = sd_to_csi2(sd);
+ 
+ 	if (on)
+-		return rzg2l_csi2_dphy_enable(csi2);
++		return csi2->info->dphy_enable(csi2);
+ 
+-	return rzg2l_csi2_dphy_disable(csi2);
++	return csi2->info->dphy_disable(csi2);
+ }
+ 
+ static int rzg2l_csi2_mipi_link_enable(struct rzg2l_csi2 *csi2)
+@@ -772,6 +783,10 @@ static int rzg2l_csi2_probe(struct platform_device *pdev)
+ 	if (!csi2)
+ 		return -ENOMEM;
+ 
++	csi2->info = of_device_get_match_data(dev);
++	if (!csi2->info)
++		return dev_err_probe(dev, -EINVAL, "Failed to get OF match data\n");
++
+ 	csi2->base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(csi2->base))
+ 		return PTR_ERR(csi2->base);
+@@ -891,7 +906,10 @@ static const struct dev_pm_ops rzg2l_csi2_pm_ops = {
+ };
+ 
+ static const struct of_device_id rzg2l_csi2_of_table[] = {
+-	{ .compatible = "renesas,rzg2l-csi2", },
++	{
++		.compatible = "renesas,rzg2l-csi2",
++		.data = &rzg2l_csi2_info,
++	},
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, rzg2l_csi2_of_table);

@@ -1,0 +1,40 @@
+From 466ac117065084388b9b30580ed0fcbd4325f20d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:15 +0200
+Subject: [PATCH 337/643] media: rzg2l-cru: Remove unused fields from
+ rzg2l_cru_ip_format struct
+
+commit 40516958d7ec1b3b92d6db879d959eedb8205a4c upstream.
+
+Simplified the `rzg2l_cru_ip_format` struct by removing the unused
+`datatype` and `bpp` fields from the structure in `rzg2l-ip.c`.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-10-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index aee7d4ba70b0..7b006a0bfaae 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -10,12 +10,10 @@
+ 
+ struct rzg2l_cru_ip_format {
+ 	u32 code;
+-	unsigned int datatype;
+-	unsigned int bpp;
+ };
+ 
+ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+-	{ .code = MEDIA_BUS_FMT_UYVY8_1X16,	.datatype = 0x1e, .bpp = 16 },
++	{ .code = MEDIA_BUS_FMT_UYVY8_1X16, },
+ };
+ 
+ static const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code)

@@ -1,0 +1,128 @@
+From 87e572192d102b845328edb53e9692c0b53e97e0 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:17 +0200
+Subject: [PATCH 339/643] media: rzg2l-cru: Simplify configuring input format
+ for image processing
+
+commit b56dccafda941dba44b02fa3b41b95feacaff9f3 upstream.
+
+Move the `rzg2l_cru_ip_format` struct to `rzg2l-cru.h` for better
+accessibility and add a `datatype` member to it, allowing the
+configuration of the ICnMC register based on the MIPI CSI2 data type.
+
+Also, move the `rzg2l_cru_ip_code_to_fmt()` function to `rzg2l-cru.h`
+to streamline format lookup and make it more accessible across the
+driver.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-12-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../media/platform/renesas/rzg2l-cru/rzg2l-cru.h    | 12 ++++++++++++
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c | 13 +++++++------
+ .../media/platform/renesas/rzg2l-cru/rzg2l-video.c  | 13 +++++++------
+ 3 files changed, 26 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 4fe24bdde5b2..9b1ba015df3b 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -62,6 +62,16 @@ struct rzg2l_cru_ip {
+ 	struct v4l2_subdev *remote;
+ };
+ 
++/**
++ * struct rzg2l_cru_ip_format - CRU IP format
++ * @code: Media bus code
++ * @datatype: MIPI CSI2 data type
++ */
++struct rzg2l_cru_ip_format {
++	u32 code;
++	u32 datatype;
++};
++
+ /**
+  * struct rzg2l_cru_dev - Renesas CRU device structure
+  * @dev:		(OF) device
+@@ -150,4 +160,6 @@ int rzg2l_cru_ip_subdev_register(struct rzg2l_cru_dev *cru);
+ void rzg2l_cru_ip_subdev_unregister(struct rzg2l_cru_dev *cru);
+ struct v4l2_mbus_framefmt *rzg2l_cru_ip_get_src_fmt(struct rzg2l_cru_dev *cru);
+ 
++const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code);
++
+ #endif
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index 7b006a0bfaae..8f9683bf31fa 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -6,17 +6,18 @@
+  */
+ 
+ #include <linux/delay.h>
+-#include "rzg2l-cru.h"
++#include <media/mipi-csi2.h>
+ 
+-struct rzg2l_cru_ip_format {
+-	u32 code;
+-};
++#include "rzg2l-cru.h"
+ 
+ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+-	{ .code = MEDIA_BUS_FMT_UYVY8_1X16, },
++	{
++		.code = MEDIA_BUS_FMT_UYVY8_1X16,
++		.datatype = MIPI_CSI2_DT_YUV422_8B,
++	},
+ };
+ 
+-static const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code)
++const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code)
+ {
+ 	unsigned int i;
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 401ef7be58ec..37fea2bed00f 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -301,18 +301,17 @@ static void rzg2l_cru_initialize_axi(struct rzg2l_cru_dev *cru)
+ }
+ 
+ static void rzg2l_cru_csi2_setup(struct rzg2l_cru_dev *cru, bool *input_is_yuv,
+-				 struct v4l2_mbus_framefmt *ip_sd_fmt, u8 csi_vc)
++				 const struct rzg2l_cru_ip_format *ip_fmt,
++				 u8 csi_vc)
+ {
+-	u32 icnmc;
++	u32 icnmc = ICnMC_INF(ip_fmt->datatype);
+ 
+-	switch (ip_sd_fmt->code) {
++	switch (ip_fmt->code) {
+ 	case MEDIA_BUS_FMT_UYVY8_1X16:
+-		icnmc = ICnMC_INF(MIPI_CSI2_DT_YUV422_8B);
+ 		*input_is_yuv = true;
+ 		break;
+ 	default:
+ 		*input_is_yuv = false;
+-		icnmc = ICnMC_INF(MIPI_CSI2_DT_USER_DEFINED(0));
+ 		break;
+ 	}
+ 
+@@ -328,11 +327,13 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 					   struct v4l2_mbus_framefmt *ip_sd_fmt,
+ 					   u8 csi_vc)
+ {
++	const struct rzg2l_cru_ip_format *cru_ip_fmt;
+ 	bool output_is_yuv = false;
+ 	bool input_is_yuv = false;
+ 	u32 icndmr;
+ 
+-	rzg2l_cru_csi2_setup(cru, &input_is_yuv, ip_sd_fmt, csi_vc);
++	cru_ip_fmt = rzg2l_cru_ip_code_to_fmt(ip_sd_fmt->code);
++	rzg2l_cru_csi2_setup(cru, &input_is_yuv, cru_ip_fmt, csi_vc);
+ 
+ 	/* Output format */
+ 	switch (cru->format.pixelformat) {

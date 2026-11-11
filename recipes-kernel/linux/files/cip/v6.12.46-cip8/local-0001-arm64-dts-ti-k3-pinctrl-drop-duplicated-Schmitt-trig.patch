@@ -1,0 +1,32 @@
+From a4e8b8e36d1ccec6c8a1268f68a2683e1b7dcc3f Mon Sep 17 00:00:00 2001
+From: "suricata.lu" <suricata.lu@gmail.com>
+Date: Wed, 11 Nov 2026 14:09:45 +0800
+Subject: [PATCH] arm64: dts: ti: k3-pinctrl: drop duplicated Schmitt trigger
+ defines
+
+CIP patch 0040 (upstream 5b272127884b "arm64: dts: ti: k3-pinctrl: Enable
+Schmitt Trigger by default") was merged by git 3-way, but the TI base already
+has the same upstream commit as 7d1f923c5c44 ("UPSTREAM: arm64: dts: ti:
+k3-pinctrl: Enable Schmitt Trigger by default"). Because other TI commits moved
+the surrounding lines, the merge added a second, identical copy of the
+ST_DISABLE / ST_ENABLE block. Remove the copy; the file is then the same as in
+the TI base. No change to any dtb.
+---
+ arch/arm64/boot/dts/ti/k3-pinctrl.h | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/ti/k3-pinctrl.h b/arch/arm64/boot/dts/ti/k3-pinctrl.h
+index 0a3f8a74db39..4cdebdc018ef 100644
+--- a/arch/arm64/boot/dts/ti/k3-pinctrl.h
++++ b/arch/arm64/boot/dts/ti/k3-pinctrl.h
+@@ -25,10 +25,6 @@
+ #define ST_DISABLE		(0 << ST_EN_SHIFT)
+ #define ST_ENABLE		(1 << ST_EN_SHIFT)
+ 
+-/* Schmitt trigger configuration */
+-#define ST_DISABLE		(0 << ST_EN_SHIFT)
+-#define ST_ENABLE		(1 << ST_EN_SHIFT)
+-
+ #define PULL_DISABLE		(1 << PULLUDEN_SHIFT)
+ #define PULL_ENABLE		(0 << PULLUDEN_SHIFT)
+ 
