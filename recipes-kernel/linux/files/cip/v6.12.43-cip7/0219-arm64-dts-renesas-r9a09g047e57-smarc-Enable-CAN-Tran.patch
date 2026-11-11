@@ -1,0 +1,116 @@
+From 32492f18ea99c44719ff2324050d7225104902f1 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:36 +0100
+Subject: [PATCH 219/246] arm64: dts: renesas: r9a09g047e57-smarc: Enable CAN
+ Transceiver
+
+commit 99256644c8c9523e27312f6318058481943281ab upstream.
+
+Enable TCAN1046V-Q1 CAN Transceiver populated on RZ/G3E SMARC EVK by
+modelling it as two instances of tcan1042.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250320164121.193857-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts   | 22 ++++++++++++++++
+ .../boot/dts/renesas/renesas-smarc2.dtsi      | 25 +++++++++++++++++++
+ 2 files changed, 47 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 7e1daaabce8a..1f5e61a73c35 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -8,6 +8,8 @@
+ /dts-v1/;
+ 
+ /* Switch selection settings */
++#define SW_GPIO8_CAN0_STB	0
++#define SW_GPIO9_CAN1_STB	0
+ #define SW_LCD_EN		0
+ #define SW_PDM_EN		0
+ #define SW_SD0_DEV_SEL		0
+@@ -42,16 +44,36 @@ &canfd {
+ #if (!SW_PDM_EN)
+ 	channel1 {
+ 		status = "okay";
++#if (!SW_LCD_EN) && (SW_GPIO9_CAN1_STB)
++		phys = <&can_transceiver1>;
++#endif
+ 	};
+ #endif
+ 
+ #if (!SW_LCD_EN)
+ 	channel4 {
+ 		status = "okay";
++#if (SW_GPIO8_CAN0_STB)
++		phys = <&can_transceiver0>;
++#endif
+ 	};
+ #endif
+ };
+ 
++#if (!SW_LCD_EN) && (SW_GPIO8_CAN0_STB)
++&can_transceiver0 {
++	standby-gpios = <&pinctrl RZG3E_GPIO(5, 4) GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++#endif
++
++#if (!SW_LCD_EN) && (SW_GPIO9_CAN1_STB)
++&can_transceiver1 {
++	standby-gpios = <&pinctrl RZG3E_GPIO(5, 5) GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++#endif
++
+ &pinctrl {
+ 	canfd_pins: canfd {
+ 		can1_pins: can1 {
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index 1d3a844174b3..afdc1940e24a 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -12,6 +12,17 @@
+  * SW_SDIO_M2E:
+  *     0 - SMARC SDIO signal is connected to uSD1
+  *     1 - SMARC SDIO signal is connected to M.2 Key E connector
++ *
++ * Please set the switch position SW_GPIO_CAN_PMOD on the carrier board and the
++ * corresponding macro SW_GPIO8_CAN0_STB/SW_GPIO8_CAN0_STB on the board DTS:
++ *
++ * SW_GPIO8_CAN0_STB:
++ *	0 - Connect to GPIO8 PMOD (default)
++ *	1 - Connect to CAN0 transceiver STB pin
++ *
++ * SW_GPIO9_CAN1_STB:
++ *	0 - Connect to GPIO9 PMOD (default)
++ *	1 - Connect to CAN1 transceiver STB pin
+  */
+ 
+ / {
+@@ -27,6 +38,20 @@ aliases {
+ 		serial3 = &scif0;
+ 		mmc1 = &sdhi1;
+ 	};
++
++	can_transceiver0: can-phy0 {
++		compatible = "ti,tcan1042";
++		#phy-cells = <0>;
++		max-bitrate = <8000000>;
++		status = "disabled";
++	};
++
++	can_transceiver1: can-phy1 {
++		compatible = "ti,tcan1042";
++		#phy-cells = <0>;
++		max-bitrate = <8000000>;
++		status = "disabled";
++	};
+ };
+ 
+ &canfd {

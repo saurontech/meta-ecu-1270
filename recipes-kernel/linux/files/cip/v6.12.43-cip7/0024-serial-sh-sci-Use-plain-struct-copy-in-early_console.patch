@@ -1,0 +1,37 @@
+From 29d8c6a05fe4e75f1c517b1063329ce1f10062ce Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 3 Dec 2024 17:30:29 +0100
+Subject: [PATCH 024/246] serial: sh-sci: Use plain struct copy in
+ early_console_setup()
+
+Commit c1117a2fefbcce30cced3a180585e0adebc0fa89 upstream.
+
+Using memcpy() prevents the compiler from doing any checking on the
+types of the passed pointer parameters.  Copy the structure using struct
+assignment instead, to increase type-safety.
+
+No change in generated code on all relevant architectures
+(arm/arm64/riscv/sh).
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/r/e097e5c11afe5bd4c01135779c9a40e707ef6374.1733243287.git.geert+renesas@glider.be
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/tty/serial/sh-sci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 53236e3e4fa4..d4e7eb32abab 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3715,7 +3715,7 @@ static int __init early_console_setup(struct earlycon_device *device,
+ 		return -ENODEV;
+ 
+ 	device->port.type = type;
+-	memcpy(&sci_ports[0].port, &device->port, sizeof(struct uart_port));
++	sci_ports[0].port = device->port;
+ 	port_cfg.type = type;
+ 	sci_ports[0].cfg = &port_cfg;
+ 	sci_ports[0].params = sci_probe_regmap(&port_cfg);

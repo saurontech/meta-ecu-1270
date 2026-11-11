@@ -1,0 +1,41 @@
+From 69de11e8323ee7f6c5e8a047018b8963ca958727 Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Tue, 25 Mar 2025 15:56:00 +0100
+Subject: [PATCH 032/246] clk: renesas: r9a09g057: Add clock and reset entries
+ for ICU
+
+commit 44d13e198cbf031fdb8cb20b6bbbe82adcb951ca upstream.
+
+Add clock and reset entries for the Renesas RZ/V2H(P) ICU IP block.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20240930145244.356565-4-fabrizio.castro.jz@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/r9a09g057-cpg.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g057-cpg.c b/drivers/clk/renesas/r9a09g057-cpg.c
+index a426d0aa4592..7c4507fd34e6 100644
+--- a/drivers/clk/renesas/r9a09g057-cpg.c
++++ b/drivers/clk/renesas/r9a09g057-cpg.c
+@@ -94,6 +94,7 @@ static const struct cpg_core_clk r9a09g057_core_clks[] __initconst = {
+ };
+ 
+ static const struct rzv2h_mod_clk r9a09g057_mod_clks[] __initconst = {
++	DEF_MOD_CRITICAL("icu_0_pclk_i",	CLK_PLLCM33_DIV16, 0, 5, 0, 5),
+ 	DEF_MOD("gtm_0_pclk",			CLK_PLLCM33_DIV16, 4, 3, 2, 3),
+ 	DEF_MOD("gtm_1_pclk",			CLK_PLLCM33_DIV16, 4, 4, 2, 4),
+ 	DEF_MOD("gtm_2_pclk",			CLK_PLLCLN_DIV16, 4, 5, 2, 5),
+@@ -135,6 +136,7 @@ static const struct rzv2h_mod_clk r9a09g057_mod_clks[] __initconst = {
+ };
+ 
+ static const struct rzv2h_reset r9a09g057_resets[] __initconst = {
++	DEF_RST(3, 6, 1, 7),		/* ICU_0_PRESETN_I */
+ 	DEF_RST(6, 13, 2, 30),		/* GTM_0_PRESETZ */
+ 	DEF_RST(6, 14, 2, 31),		/* GTM_1_PRESETZ */
+ 	DEF_RST(6, 15, 3, 0),		/* GTM_2_PRESETZ */

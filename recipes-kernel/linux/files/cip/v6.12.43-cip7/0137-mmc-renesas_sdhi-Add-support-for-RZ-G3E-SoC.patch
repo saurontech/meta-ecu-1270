@@ -1,0 +1,280 @@
+From 64af9f0183c429c3f0ef479a54f0f6c43806febc Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:11 +0200
+Subject: [PATCH 137/246] mmc: renesas_sdhi: Add support for RZ/G3E SoC
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+commit fae80a99dc0320be854aa789cbe7ed0e1e574c61 upstream.
+
+The SDHI/eMMC IPs in the RZ/G3E SoC are similar to those in R-Car Gen3.
+However, the RZ/G3E SD0 channel has Voltage level control and PWEN pin
+support via SD_STATUS register.
+
+internal regulator support is added to control the voltage levels of
+the SD pins via sd_iovs/sd_pwen bits in SD_STATUS register by populating
+vqmmc-regulator child node.
+
+SD1 and SD2 channels have gpio regulator support and internal regulator
+support. Selection of the regulator is based on the regulator phandle.
+Similar case for SD0 fixed voltage (eMMC) that uses fixed regulator and
+SD0 non-fixed voltage (SD0) that uses internal regulator.
+
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250305092958.21865-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+[tommaso: Squashed the commits ede057759b83("mmc: renesas_sdhi: fix
+	  error code in renesas_sdhi_probe()") and
+	  77183db6b8db("mmc: renesas_sdhi: disable clocks if registering
+	  regulator failed") and
+	  9078f01fec12("mmc: renesas_sdhi: add regulator dependency")]
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/mmc/host/Kconfig             |   2 +-
+ drivers/mmc/host/renesas_sdhi.h      |   1 +
+ drivers/mmc/host/renesas_sdhi_core.c | 131 +++++++++++++++++++++++++++
+ drivers/mmc/host/tmio_mmc.h          |  10 ++
+ 4 files changed, 143 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/Kconfig b/drivers/mmc/host/Kconfig
+index 7199cb0bd0b9..c5a169395162 100644
+--- a/drivers/mmc/host/Kconfig
++++ b/drivers/mmc/host/Kconfig
+@@ -681,8 +681,8 @@ config MMC_TMIO_CORE
+ config MMC_SDHI
+ 	tristate "Renesas SDHI SD/SDIO controller support"
+ 	depends on SUPERH || ARCH_RENESAS || COMPILE_TEST
++	depends on (RESET_CONTROLLER && REGULATOR) || !OF
+ 	select MMC_TMIO_CORE
+-	select RESET_CONTROLLER if ARCH_RENESAS
+ 	help
+ 	  This provides support for the SDHI SD/SDIO controller found in
+ 	  Renesas SuperH, ARM and ARM64 based SoCs
+diff --git a/drivers/mmc/host/renesas_sdhi.h b/drivers/mmc/host/renesas_sdhi.h
+index f12a87442338..291ddb4ad9be 100644
+--- a/drivers/mmc/host/renesas_sdhi.h
++++ b/drivers/mmc/host/renesas_sdhi.h
+@@ -95,6 +95,7 @@ struct renesas_sdhi {
+ 
+ 	struct reset_control *rstc;
+ 	struct tmio_mmc_host *host;
++	struct regulator_dev *rdev;
+ };
+ 
+ #define host_to_priv(host) \
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 6ebb3d1eeb4d..8c83e203c516 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -32,6 +32,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_domain.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/regulator/driver.h>
++#include <linux/regulator/of_regulator.h>
+ #include <linux/reset.h>
+ #include <linux/sh_dma.h>
+ #include <linux/slab.h>
+@@ -581,12 +583,24 @@ static void renesas_sdhi_reset(struct tmio_mmc_host *host, bool preserve)
+ 
+ 	if (!preserve) {
+ 		if (priv->rstc) {
++			u32 sd_status;
++			/*
++			 * HW reset might have toggled the regulator state in
++			 * HW which regulator core might be unaware of so save
++			 * and restore the regulator state during HW reset.
++			 */
++			if (priv->rdev)
++				sd_status = sd_ctrl_read32(host, CTL_SD_STATUS);
++
+ 			reset_control_reset(priv->rstc);
+ 			/* Unknown why but without polling reset status, it will hang */
+ 			read_poll_timeout(reset_control_status, ret, ret == 0, 1, 100,
+ 					  false, priv->rstc);
+ 			/* At least SDHI_VER_GEN2_SDR50 needs manual release of reset */
+ 			sd_ctrl_write16(host, CTL_RESET_SD, 0x0001);
++			if (priv->rdev)
++				sd_ctrl_write32(host, CTL_SD_STATUS, sd_status);
++
+ 			priv->needs_adjust_hs400 = false;
+ 			renesas_sdhi_set_clock(host, host->clk_cache);
+ 
+@@ -904,6 +918,102 @@ static void renesas_sdhi_enable_dma(struct tmio_mmc_host *host, bool enable)
+ 	renesas_sdhi_sdbuf_width(host, enable ? width : 16);
+ }
+ 
++static const unsigned int renesas_sdhi_vqmmc_voltages[] = {
++	3300000, 1800000
++};
++
++static int renesas_sdhi_regulator_disable(struct regulator_dev *rdev)
++{
++	struct tmio_mmc_host *host = rdev_get_drvdata(rdev);
++	u32 sd_status;
++
++	sd_status = sd_ctrl_read32(host, CTL_SD_STATUS);
++	sd_status &= ~SD_STATUS_PWEN;
++	sd_ctrl_write32(host, CTL_SD_STATUS, sd_status);
++
++	return 0;
++}
++
++static int renesas_sdhi_regulator_enable(struct regulator_dev *rdev)
++{
++	struct tmio_mmc_host *host = rdev_get_drvdata(rdev);
++	u32 sd_status;
++
++	sd_status = sd_ctrl_read32(host, CTL_SD_STATUS);
++	sd_status |= SD_STATUS_PWEN;
++	sd_ctrl_write32(host, CTL_SD_STATUS, sd_status);
++
++	return 0;
++}
++
++static int renesas_sdhi_regulator_is_enabled(struct regulator_dev *rdev)
++{
++	struct tmio_mmc_host *host = rdev_get_drvdata(rdev);
++	u32 sd_status;
++
++	sd_status = sd_ctrl_read32(host, CTL_SD_STATUS);
++
++	return (sd_status & SD_STATUS_PWEN) ? 1 : 0;
++}
++
++static int renesas_sdhi_regulator_get_voltage(struct regulator_dev *rdev)
++{
++	struct tmio_mmc_host *host = rdev_get_drvdata(rdev);
++	u32 sd_status;
++
++	sd_status = sd_ctrl_read32(host, CTL_SD_STATUS);
++
++	return (sd_status & SD_STATUS_IOVS) ? 1800000 : 3300000;
++}
++
++static int renesas_sdhi_regulator_set_voltage(struct regulator_dev *rdev,
++					      int min_uV, int max_uV,
++					      unsigned int *selector)
++{
++	struct tmio_mmc_host *host = rdev_get_drvdata(rdev);
++	u32 sd_status;
++
++	sd_status = sd_ctrl_read32(host, CTL_SD_STATUS);
++	if (min_uV >= 1700000 && max_uV <= 1950000) {
++		sd_status |= SD_STATUS_IOVS;
++		*selector = 1;
++	} else {
++		sd_status &= ~SD_STATUS_IOVS;
++		*selector = 0;
++	}
++	sd_ctrl_write32(host, CTL_SD_STATUS, sd_status);
++
++	return 0;
++}
++
++static int renesas_sdhi_regulator_list_voltage(struct regulator_dev *rdev,
++					       unsigned int selector)
++{
++	if (selector >= ARRAY_SIZE(renesas_sdhi_vqmmc_voltages))
++		return -EINVAL;
++
++	return renesas_sdhi_vqmmc_voltages[selector];
++}
++
++static const struct regulator_ops renesas_sdhi_regulator_voltage_ops = {
++	.enable = renesas_sdhi_regulator_enable,
++	.disable = renesas_sdhi_regulator_disable,
++	.is_enabled = renesas_sdhi_regulator_is_enabled,
++	.list_voltage = renesas_sdhi_regulator_list_voltage,
++	.get_voltage = renesas_sdhi_regulator_get_voltage,
++	.set_voltage = renesas_sdhi_regulator_set_voltage,
++};
++
++static const struct regulator_desc renesas_sdhi_vqmmc_regulator = {
++	.name = "sdhi-vqmmc-regulator",
++	.of_match = of_match_ptr("vqmmc-regulator"),
++	.type = REGULATOR_VOLTAGE,
++	.owner = THIS_MODULE,
++	.ops = &renesas_sdhi_regulator_voltage_ops,
++	.volt_table = renesas_sdhi_vqmmc_voltages,
++	.n_voltages = ARRAY_SIZE(renesas_sdhi_vqmmc_voltages),
++};
++
+ int renesas_sdhi_probe(struct platform_device *pdev,
+ 		       const struct tmio_mmc_dma_ops *dma_ops,
+ 		       const struct renesas_sdhi_of_data *of_data,
+@@ -911,7 +1021,10 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ {
+ 	struct tmio_mmc_data *mmd = pdev->dev.platform_data;
+ 	struct tmio_mmc_data *mmc_data;
++	struct regulator_config rcfg = { .dev = &pdev->dev, };
++	struct regulator_dev *rdev;
+ 	struct renesas_sdhi_dma *dma_priv;
++	struct device *dev = &pdev->dev;
+ 	struct tmio_mmc_host *host;
+ 	struct renesas_sdhi *priv;
+ 	int num_irqs, irq, ret, i;
+@@ -1053,6 +1166,24 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 	if (ret)
+ 		goto efree;
+ 
++	rcfg.of_node = of_get_child_by_name(dev->of_node, "vqmmc-regulator");
++	if (!of_device_is_available(rcfg.of_node)) {
++		of_node_put(rcfg.of_node);
++		rcfg.of_node = NULL;
++	}
++
++	if (rcfg.of_node) {
++		rcfg.driver_data = priv->host;
++		rdev = devm_regulator_register(dev, &renesas_sdhi_vqmmc_regulator, &rcfg);
++		of_node_put(rcfg.of_node);
++		if (IS_ERR(rdev)) {
++			dev_err(dev, "regulator register failed err=%ld", PTR_ERR(rdev));
++			ret = PTR_ERR(rdev);
++			goto edisclk;
++		}
++		priv->rdev = rdev;
++	}
++
+ 	ver = sd_ctrl_read16(host, CTL_VERSION);
+ 	/* GEN2_SDR104 is first known SDHI to use 32bit block count */
+ 	if (ver < SDHI_VER_GEN2_SDR104 && mmc_data->max_blk_count > U16_MAX)
+diff --git a/drivers/mmc/host/tmio_mmc.h b/drivers/mmc/host/tmio_mmc.h
+index a75755f31d31..41787ea77a13 100644
+--- a/drivers/mmc/host/tmio_mmc.h
++++ b/drivers/mmc/host/tmio_mmc.h
+@@ -44,6 +44,7 @@
+ #define CTL_RESET_SD 0xe0
+ #define CTL_VERSION 0xe2
+ #define CTL_SDIF_MODE 0xe6 /* only known on R-Car 2+ */
++#define CTL_SD_STATUS 0xf2 /* only known on RZ/{G2L,G3E,V2H} */
+ 
+ /* Definitions for values the CTL_STOP_INTERNAL_ACTION register can take */
+ #define TMIO_STOP_STP		BIT(0)
+@@ -103,6 +104,10 @@
+ /* Definitions for values the CTL_SDIF_MODE register can take */
+ #define SDIF_MODE_HS400		BIT(0) /* only known on R-Car 2+ */
+ 
++/* Definitions for values the CTL_SD_STATUS register can take */
++#define SD_STATUS_PWEN		BIT(0) /* only known on RZ/{G3E,V2H} */
++#define SD_STATUS_IOVS		BIT(16) /* only known on RZ/{G3E,V2H} */
++
+ /* Define some IRQ masks */
+ /* This is the mask used at reset by the chip */
+ #define TMIO_MASK_ALL           0x837f031d
+@@ -226,6 +231,11 @@ static inline u32 sd_ctrl_read16_and_16_as_32(struct tmio_mmc_host *host,
+ 	       ioread16(host->ctl + ((addr + 2) << host->bus_shift)) << 16;
+ }
+ 
++static inline u32 sd_ctrl_read32(struct tmio_mmc_host *host, int addr)
++{
++	return ioread32(host->ctl + (addr << host->bus_shift));
++}
++
+ static inline void sd_ctrl_read32_rep(struct tmio_mmc_host *host, int addr,
+ 				      u32 *buf, int count)
+ {

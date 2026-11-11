@@ -1,0 +1,99 @@
+From bcc9039b1260196b8cff511395ba3ab08d1f724d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Jul 2025 11:07:19 +0200
+Subject: [PATCH 169/246] irqchip/renesas-rzv2h: Add field_width to struct
+ rzv2h_hw_info
+
+commit 1a6ebcc10b138a6c55f8df2cf6cc630ddabe3cab upstream.
+
+On RZ/G3E the field width for TSSR register for a TINT is 16 compared to 8
+on the RZ/V2H.
+
+Add field_width to struct rzv2h_hw_info and replace the macros ICU_TSSR_K
+and ICU_TSSR_TSSEL_N by a runtime evaluation:
+
+    (32 / field_width) provides the number of tints in the TSSR register.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/all/20250224131253.134199-10-biju.das.jz@bp.renesas.com
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 2fae3274c015..98a6a7cd3611 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -64,8 +64,6 @@
+ #define ICU_TINT_LEVEL_HIGH			2
+ #define ICU_TINT_LEVEL_LOW			3
+ 
+-#define ICU_TSSR_K(tint_nr)			((tint_nr) / 4)
+-#define ICU_TSSR_TSSEL_N(tint_nr)		((tint_nr) % 4)
+ #define ICU_TSSR_TSSEL_PREP(tssel, n)		((tssel) << ((n) * 8))
+ #define ICU_TSSR_TSSEL_MASK(n)			ICU_TSSR_TSSEL_PREP(0x7F, n)
+ #define ICU_TSSR_TIEN(n)			(BIT(7) << ((n) * 8))
+@@ -84,10 +82,12 @@
+  * struct rzv2h_hw_info - Interrupt Control Unit controller hardware info structure.
+  * @t_offs:		TINT offset
+  * @max_tssel:		TSSEL max value
++ * @field_width:	TSSR field width
+  */
+ struct rzv2h_hw_info {
+ 	u16		t_offs;
+ 	u8		max_tssel;
++	u8		field_width;
+ };
+ 
+ /**
+@@ -140,13 +140,15 @@ static void rzv2h_tint_irq_endisable(struct irq_data *d, bool enable)
+ 	struct rzv2h_icu_priv *priv = irq_data_to_priv(d);
+ 	unsigned int hw_irq = irqd_to_hwirq(d);
+ 	u32 tint_nr, tssel_n, k, tssr;
++	u8 nr_tint;
+ 
+ 	if (hw_irq < ICU_TINT_START)
+ 		return;
+ 
+ 	tint_nr = hw_irq - ICU_TINT_START;
+-	k = ICU_TSSR_K(tint_nr);
+-	tssel_n = ICU_TSSR_TSSEL_N(tint_nr);
++	nr_tint = 32 / priv->info->field_width;
++	k = tint_nr / nr_tint;
++	tssel_n = tint_nr % nr_tint;
+ 
+ 	guard(raw_spinlock)(&priv->lock);
+ 	tssr = readl_relaxed(priv->base + priv->info->t_offs + ICU_TSSR(k));
+@@ -278,6 +280,7 @@ static int rzv2h_tint_set_type(struct irq_data *d, unsigned int type)
+ 	unsigned int hwirq;
+ 	u32 tint, sense;
+ 	int tint_nr;
++	u8 nr_tint;
+ 
+ 	switch (type & IRQ_TYPE_SENSE_MASK) {
+ 	case IRQ_TYPE_LEVEL_LOW:
+@@ -308,8 +311,9 @@ static int rzv2h_tint_set_type(struct irq_data *d, unsigned int type)
+ 	hwirq = irqd_to_hwirq(d);
+ 	tint_nr = hwirq - ICU_TINT_START;
+ 
+-	tssr_k = ICU_TSSR_K(tint_nr);
+-	tssel_n = ICU_TSSR_TSSEL_N(tint_nr);
++	nr_tint = 32 / priv->info->field_width;
++	tssr_k = tint_nr / nr_tint;
++	tssel_n = tint_nr % nr_tint;
+ 	tien = ICU_TSSR_TIEN(tssel_n);
+ 
+ 	titsr_k = ICU_TITSR_K(tint_nr);
+@@ -519,6 +523,7 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ static const struct rzv2h_hw_info rzv2h_hw_params = {
+ 	.t_offs		= 0,
+ 	.max_tssel	= ICU_RZV2H_TSSEL_MAX_VAL,
++	.field_width	= 8,
+ };
+ 
+ static int rzv2h_icu_init(struct device_node *node, struct device_node *parent)

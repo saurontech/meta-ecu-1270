@@ -1,0 +1,41 @@
+From e7cf4b96807f1c46f61c24b44434849d98c14e8f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:12 +0200
+Subject: [PATCH 138/246] mmc: renesas_sdhi: Use
+ of_get_available_child_by_name()
+
+commit 18da3ecdbaf6f140eb45818fd848b85d2c414db6 upstream.
+
+Use the helper of_get_available_child_by_name() to simplify
+renesas_sdhi_probe().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/r/20250407092144.35268-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/mmc/host/renesas_sdhi_core.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 8c83e203c516..862c279be4b3 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -1166,12 +1166,7 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 	if (ret)
+ 		goto efree;
+ 
+-	rcfg.of_node = of_get_child_by_name(dev->of_node, "vqmmc-regulator");
+-	if (!of_device_is_available(rcfg.of_node)) {
+-		of_node_put(rcfg.of_node);
+-		rcfg.of_node = NULL;
+-	}
+-
++	rcfg.of_node = of_get_available_child_by_name(dev->of_node, "vqmmc-regulator");
+ 	if (rcfg.of_node) {
+ 		rcfg.driver_data = priv->host;
+ 		rdev = devm_regulator_register(dev, &renesas_sdhi_vqmmc_regulator, &rcfg);

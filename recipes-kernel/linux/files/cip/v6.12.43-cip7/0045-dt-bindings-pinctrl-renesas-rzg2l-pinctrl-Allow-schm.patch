@@ -1,0 +1,38 @@
+From 6589091644072a3a7c7dfa93f7e738961cee1083 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 31 Mar 2025 13:06:49 +0200
+Subject: [PATCH 045/246] dt-bindings: pinctrl: renesas,rzg2l-pinctrl: Allow
+ schmitt and open drain properties
+
+commit f07e2b681edd8d8ed25048b958fdcfb55abaf487 upstream.
+
+On the RZ/V2H(P) SoC one can configure the 'input-schmitt-{enable,disable}',
+'drive-open-drain' and 'drive-push-pull' of multiplexed pins. Update the
+binding documentation to include these properties.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/20241004123658.764557-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml    | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
+index dda91d0a5cb9..7b9b65612dc7 100644
+--- a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
+@@ -119,6 +119,10 @@ additionalProperties:
+         bias-disable: true
+         bias-pull-down: true
+         bias-pull-up: true
++        input-schmitt-enable: true
++        input-schmitt-disable: true
++        drive-open-drain: true
++        drive-push-pull: true
+         renesas,output-impedance:
+           description:
+             Output impedance for pins on the RZ/V2H(P) SoC. The value provided by this

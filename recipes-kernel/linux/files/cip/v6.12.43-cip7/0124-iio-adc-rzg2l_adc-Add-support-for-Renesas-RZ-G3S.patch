@@ -1,0 +1,47 @@
+From dff85358159d5d2064507d81682a5a8f72e54244 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:11 +0300
+Subject: [PATCH 124/246] iio: adc: rzg2l_adc: Add support for Renesas RZ/G3S
+
+commit 645fb7c22fd8d27c223b0e4abff442632bd9a75a upstream.
+
+Add ADC support for the Renesas RZ/G3S SoC. The key features of this IP
+include:
+- 9 channels, with one dedicated to reading the temperature reported by the
+  Thermal Sensor Unit (TSU)
+- A different default ADCMP value, which is written to the ADM3 register.
+- Different default sampling rates
+- ADM3.ADSMP field is 8 bits wide
+- ADINT.INTEN field is 11 bits wide
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20241206111337.726244-14-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/iio/adc/rzg2l_adc.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/iio/adc/rzg2l_adc.c b/drivers/iio/adc/rzg2l_adc.c
+index 41e59310117b..6dc97fac0e7f 100644
+--- a/drivers/iio/adc/rzg2l_adc.c
++++ b/drivers/iio/adc/rzg2l_adc.c
+@@ -531,7 +531,16 @@ static const struct rzg2l_adc_hw_params rzg2l_hw_params = {
+ 	.adivc = true
+ };
+ 
++static const struct rzg2l_adc_hw_params rzg3s_hw_params = {
++	.num_channels = 9,
++	.default_adcmp = 0x1d,
++	.default_adsmp = { 0x7f, 0xff },
++	.adsmp_mask = GENMASK(7, 0),
++	.adint_inten_mask = GENMASK(11, 0),
++};
++
+ static const struct of_device_id rzg2l_adc_match[] = {
++	{ .compatible = "renesas,r9a08g045-adc", .data = &rzg3s_hw_params },
+ 	{ .compatible = "renesas,rzg2l-adc", .data = &rzg2l_hw_params },
+ 	{ /* sentinel */ }
+ };

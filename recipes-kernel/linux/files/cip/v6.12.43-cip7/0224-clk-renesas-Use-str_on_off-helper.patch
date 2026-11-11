@@ -1,0 +1,63 @@
+From 669b49d7dfe42dc7d92eaa59380f341bd3426f91 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Wed, 20 Aug 2025 09:45:47 +0100
+Subject: [PATCH 224/246] clk: renesas: Use str_on_off() helper
+
+commit aff664cc8cbc5c28e5aa57dc4201c34497f3c871 upstream.
+
+Use the str_on_off() helper instead of open-coding the same operation.
+Note that this does change the case of the flags, which doesn't matter
+much for debug messages.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/622f8554dcb815c8fc73511a1a118c1724570fa9.1745840497.git.geert+renesas@glider.be
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/renesas-cpg-mssr.c | 3 ++-
+ drivers/clk/renesas/rzg2l-cpg.c        | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/renesas/renesas-cpg-mssr.c b/drivers/clk/renesas/renesas-cpg-mssr.c
+index 0f27c33192e1..4e7eabfaec47 100644
+--- a/drivers/clk/renesas/renesas-cpg-mssr.c
++++ b/drivers/clk/renesas/renesas-cpg-mssr.c
+@@ -27,6 +27,7 @@
+ #include <linux/psci.h>
+ #include <linux/reset-controller.h>
+ #include <linux/slab.h>
++#include <linux/string_choices.h>
+ 
+ #include <dt-bindings/clock/renesas-cpg-mssr.h>
+ 
+@@ -205,7 +206,7 @@ static int cpg_mstp_clock_endisable(struct clk_hw *hw, bool enable)
+ 	int error;
+ 
+ 	dev_dbg(dev, "MSTP %u%02u/%pC %s\n", reg, bit, hw->clk,
+-		enable ? "ON" : "OFF");
++		str_on_off(enable));
+ 	spin_lock_irqsave(&priv->rmw_lock, flags);
+ 
+ 	if (priv->reg_layout == CLK_REG_LAYOUT_RZ_A) {
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index e2ecc9d36e05..e4f2d974f38a 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -27,6 +27,7 @@
+ #include <linux/pm_domain.h>
+ #include <linux/reset-controller.h>
+ #include <linux/slab.h>
++#include <linux/string_choices.h>
+ #include <linux/units.h>
+ 
+ #include <dt-bindings/clock/renesas-cpg-mssr.h>
+@@ -1222,7 +1223,7 @@ static int rzg2l_mod_clock_endisable(struct clk_hw *hw, bool enable)
+ 	}
+ 
+ 	dev_dbg(dev, "CLK_ON 0x%x/%pC %s\n", CLK_ON_R(reg), hw->clk,
+-		enable ? "ON" : "OFF");
++		str_on_off(enable));
+ 
+ 	value = bitmask << 16;
+ 	if (enable)

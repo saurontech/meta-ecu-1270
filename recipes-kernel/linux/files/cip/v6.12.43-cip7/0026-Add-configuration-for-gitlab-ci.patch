@@ -1,0 +1,20 @@
+From 7d9d09fb2fb6d430e14eca0192c7a75b603ea395 Mon Sep 17 00:00:00 2001
+From: Pavel Machek <pavel@ucw.cz>
+Date: Thu, 20 Mar 2025 22:17:21 +0100
+Subject: [PATCH 026/246] Add configuration for gitlab-ci.
+
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .gitlab-ci.yml | 3 +++
+ 1 file changed, 3 insertions(+)
+ create mode 100644 .gitlab-ci.yml
+
+diff --git a/.gitlab-ci.yml b/.gitlab-ci.yml
+new file mode 100644
+index 000000000000..e5e0e4872101
+--- /dev/null
++++ b/.gitlab-ci.yml
+@@ -0,0 +1,3 @@
++include:
++  - https://gitlab.com/cip-project/cip-testing/linux-cip-pipelines/raw/master/linux-cip-pipeline.yml
++  - https://gitlab.com/cip-project/cip-testing/linux-cip-pipelines/raw/master/trees/linux-6.12.y-cip.yml

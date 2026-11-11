@@ -1,0 +1,39 @@
+From 5ba8ba3c7dfc0a4e2819f6ac9de391648de7ed5c Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:06 +0100
+Subject: [PATCH 189/246] clk: renesas: rzv2h: Improve rzv2h_ddiv_set_rate()
+
+commit ce0a97ff7127312aaee137fcdb159d8ddd14ede4 upstream.
+
+Remove duplicate code into rzv2h_ddiv_set_rate().
+
+Reported-by: Pavel Machek <pavel@denx.de>
+Closes: https://lore.kernel.org/cip-dev/Z9QBZo4GgtMjid0v@duo.ucw.cz/
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250317083213.371614-3-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index d55b758b009b..56f6d0ffa645 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -329,12 +329,6 @@ static int rzv2h_ddiv_set_rate(struct clk_hw *hw, unsigned long rate,
+ 	writel(val, divider->reg);
+ 
+ 	ret = rzv2h_cpg_wait_ddiv_clk_update_done(priv->base, ddiv->mon);
+-	if (ret)
+-		goto ddiv_timeout;
+-
+-	spin_unlock_irqrestore(divider->lock, flags);
+-
+-	return 0;
+ 
+ ddiv_timeout:
+ 	spin_unlock_irqrestore(divider->lock, flags);

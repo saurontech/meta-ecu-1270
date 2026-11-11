@@ -1,0 +1,75 @@
+From 3eaded96ecd93c96cafabac8e3a064575f4b595a Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Tue, 3 Jun 2025 12:19:59 +0300
+Subject: [PATCH 107/246] clk: renesas: r9a08g045: Add clock, reset and power
+ domain for the remaining SCIFs
+
+commit b73435047ef74c82d6e82c333810eba0038f9cf7 upstream.
+
+The Renesas RZ/G3S SoC has 6 SCIF interfaces.  SCIF0 is used as debug
+console and is already enabled.  Add clock, reset and power domain
+support for the remaining ones.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241115134401.3893008-2-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[claudiu.beznea: fixed conflict by using RZG2L_PD_F_NONE instead of zero
+ to describe the power domain flags]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/r9a08g045-cpg.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a08g045-cpg.c b/drivers/clk/renesas/r9a08g045-cpg.c
+index 1610d4bf203f..70ad59f63d45 100644
+--- a/drivers/clk/renesas/r9a08g045-cpg.c
++++ b/drivers/clk/renesas/r9a08g045-cpg.c
+@@ -232,6 +232,11 @@ static const struct rzg2l_mod_clk r9a08g045_mod_clks[] = {
+ 	DEF_MOD("i2c2_pclk",		R9A08G045_I2C2_PCLK, R9A08G045_CLK_P0, 0x580, 2),
+ 	DEF_MOD("i2c3_pclk",		R9A08G045_I2C3_PCLK, R9A08G045_CLK_P0, 0x580, 3),
+ 	DEF_MOD("scif0_clk_pck",	R9A08G045_SCIF0_CLK_PCK, R9A08G045_CLK_P0, 0x584, 0),
++	DEF_MOD("scif1_clk_pck",	R9A08G045_SCIF1_CLK_PCK, R9A08G045_CLK_P0, 0x584, 1),
++	DEF_MOD("scif2_clk_pck",	R9A08G045_SCIF2_CLK_PCK, R9A08G045_CLK_P0, 0x584, 2),
++	DEF_MOD("scif3_clk_pck",	R9A08G045_SCIF3_CLK_PCK, R9A08G045_CLK_P0, 0x584, 3),
++	DEF_MOD("scif4_clk_pck",	R9A08G045_SCIF4_CLK_PCK, R9A08G045_CLK_P0, 0x584, 4),
++	DEF_MOD("scif5_clk_pck",	R9A08G045_SCIF5_CLK_PCK, R9A08G045_CLK_P0, 0x584, 5),
+ 	DEF_MOD("gpio_hclk",		R9A08G045_GPIO_HCLK, R9A08G045_OSCCLK, 0x598, 0),
+ 	DEF_MOD("vbat_bclk",		R9A08G045_VBAT_BCLK, R9A08G045_OSCCLK, 0x614, 0),
+ };
+@@ -261,6 +266,11 @@ static const struct rzg2l_reset r9a08g045_resets[] = {
+ 	DEF_RST(R9A08G045_I2C2_MRST, 0x880, 2),
+ 	DEF_RST(R9A08G045_I2C3_MRST, 0x880, 3),
+ 	DEF_RST(R9A08G045_SCIF0_RST_SYSTEM_N, 0x884, 0),
++	DEF_RST(R9A08G045_SCIF1_RST_SYSTEM_N, 0x884, 1),
++	DEF_RST(R9A08G045_SCIF2_RST_SYSTEM_N, 0x884, 2),
++	DEF_RST(R9A08G045_SCIF3_RST_SYSTEM_N, 0x884, 3),
++	DEF_RST(R9A08G045_SCIF4_RST_SYSTEM_N, 0x884, 4),
++	DEF_RST(R9A08G045_SCIF5_RST_SYSTEM_N, 0x884, 5),
+ 	DEF_RST(R9A08G045_GPIO_RSTN, 0x898, 0),
+ 	DEF_RST(R9A08G045_GPIO_PORT_RESETN, 0x898, 1),
+ 	DEF_RST(R9A08G045_GPIO_SPARE_RESETN, 0x898, 2),
+@@ -343,6 +353,21 @@ static const struct rzg2l_cpg_pm_domain_init_data r9a08g045_pm_domains[] = {
+ 	DEF_PD("scif0",		R9A08G045_PD_SCIF0,
+ 				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(1)),
+ 				RZG2L_PD_F_NONE),
++	DEF_PD("scif1",		R9A08G045_PD_SCIF1,
++				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(2)),
++				RZG2L_PD_F_NONE),
++	DEF_PD("scif2",		R9A08G045_PD_SCIF2,
++				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(3)),
++				RZG2L_PD_F_NONE),
++	DEF_PD("scif3",		R9A08G045_PD_SCIF3,
++				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(4)),
++				RZG2L_PD_F_NONE),
++	DEF_PD("scif4",		R9A08G045_PD_SCIF4,
++				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(5)),
++				RZG2L_PD_F_NONE),
++	DEF_PD("scif5",		R9A08G045_PD_SCIF5,
++				DEF_REG_CONF(CPG_BUS_MCPU3_MSTOP, BIT(4)),
++				RZG2L_PD_F_NONE),
+ 	DEF_PD("vbat",		R9A08G045_PD_VBAT,
+ 				DEF_REG_CONF(CPG_BUS_MCPU3_MSTOP, BIT(8)),
+ 				RZG2L_PD_F_ALWAYS_ON),

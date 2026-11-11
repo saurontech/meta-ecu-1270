@@ -1,0 +1,48 @@
+From 61816d78c524d6da0944dfb627b38f93d7b0967c Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 12:28:53 +0200
+Subject: [PATCH 130/246] watchdog: Enable RZV2HWDT driver depend on
+ ARCH_RENESAS
+
+commit 331c8349605c8fa2f9040c39fe8c40afe3fdc3c3 upstream.
+
+RZ/G3E watchdog timer IP is similar to the one found on RZ/V2H. Both these
+SoCs belong to the ARCH_RENESAS family. So, it makes sense to use
+ARCH_RENESAS rather than ARCH_R9A09G057 to enable the RZV2HWDT driver.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Guenter Roeck <linux@roeck-us.net>
+Link: https://lore.kernel.org/r/20250126132633.31956-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Wim Van Sebroeck <wim@linux-watchdog.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Message-ID: <20250623102857.1493371-5-tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ drivers/watchdog/Kconfig | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/watchdog/Kconfig b/drivers/watchdog/Kconfig
+index 0b59c669c26d..bb36b3a7727e 100644
+--- a/drivers/watchdog/Kconfig
++++ b/drivers/watchdog/Kconfig
+@@ -955,13 +955,14 @@ config RENESAS_RZG2LWDT
+ 	  Renesas RZ/G2L SoCs. These watchdogs can be used to reset a system.
+ 
+ config RENESAS_RZV2HWDT
+-	tristate "Renesas RZ/V2H(P) WDT Watchdog"
+-	depends on ARCH_R9A09G057 || COMPILE_TEST
++	tristate "Renesas RZ/{G3E,V2H(P)} WDT Watchdog"
++	depends on ARCH_RENESAS || COMPILE_TEST
+ 	depends on PM || COMPILE_TEST
+ 	select WATCHDOG_CORE
+ 	help
+ 	  This driver adds watchdog support for the integrated watchdogs in the
+-	  Renesas RZ/V2H(P) SoCs. These watchdogs can be used to reset a system.
++	  Renesas RZ/{G3E,V2H(P)} SoCs. These watchdogs can be used to reset a
++	  system.
+ 
+ config ASPEED_WATCHDOG
+ 	tristate "Aspeed BMC watchdog support"

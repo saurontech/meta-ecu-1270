@@ -1,0 +1,105 @@
+From 01aaa3fd861e5d77950c4cdfe855a60a060c449c Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Tue, 3 Jun 2025 12:20:03 +0300
+Subject: [PATCH 109/246] arm64: dts: renesas: rzg3s-smarc-switches: Add a
+ header to describe different switches
+
+commit 02760e35b5a62f0ca24e792817d720a2c8ddd409 upstream.
+
+There are different switches available on both the RZ/G3S SMARC Module and
+RZ SMARC Carrier II boards. These switches are used to route different SoC
+signals to different parts available on board.
+
+These switches are described in device trees through macros. These macros
+are set accordingly such that the resulted compiled dtb to describe the
+on-board switches states.
+
+The SCIF1 depends on the state of the SW_CONFIG3 and SW_OPT_MUX4 switches.
+SCIF1 can be enabled through a device tree overlay. To manage all switches
+in a unified state and allow users to configure the output device tree, add
+a file that contains all switch definitions and states.
+
+Commit prepares the code to enable SCIF1 on the RZ/G3S overlay.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250120130936.1080069-3-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../boot/dts/renesas/rzg3s-smarc-som.dtsi     | 20 +-----------
+ .../boot/dts/renesas/rzg3s-smarc-switches.h   | 32 +++++++++++++++++++
+ 2 files changed, 33 insertions(+), 19 deletions(-)
+ create mode 100644 arch/arm64/boot/dts/renesas/rzg3s-smarc-switches.h
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index 041d256d7b79..6f25ab617982 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -9,25 +9,7 @@
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+ 
+-/*
+- * On-board switches' states:
+- * @SW_OFF: switch's state is OFF
+- * @SW_ON:  switch's state is ON
+- */
+-#define SW_OFF		0
+-#define SW_ON		1
+-
+-/*
+- * SW_CONFIG[x] switches' states:
+- * @SW_CONFIG2:
+- *	SW_OFF - SD0 is connected to eMMC
+- *	SW_ON  - SD0 is connected to uSD0 card
+- * @SW_CONFIG3:
+- *	SW_OFF - SD2 is connected to SoC
+- *	SW_ON  - SCIF1, SSI0, IRQ0, IRQ1 connected to SoC
+- */
+-#define SW_CONFIG2	SW_OFF
+-#define SW_CONFIG3	SW_ON
++#include "rzg3s-smarc-switches.h"
+ 
+ / {
+ 	compatible = "renesas,rzg3s-smarcm", "renesas,r9a08g045s33", "renesas,r9a08g045";
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-switches.h b/arch/arm64/boot/dts/renesas/rzg3s-smarc-switches.h
+new file mode 100644
+index 000000000000..5c27c043afef
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-switches.h
+@@ -0,0 +1,32 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
++/*
++ * On-board switches for the Renesas RZ/G3S SMARC Module and RZ SMARC Carrier II
++ * boards.
++ *
++ * Copyright (C) 2024 Renesas Electronics Corp.
++ */
++
++#ifndef __RZG3S_SMARC_SWITCHES_H__
++#define __RZG3S_SMARC_SWITCHES_H__
++
++/*
++ * On-board switches' states:
++ * @SW_OFF: switch's state is OFF
++ * @SW_ON:  switch's state is ON
++ */
++#define SW_OFF		0
++#define SW_ON		1
++
++/*
++ * SW_CONFIG[x] switches' states:
++ * @SW_CONFIG2:
++ *	SW_OFF - SD0 is connected to eMMC
++ *	SW_ON  - SD0 is connected to uSD0 card
++ * @SW_CONFIG3:
++ *	SW_OFF - SD2 is connected to SoC
++ *	SW_ON  - SCIF1, SSI0, IRQ0, IRQ1 connected to SoC
++ */
++#define SW_CONFIG2	SW_OFF
++#define SW_CONFIG3	SW_ON
++
++#endif /* __RZG3S_SMARC_SWITCHES_H__ */

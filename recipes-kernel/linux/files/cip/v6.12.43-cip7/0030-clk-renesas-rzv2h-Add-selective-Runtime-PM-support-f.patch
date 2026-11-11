@@ -1,0 +1,176 @@
+From e3e58278622c300f63b77b968649f3321c3c66f3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 25 Mar 2025 15:55:58 +0100
+Subject: [PATCH 030/246] clk: renesas: rzv2h: Add selective Runtime PM support
+ for clocks
+
+commit 03108a2614ecab46af6e0d66f9fd61c0d80587f2 upstream.
+
+Update `rzv2h_cpg_attach_dev` to prevent external and core clocks not tied
+to the power domain from being managed by Runtime PM. This ensures that
+only clocks originating from the domain are controlled, thereby avoiding
+unintended handling of external and core clocks.
+
+Additionally, introduce a `no_pm` flag in `mod_clock` and `rzv2h_mod_clk`
+structures to exclude specific clocks from Runtime PM when needed. Some
+clocks, such as those in the CRU block, require unique enable/disable
+sequences that are incompatible with standard Runtime PM. For example,
+the CSI-2 D-PHY clock initialization requires toggling individual clocks,
+making Runtime PM unsuitable.
+
+The helper function `rzv2h_cpg_is_pm_clk()` checks whether a clock should
+be managed by Runtime PM based on this `no_pm` flag. New macros, such as
+`DEF_MOD_NO_PM`, allow straightforward declaration of clocks that bypass
+PM.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241202203916.48668-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 44 ++++++++++++++++++++++++++++++---
+ drivers/clk/renesas/rzv2h-cpg.h | 12 ++++++---
+ 2 files changed, 49 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 5f8116e39e22..bb2863722b3b 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -98,6 +98,7 @@ struct pll_clk {
+  *
+  * @priv: CPG private data
+  * @hw: handle between common and hardware-specific interfaces
++ * @no_pm: flag to indicate PM is not supported
+  * @on_index: register offset
+  * @on_bit: ON/MON bit
+  * @mon_index: monitor register offset
+@@ -106,6 +107,7 @@ struct pll_clk {
+ struct mod_clock {
+ 	struct rzv2h_cpg_priv *priv;
+ 	struct clk_hw hw;
++	bool no_pm;
+ 	u8 on_index;
+ 	u8 on_bit;
+ 	s8 mon_index;
+@@ -542,6 +544,7 @@ rzv2h_cpg_register_mod_clk(const struct rzv2h_mod_clk *mod,
+ 	clock->on_bit = mod->on_bit;
+ 	clock->mon_index = mod->mon_index;
+ 	clock->mon_bit = mod->mon_bit;
++	clock->no_pm = mod->no_pm;
+ 	clock->priv = priv;
+ 	clock->hw.init = &init;
+ 
+@@ -669,17 +672,51 @@ struct rzv2h_cpg_pd {
+ 	struct generic_pm_domain genpd;
+ };
+ 
++static bool rzv2h_cpg_is_pm_clk(struct rzv2h_cpg_pd *pd,
++				const struct of_phandle_args *clkspec)
++{
++	if (clkspec->np != pd->genpd.dev.of_node || clkspec->args_count != 2)
++		return false;
++
++	switch (clkspec->args[0]) {
++	case CPG_MOD: {
++		struct rzv2h_cpg_priv *priv = pd->priv;
++		unsigned int id = clkspec->args[1];
++		struct mod_clock *clock;
++
++		if (id >= priv->num_mod_clks)
++			return false;
++
++		if (priv->clks[priv->num_core_clks + id] == ERR_PTR(-ENOENT))
++			return false;
++
++		clock = to_mod_clock(__clk_get_hw(priv->clks[priv->num_core_clks + id]));
++
++		return !clock->no_pm;
++	}
++
++	case CPG_CORE:
++	default:
++		return false;
++	}
++}
++
+ static int rzv2h_cpg_attach_dev(struct generic_pm_domain *domain, struct device *dev)
+ {
++	struct rzv2h_cpg_pd *pd = container_of(domain, struct rzv2h_cpg_pd, genpd);
+ 	struct device_node *np = dev->of_node;
+ 	struct of_phandle_args clkspec;
+ 	bool once = true;
+ 	struct clk *clk;
++	unsigned int i;
+ 	int error;
+-	int i = 0;
+ 
+-	while (!of_parse_phandle_with_args(np, "clocks", "#clock-cells", i,
+-					   &clkspec)) {
++	for (i = 0; !of_parse_phandle_with_args(np, "clocks", "#clock-cells", i, &clkspec); i++) {
++		if (!rzv2h_cpg_is_pm_clk(pd, &clkspec)) {
++			of_node_put(clkspec.np);
++			continue;
++		}
++
+ 		if (once) {
+ 			once = false;
+ 			error = pm_clk_create(dev);
+@@ -701,7 +738,6 @@ static int rzv2h_cpg_attach_dev(struct generic_pm_domain *domain, struct device
+ 				error);
+ 			goto fail_put;
+ 		}
+-		i++;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index 1bd406c69015..60016b6122a9 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -95,6 +95,7 @@ enum clk_types {
+  * @name: handle between common and hardware-specific interfaces
+  * @parent: id of parent clock
+  * @critical: flag to indicate the clock is critical
++ * @no_pm: flag to indicate PM is not supported
+  * @on_index: control register index
+  * @on_bit: ON bit
+  * @mon_index: monitor register index
+@@ -104,17 +105,19 @@ struct rzv2h_mod_clk {
+ 	const char *name;
+ 	u16 parent;
+ 	bool critical;
++	bool no_pm;
+ 	u8 on_index;
+ 	u8 on_bit;
+ 	s8 mon_index;
+ 	u8 mon_bit;
+ };
+ 
+-#define DEF_MOD_BASE(_name, _parent, _critical, _onindex, _onbit, _monindex, _monbit) \
++#define DEF_MOD_BASE(_name, _parent, _critical, _no_pm, _onindex, _onbit, _monindex, _monbit) \
+ 	{ \
+ 		.name = (_name), \
+ 		.parent = (_parent), \
+ 		.critical = (_critical), \
++		.no_pm = (_no_pm), \
+ 		.on_index = (_onindex), \
+ 		.on_bit = (_onbit), \
+ 		.mon_index = (_monindex), \
+@@ -122,10 +125,13 @@ struct rzv2h_mod_clk {
+ 	}
+ 
+ #define DEF_MOD(_name, _parent, _onindex, _onbit, _monindex, _monbit)		\
+-	DEF_MOD_BASE(_name, _parent, false, _onindex, _onbit, _monindex, _monbit)
++	DEF_MOD_BASE(_name, _parent, false, false, _onindex, _onbit, _monindex, _monbit)
+ 
+ #define DEF_MOD_CRITICAL(_name, _parent, _onindex, _onbit, _monindex, _monbit)	\
+-	DEF_MOD_BASE(_name, _parent, true, _onindex, _onbit, _monindex, _monbit)
++	DEF_MOD_BASE(_name, _parent, true, false, _onindex, _onbit, _monindex, _monbit)
++
++#define DEF_MOD_NO_PM(_name, _parent, _onindex, _onbit, _monindex, _monbit)		\
++	DEF_MOD_BASE(_name, _parent, false, true, _onindex, _onbit, _monindex, _monbit)
+ 
+ /**
+  * struct rzv2h_reset - Reset definitions

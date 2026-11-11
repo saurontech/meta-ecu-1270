@@ -1,0 +1,36 @@
+From f742b6e91259bec9fc08821b6a176e9c6037496e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:45:57 +0100
+Subject: [PATCH 233/246] memory: renesas-rpc-if: Fix RPCIF_DRENR_CDB macro
+ error
+
+commit bf657e234ac12923b579b13d8b9f1b5ca0519697 upstream.
+
+Fix the below macro error found while moving the reg definitions
+to renesas-rpc-if-regs.h in the later patch.
+
+ERROR: Macros with complex values should be enclosed in parentheses
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250401143537.224047-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/memory/renesas-rpc-if.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/memory/renesas-rpc-if.c b/drivers/memory/renesas-rpc-if.c
+index 7fbd36fa1a1b..11461f6ceb71 100644
+--- a/drivers/memory/renesas-rpc-if.c
++++ b/drivers/memory/renesas-rpc-if.c
+@@ -56,7 +56,7 @@
+ #define RPCIF_DROPR		0x0018	/* R/W */
+ 
+ #define RPCIF_DRENR		0x001C	/* R/W */
+-#define RPCIF_DRENR_CDB(o)	(u32)((((o) & 0x3) << 30))
++#define RPCIF_DRENR_CDB(o)	(((u32)((o) & 0x3)) << 30)
+ #define RPCIF_DRENR_OCDB(o)	(((o) & 0x3) << 28)
+ #define RPCIF_DRENR_ADB(o)	(((o) & 0x3) << 24)
+ #define RPCIF_DRENR_OPDB(o)	(((o) & 0x3) << 20)

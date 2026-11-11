@@ -1,0 +1,53 @@
+From ff9352414284b300a8688ebe382402c682f839de Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Jul 2025 11:07:16 +0200
+Subject: [PATCH 166/246] irqchip/renesas-rzv2h: Use devm_pm_runtime_enable()
+
+commit 5ec8cabc3b8622f95de973c1a245245c65e3337b upstream.
+
+Simplify rzv2h_icu_init() by using devm_pm_runtime_enable().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/all/20250224131253.134199-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index edae54f9f5da..10b9b63a1f09 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -468,11 +468,16 @@ static int rzv2h_icu_init(struct device_node *node, struct device_node *parent)
+ 		return ret;
+ 	}
+ 
+-	pm_runtime_enable(&pdev->dev);
++	ret = devm_pm_runtime_enable(&pdev->dev);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "devm_pm_runtime_enable failed, %d\n", ret);
++		return ret;
++	}
++
+ 	ret = pm_runtime_resume_and_get(&pdev->dev);
+ 	if (ret < 0) {
+ 		dev_err(&pdev->dev, "pm_runtime_resume_and_get failed: %d\n", ret);
+-		goto pm_disable;
++		return ret;
+ 	}
+ 
+ 	raw_spin_lock_init(&rzv2h_icu_data->lock);
+@@ -493,8 +498,6 @@ static int rzv2h_icu_init(struct device_node *node, struct device_node *parent)
+ 
+ pm_put:
+ 	pm_runtime_put(&pdev->dev);
+-pm_disable:
+-	pm_runtime_disable(&pdev->dev);
+ 
+ 	return ret;
+ }

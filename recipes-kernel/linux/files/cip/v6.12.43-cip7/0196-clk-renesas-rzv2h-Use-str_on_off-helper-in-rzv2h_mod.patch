@@ -1,0 +1,43 @@
+From 641958dbbac1832dd3a61c3903087064466e870c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:13 +0100
+Subject: [PATCH 196/246] clk: renesas: rzv2h: Use str_on_off() helper in
+ rzv2h_mod_clock_endisable()
+
+commit e6c2b4ed4906c9be9d522af75690dc570fdde5d4 upstream.
+
+Replace hard-coded "ON"/"OFF" strings with the `str_on_off()` helper in
+`rzv2h_mod_clock_endisable()`.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407165202.197570-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 66459c47744d..ed72b8013500 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -25,6 +25,7 @@
+ #include <linux/pm_domain.h>
+ #include <linux/refcount.h>
+ #include <linux/reset-controller.h>
++#include <linux/string_choices.h>
+ 
+ #include <dt-bindings/clock/renesas-cpg-mssr.h>
+ 
+@@ -593,7 +594,7 @@ static int rzv2h_mod_clock_endisable(struct clk_hw *hw, bool enable)
+ 	int error;
+ 
+ 	dev_dbg(dev, "CLK_ON 0x%x/%pC %s\n", reg, hw->clk,
+-		enable ? "ON" : "OFF");
++		str_on_off(enable));
+ 
+ 	if (enabled == enable)
+ 		return 0;

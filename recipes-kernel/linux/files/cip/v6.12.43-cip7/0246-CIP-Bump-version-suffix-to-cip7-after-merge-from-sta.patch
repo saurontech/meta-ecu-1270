@@ -1,0 +1,18 @@
+From 56b6d4eec5992dbac52818ae238e8423c79da043 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+Date: Tue, 26 Aug 2025 11:50:13 +0900
+Subject: [PATCH 246/246] CIP: Bump version suffix to -cip7 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 8b900f831287..9d10d6b47141 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip6
++-cip7

@@ -1,0 +1,39 @@
+From ff8b868be8392bd33a4890693a673bb8590f5ae9 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 25 Mar 2025 15:55:56 +0100
+Subject: [PATCH 028/246] dt-bindings: soc: renesas: Document RZ/G3E SMARC SoM
+ and Carrier-II EVK
+
+commit 2bf1a3ca1df7ed93e5ac82ff672753a4edbb6e80 upstream.
+
+Document the Renesas RZ/G3E SMARC Carrier-II EVK board which is based
+on the Renesas RZ/G3E SMARC SoM. The RZ/G3E SMARC Carrier-II EVK
+consists of an RZ/G3E SoM module and a SMARC Carrier-II carrier board.
+The SoM module sits on top of the carrier board.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241203105005.103927-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/soc/renesas/renesas.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+index 984718402d66..8e47f36bf4fd 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+@@ -537,6 +537,10 @@ properties:
+ 
+       - description: RZ/G3E (R9A09G047)
+         items:
++          - enum:
++              - renesas,smarc2-evk # RZ SMARC Carrier-II EVK
++          - enum:
++              - renesas,rzg3e-smarcm # RZ/G3E SMARC Module (SoM)
+           - enum:
+               - renesas,r9a09g047e27 # Dual Cortex-A55 + Cortex-M33 (15mm BGA)
+               - renesas,r9a09g047e28 # Dual Cortex-A55 + Cortex-M33 (21mm BGA)

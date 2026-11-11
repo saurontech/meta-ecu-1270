@@ -1,0 +1,52 @@
+From a1764c3cccf3c75481935e126753808bd751c8ec Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:46:08 +0100
+Subject: [PATCH 244/246] arm64: dts: renesas: r9a09g047: Add XSPI node
+
+commit 348da7b1cf0c5a7f2081ff42e969baf0c84da4e7 upstream.
+
+Add XSPI node to RZ/G3E ("R9A09G047") SoC DTSI.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250508183109.137721-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index 876f70fed433..3d3aa371dad8 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -280,6 +280,27 @@ sys: system-controller@10430000 {
+ 			resets = <&cpg 0x30>;
+ 		};
+ 
++		xspi: spi@11030000 {
++			compatible = "renesas,r9a09g047-xspi";
++			reg = <0 0x11030000 0 0x10000>,
++			      <0 0x20000000 0 0x10000000>;
++			reg-names = "regs", "dirmap";
++			interrupts = <GIC_SPI 228 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 229 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "pulse", "err_pulse";
++			clocks = <&cpg CPG_MOD 0x9f>,
++				 <&cpg CPG_MOD 0xa0>,
++				 <&cpg CPG_CORE R9A09G047_SPI_CLK_SPI>,
++				 <&cpg CPG_MOD 0xa1>;
++			clock-names = "ahb", "axi", "spi", "spix2";
++			resets = <&cpg 0xa3>, <&cpg 0xa4>;
++			reset-names = "hresetn", "aresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		scif0: serial@11c01400 {
+ 			compatible = "renesas,scif-r9a09g047", "renesas,scif-r9a09g057";
+ 			reg = <0 0x11c01400 0 0x400>;

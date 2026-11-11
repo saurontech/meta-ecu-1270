@@ -1,0 +1,76 @@
+From 6f0e8d37e862134361c129ec1d50b28e39cf8e70 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 31 Mar 2025 13:06:53 +0200
+Subject: [PATCH 048/246] pinctrl: renesas: rzg2l: Add support for
+ enabling/disabling open-drain outputs
+
+commit 9d75b70061917fbfe3247e2594879e5a14d3e24a upstream.
+
+Add support for enabling and disabling open-drain outputs.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20241004123658.764557-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index 131f71b2966a..da1c49f9a567 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -139,6 +139,7 @@
+ #define IEN(off)		(0x1800 + (off) * 8)
+ #define PUPD(off)		(0x1C00 + (off) * 8)
+ #define ISEL(off)		(0x2C00 + (off) * 8)
++#define NOD(off)		(0x3000 + (off) * 8)
+ #define SD_CH(off, ch)		((off) + (ch) * 4)
+ #define ETH_POC(off, ch)	((off) + (ch) * 4)
+ #define QSPI			(0x3008)
+@@ -160,6 +161,7 @@
+ #define IOLH_MASK		0x03
+ #define SR_MASK			0x01
+ #define PUPD_MASK		0x03
++#define NOD_MASK		0x01
+ 
+ #define PM_INPUT		0x1
+ #define PM_OUTPUT		0x2
+@@ -1340,6 +1342,18 @@ static int rzg2l_pinctrl_pinconf_get(struct pinctrl_dev *pctldev,
+ 		break;
+ 	}
+ 
++	case PIN_CONFIG_DRIVE_OPEN_DRAIN:
++	case PIN_CONFIG_DRIVE_PUSH_PULL:
++		if (!(cfg & PIN_CFG_NOD))
++			return -EINVAL;
++
++		arg = rzg2l_read_pin_config(pctrl, NOD(off), bit, NOD_MASK);
++		if (!arg && param != PIN_CONFIG_DRIVE_PUSH_PULL)
++			return -EINVAL;
++		if (arg && param != PIN_CONFIG_DRIVE_OPEN_DRAIN)
++			return -EINVAL;
++		break;
++
+ 	case RENESAS_RZV2H_PIN_CONFIG_OUTPUT_IMPEDANCE:
+ 		if (!(cfg & PIN_CFG_IOLH_RZV2H))
+ 			return -EINVAL;
+@@ -1469,6 +1483,15 @@ static int rzg2l_pinctrl_pinconf_set(struct pinctrl_dev *pctldev,
+ 			rzg2l_rmw_pin_config(pctrl, IOLH(off), bit, IOLH_MASK, index);
+ 			break;
+ 
++		case PIN_CONFIG_DRIVE_OPEN_DRAIN:
++		case PIN_CONFIG_DRIVE_PUSH_PULL:
++			if (!(cfg & PIN_CFG_NOD))
++				return -EINVAL;
++
++			rzg2l_rmw_pin_config(pctrl, NOD(off), bit, NOD_MASK,
++					     param == PIN_CONFIG_DRIVE_OPEN_DRAIN ? 1 : 0);
++			break;
++
+ 		case RENESAS_RZV2H_PIN_CONFIG_OUTPUT_IMPEDANCE:
+ 			if (!(cfg & PIN_CFG_IOLH_RZV2H))
+ 				return -EINVAL;

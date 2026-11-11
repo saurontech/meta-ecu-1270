@@ -1,0 +1,134 @@
+From 84f8786dc76dee6b862d784af85a12eb993eeb5c Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:31:59 +0300
+Subject: [PATCH 101/246] arm64: dts: renesas: r9a08g045: Add SSI nodes
+
+commit 880f6c84701cb7735d19f20db89e757086a8fcfa upstream.
+
+Add DT nodes for the SSI IPs available on the Renesas RZ/G3S SoC. Along
+with it external audio clocks were added. Board device tree could use it
+and update the frequencies.
+
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241210170953.2936724-21-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 94 ++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 40e0b9f2b0b4..7cf8587bfe0f 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -14,6 +14,20 @@ / {
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
+ 
++	audio_clk1: audio1-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by boards that provide it. */
++		clock-frequency = <0>;
++	};
++
++	audio_clk2: audio2-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by boards that provide it. */
++		clock-frequency = <0>;
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -187,6 +201,86 @@ i2c3: i2c@10090c00 {
+ 			status = "disabled";
+ 		};
+ 
++		ssi0: ssi@100a8000 {
++			compatible = "renesas,r9a08g045-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x100a8000 0 0x400>;
++			interrupts = <GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 241 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 242 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A08G045_SSI0_PCLK2>,
++				 <&cpg CPG_MOD R9A08G045_SSI0_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A08G045_SSI0_RST_M2_REG>;
++			dmas = <&dmac 0x2665>, <&dmac 0x2666>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		ssi1: ssi@100a8400 {
++			compatible = "renesas,r9a08g045-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x100a8400 0 0x400>;
++			interrupts = <GIC_SPI 243 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 244 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 245 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A08G045_SSI1_PCLK2>,
++				 <&cpg CPG_MOD R9A08G045_SSI1_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A08G045_SSI1_RST_M2_REG>;
++			dmas = <&dmac 0x2669>, <&dmac 0x266a>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		ssi2: ssi@100a8800 {
++			compatible = "renesas,r9a08g045-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x100a8800 0 0x400>;
++			interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 247 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 248 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A08G045_SSI2_PCLK2>,
++				 <&cpg CPG_MOD R9A08G045_SSI2_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A08G045_SSI2_RST_M2_REG>;
++			dmas = <&dmac 0x266d>, <&dmac 0x266e>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		ssi3: ssi@100a8c00 {
++			compatible = "renesas,r9a08g045-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x100a8c00 0 0x400>;
++			interrupts = <GIC_SPI 249 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 250 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 251 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A08G045_SSI3_PCLK2>,
++				 <&cpg CPG_MOD R9A08G045_SSI3_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A08G045_SSI3_RST_M2_REG>;
++			dmas = <&dmac 0x2671>, <&dmac 0x2672>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
+ 		cpg: clock-controller@11010000 {
+ 			compatible = "renesas,r9a08g045-cpg";
+ 			reg = <0 0x11010000 0 0x10000>;

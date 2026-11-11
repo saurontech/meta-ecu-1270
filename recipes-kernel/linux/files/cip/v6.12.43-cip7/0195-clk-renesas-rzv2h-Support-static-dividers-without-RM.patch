@@ -1,0 +1,78 @@
+From aa17986c1888d3c846a53dbebee9f5baad95e525 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:12 +0100
+Subject: [PATCH 195/246] clk: renesas: rzv2h: Support static dividers without
+ RMW
+
+commit 52239ebe624016d01b3bf8a3a8510dfd57f56b21 upstream.
+
+Add support for static dividers that do not require read-modify-write
+(RMW) operations.  This enables the use of the generic clk_divider_ops
+instead of the custom RMW-based implementation.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Co-developed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407165202.197570-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c |  5 ++++-
+ drivers/clk/renesas/rzv2h-cpg.h | 12 ++++++++++++
+ 2 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 8e12ed49e9b3..66459c47744d 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -374,7 +374,10 @@ rzv2h_cpg_ddiv_clk_register(const struct cpg_core_clk *core,
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	init.name = core->name;
+-	init.ops = &rzv2h_ddiv_clk_divider_ops;
++	if (cfg_ddiv.no_rmw)
++		init.ops = &clk_divider_ops;
++	else
++		init.ops = &rzv2h_ddiv_clk_divider_ops;
+ 	init.parent_names = &parent_name;
+ 	init.num_parents = 1;
+ 	init.flags = CLK_SET_RATE_PARENT;
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index 00b52b459aad..97054f207113 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -37,12 +37,15 @@ struct pll {
+  * @shift: position of the divider bit
+  * @width: width of the divider
+  * @monbit: monitor bit in CPG_CLKSTATUS0 register
++ * @no_rmw: flag to indicate if the register is read-modify-write
++ *        (1: no RMW, 0: RMW)
+  */
+ struct ddiv {
+ 	unsigned int offset:11;
+ 	unsigned int shift:4;
+ 	unsigned int width:4;
+ 	unsigned int monbit:5;
++	unsigned int no_rmw:1;
+ };
+ 
+ /*
+@@ -61,6 +64,15 @@ struct ddiv {
+ 		.monbit = _monbit \
+ 	})
+ 
++#define DDIV_PACK_NO_RMW(_offset, _shift, _width, _monbit) \
++	((struct ddiv){ \
++		.offset = (_offset), \
++		.shift = (_shift), \
++		.width = (_width), \
++		.monbit = (_monbit), \
++		.no_rmw = 1 \
++	})
++
+ /**
+  * struct smuxed - Structure for static muxed clocks
+  *

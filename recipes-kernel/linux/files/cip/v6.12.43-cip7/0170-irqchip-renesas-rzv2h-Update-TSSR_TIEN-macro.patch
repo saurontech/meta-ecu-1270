@@ -1,0 +1,60 @@
+From 4b8b7bc023a7ab505efde1a525a4f2a2e933e6d6 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Jul 2025 11:07:20 +0200
+Subject: [PATCH 170/246] irqchip/renesas-rzv2h: Update TSSR_TIEN macro
+
+commit 76c3b774734feb8224b78721e0c67a54760a75c5 upstream.
+
+On RZ/G3E, TIEN bit position is at 15 compared to 7 on RZ/V2H. Replace the
+macro ICU_TSSR_TIEN(n)->ICU_TSSR_TIEN(n, _field_width) for supporting both
+these SoCs.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/all/20250224131253.134199-11-biju.das.jz@bp.renesas.com
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 98a6a7cd3611..8d0bd4d69de2 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -66,7 +66,11 @@
+ 
+ #define ICU_TSSR_TSSEL_PREP(tssel, n)		((tssel) << ((n) * 8))
+ #define ICU_TSSR_TSSEL_MASK(n)			ICU_TSSR_TSSEL_PREP(0x7F, n)
+-#define ICU_TSSR_TIEN(n)			(BIT(7) << ((n) * 8))
++#define ICU_TSSR_TIEN(n, field_width)	\
++({\
++		typeof(field_width) (_field_width) = (field_width); \
++		BIT((_field_width) - 1) << ((n) * (_field_width)); \
++})
+ 
+ #define ICU_TITSR_K(tint_nr)			((tint_nr) / 16)
+ #define ICU_TITSR_TITSEL_N(tint_nr)		((tint_nr) % 16)
+@@ -153,9 +157,9 @@ static void rzv2h_tint_irq_endisable(struct irq_data *d, bool enable)
+ 	guard(raw_spinlock)(&priv->lock);
+ 	tssr = readl_relaxed(priv->base + priv->info->t_offs + ICU_TSSR(k));
+ 	if (enable)
+-		tssr |= ICU_TSSR_TIEN(tssel_n);
++		tssr |= ICU_TSSR_TIEN(tssel_n, priv->info->field_width);
+ 	else
+-		tssr &= ~ICU_TSSR_TIEN(tssel_n);
++		tssr &= ~ICU_TSSR_TIEN(tssel_n, priv->info->field_width);
+ 	writel_relaxed(tssr, priv->base + priv->info->t_offs + ICU_TSSR(k));
+ }
+ 
+@@ -314,7 +318,7 @@ static int rzv2h_tint_set_type(struct irq_data *d, unsigned int type)
+ 	nr_tint = 32 / priv->info->field_width;
+ 	tssr_k = tint_nr / nr_tint;
+ 	tssel_n = tint_nr % nr_tint;
+-	tien = ICU_TSSR_TIEN(tssel_n);
++	tien = ICU_TSSR_TIEN(tssel_n, priv->info->field_width);
+ 
+ 	titsr_k = ICU_TITSR_K(tint_nr);
+ 	titsel_n = ICU_TITSR_TITSEL_N(tint_nr);

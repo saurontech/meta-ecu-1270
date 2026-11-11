@@ -1,0 +1,130 @@
+From 02815a5a95f8e652f53d0d42e80f12e4d5f15069 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:10 +0100
+Subject: [PATCH 193/246] clk: renesas: rzv2h: Add support for static mux
+ clocks
+
+commit c1d6f686e5cb2530e1d04a4c994c3085c00e644c upstream.
+
+Add support for `CLK_TYPE_SMUX` to register static muxed clocks on the
+Renesas RZ/V2H(P) SoC.  Extend `cpg_core_clk` to include parent names,
+mux flags, and a new `smuxed` struct.  Update clock registration to
+handle static mux clocks.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407165202.197570-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 21 +++++++++++++++++++++
+ drivers/clk/renesas/rzv2h-cpg.h | 32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 0ca8e31685b0..7988f0db0f63 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -394,6 +394,24 @@ rzv2h_cpg_ddiv_clk_register(const struct cpg_core_clk *core,
+ 	return div->hw.clk;
+ }
+ 
++static struct clk * __init
++rzv2h_cpg_mux_clk_register(const struct cpg_core_clk *core,
++			   struct rzv2h_cpg_priv *priv)
++{
++	struct smuxed mux = core->cfg.smux;
++	const struct clk_hw *clk_hw;
++
++	clk_hw = devm_clk_hw_register_mux(priv->dev, core->name,
++					  core->parent_names, core->num_parents,
++					  core->flag, priv->base + mux.offset,
++					  mux.shift, mux.width,
++					  core->mux_flags, &priv->rmw_lock);
++	if (IS_ERR(clk_hw))
++		return ERR_CAST(clk_hw);
++
++	return clk_hw->clk;
++}
++
+ static struct clk
+ *rzv2h_cpg_clk_src_twocell_get(struct of_phandle_args *clkspec,
+ 			       void *data)
+@@ -478,6 +496,9 @@ rzv2h_cpg_register_core_clk(const struct cpg_core_clk *core,
+ 	case CLK_TYPE_DDIV:
+ 		clk = rzv2h_cpg_ddiv_clk_register(core, priv);
+ 		break;
++	case CLK_TYPE_SMUX:
++		clk = rzv2h_cpg_mux_clk_register(core, priv);
++		break;
+ 	default:
+ 		goto fail;
+ 	}
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index 59f72fbed133..03e602d70f69 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -53,6 +53,26 @@ struct ddiv {
+ 		.monbit = _monbit \
+ 	})
+ 
++/**
++ * struct smuxed - Structure for static muxed clocks
++ *
++ * @offset: register offset
++ * @shift: position of the divider field
++ * @width: width of the divider field
++ */
++struct smuxed {
++	unsigned int offset:11;
++	unsigned int shift:4;
++	unsigned int width:4;
++};
++
++#define SMUX_PACK(_offset, _shift, _width) \
++	((struct smuxed){ \
++		.offset = (_offset), \
++		.shift = (_shift), \
++		.width = (_width), \
++	})
++
+ #define CPG_CDDIV0		(0x400)
+ #define CPG_CDDIV1		(0x404)
+ #define CPG_CDDIV3		(0x40C)
+@@ -96,8 +116,12 @@ struct cpg_core_clk {
+ 		unsigned int conf;
+ 		struct ddiv ddiv;
+ 		struct pll pll;
++		struct smuxed smux;
+ 	} cfg;
+ 	const struct clk_div_table *dtable;
++	const char * const *parent_names;
++	unsigned int num_parents;
++	u8 mux_flags;
+ 	u32 flag;
+ };
+ 
+@@ -107,6 +131,7 @@ enum clk_types {
+ 	CLK_TYPE_FF,		/* Fixed Factor Clock */
+ 	CLK_TYPE_PLL,
+ 	CLK_TYPE_DDIV,		/* Dynamic Switching Divider */
++	CLK_TYPE_SMUX,		/* Static Mux */
+ };
+ 
+ #define DEF_TYPE(_name, _id, _type...) \
+@@ -125,6 +150,13 @@ enum clk_types {
+ 		.parent = _parent, \
+ 		.dtable = _dtable, \
+ 		.flag = CLK_DIVIDER_HIWORD_MASK)
++#define DEF_SMUX(_name, _id, _smux_packed, _parent_names) \
++	DEF_TYPE(_name, _id, CLK_TYPE_SMUX, \
++		 .cfg.smux = _smux_packed, \
++		 .parent_names = _parent_names, \
++		 .num_parents = ARRAY_SIZE(_parent_names), \
++		 .flag = CLK_SET_RATE_PARENT, \
++		 .mux_flags = CLK_MUX_HIWORD_MASK)
+ 
+ /**
+  * struct rzv2h_mod_clk - Module Clocks definitions

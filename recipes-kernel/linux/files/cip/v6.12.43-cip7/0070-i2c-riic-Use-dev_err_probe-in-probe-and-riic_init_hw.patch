@@ -1,0 +1,79 @@
+From c74ca6616d79af38ba441a1030dabf172634c3c8 Mon Sep 17 00:00:00 2001
+From: "Lad Prabhakar via lists.cip-project.org"
+ <prabhakar.mahadev-lad.rj=bp.renesas.com@lists.cip-project.org>
+Date: Wed, 23 Apr 2025 22:04:52 +0100
+Subject: [PATCH 070/246] i2c: riic: Use dev_err_probe in probe and
+ riic_init_hw functions
+
+commit e2aa2502e8067527e36dd7a3cad81b2004614a6c upstream.
+
+Refactor error handling in the riic_i2c_probe() and riic_init_hw()
+functions by replacing multiple dev_err() calls with dev_err_probe().
+
+Additionally, update the riic_init_hw() function to use a local `dev`
+pointer instead of `riic->adapter.dev` for dev_err_probe(), as the I2C
+adapter is not initialized at this stage. Drop the cast to (unsigned long)
+in the riic_init_hw() function when printing the bus frequency, and update
+the error message to display the frequency in Hz, improving clarity.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Andy Shevchenko <andy@kernel.org>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/i2c/busses/i2c-riic.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index 0df5a024140b..552ad6bb151b 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -356,11 +356,9 @@ static int riic_init_hw(struct riic_dev *riic)
+ 		rate /= 2;
+ 	}
+ 
+-	if (brl > (0x1F + 3)) {
+-		dev_err(&riic->adapter.dev, "invalid speed (%lu). Too slow.\n",
+-			(unsigned long)t->bus_freq_hz);
+-		return -EINVAL;
+-	}
++	if (brl > (0x1F + 3))
++		return dev_err_probe(dev, -EINVAL, "invalid speed (%uHz). Too slow.\n",
++				     t->bus_freq_hz);
+ 
+ 	brh = total_ticks - brl;
+ 
+@@ -445,10 +443,9 @@ static int riic_i2c_probe(struct platform_device *pdev)
+ 		return PTR_ERR(riic->base);
+ 
+ 	riic->clk = devm_clk_get(dev, NULL);
+-	if (IS_ERR(riic->clk)) {
+-		dev_err(dev, "missing controller clock");
+-		return PTR_ERR(riic->clk);
+-	}
++	if (IS_ERR(riic->clk))
++		return dev_err_probe(dev, PTR_ERR(riic->clk),
++				     "missing controller clock");
+ 
+ 	riic->rstc = devm_reset_control_get_optional_exclusive(dev, NULL);
+ 	if (IS_ERR(riic->rstc))
+@@ -472,10 +469,9 @@ static int riic_i2c_probe(struct platform_device *pdev)
+ 
+ 		ret = devm_request_irq(dev, irq, riic_irqs[i].isr,
+ 				       0, riic_irqs[i].name, riic);
+-		if (ret) {
+-			dev_err(dev, "failed to request irq %s\n", riic_irqs[i].name);
+-			return ret;
+-		}
++		if (ret)
++			return dev_err_probe(dev, ret, "failed to request irq %s\n",
++					     riic_irqs[i].name);
+ 	}
+ 
+ 	riic->info = of_device_get_match_data(dev);

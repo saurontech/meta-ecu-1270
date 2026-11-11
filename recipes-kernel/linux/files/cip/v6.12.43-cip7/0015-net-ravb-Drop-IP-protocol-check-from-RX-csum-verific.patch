@@ -1,0 +1,34 @@
+From 380e1e568fd108a1b9b2b24e7660bd968453d3c3 Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:27 +0100
+Subject: [PATCH 015/246] net: ravb: Drop IP protocol check from RX csum
+ verification
+
+Commit 8d2109c1a51525c3586c5bf6f78ab1ce3c2908f8 upstream.
+
+We do not need to confirm that the protocol is IPv4. If the hardware
+encounters an unsupported protocol, it will set the checksum value to
+0xFFFF.
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index d9ef70bd13b9..4fb479800431 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -781,8 +781,7 @@ static void ravb_rx_csum_gbeth(struct sk_buff *skb)
+ 	else
+ 		skb_trim(skb, skb->len - 2 * sizeof(__sum16));
+ 
+-	/* TODO: IPV6 Rx checksum */
+-	if (skb->protocol == htons(ETH_P_IP) && !csum_proto)
++	if (!csum_proto)
+ 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+ }
+ 

@@ -1,0 +1,35 @@
+From 49c4644611d7dddc257b0c213c6e8d26843ea5b8 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:31:57 +0300
+Subject: [PATCH 099/246] ASoC: dt-bindings: renesas,rz-ssi: Document the
+ Renesas RZ/G3S SoC
+
+commit 699a9733a354d74482ae4d4304acdbb0c0318a23 upstream.
+
+The SSI IP variant present on the Renesas RZ/G3S SoC is similar to the
+one found on the Renesas RZ/G2{UL, L, LC} SoCs. Add documentation for
+it.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20241210170953.2936724-20-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml b/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml
+index 5b42eec864f8..e4cdbf2202b9 100644
+--- a/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml
++++ b/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml
+@@ -19,6 +19,7 @@ properties:
+           - renesas,r9a07g043-ssi  # RZ/G2UL and RZ/Five
+           - renesas,r9a07g044-ssi  # RZ/G2{L,LC}
+           - renesas,r9a07g054-ssi  # RZ/V2L
++          - renesas,r9a08g045-ssi  # RZ/G3S
+       - const: renesas,rz-ssi
+ 
+   reg:

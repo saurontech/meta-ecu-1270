@@ -1,0 +1,33 @@
+From 720affe791401d2cfe172c257ee292f7eca580c8 Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:32 +0100
+Subject: [PATCH 020/246] net: ravb: Enable IPv6 RX checksum offloading for
+ GbEth
+
+Commit 59cceae40c67d943687587912483d68226cd04de upstream.
+
+The GbEth IP supports offloading IPv6 TCP, UDP & ICMPv6 checksums in the
+RX path.
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index a5b4f4fe77b1..e1e55e677215 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -1014,7 +1014,8 @@ enum CSR2_BIT {
+ 	CSR2_RDHD	= 0x08000000,
+ };
+ 
+-#define CSR2_CSUM_ENABLE (CSR2_RTCP4 | CSR2_RUDP4 | CSR2_RICMP4)
++#define CSR2_CSUM_ENABLE (CSR2_RTCP4 | CSR2_RUDP4 | CSR2_RICMP4 | \
++			  CSR2_RTCP6 | CSR2_RUDP6 | CSR2_RICMP6)
+ 
+ #define DBAT_ENTRY_NUM	22
+ #define RX_QUEUE_OFFSET	4

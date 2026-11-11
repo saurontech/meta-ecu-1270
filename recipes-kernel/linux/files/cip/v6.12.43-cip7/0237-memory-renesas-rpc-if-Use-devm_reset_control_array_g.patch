@@ -1,0 +1,35 @@
+From 139a0eac628fbc74a119b20591f047562b368bfa Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:46:01 +0100
+Subject: [PATCH 237/246] memory: renesas-rpc-if: Use
+ devm_reset_control_array_get_exclusive()
+
+commit c66fce831d0669dc809f90bcefd80ae979e35431 upstream.
+
+Replace devm_*_get_exclusive()->devm_*_array_get_exclusive() to support
+existing SoCs along with RZ/G3E as RZ/G3E has 2 resets.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250424090000.136804-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/memory/renesas-rpc-if.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/memory/renesas-rpc-if.c b/drivers/memory/renesas-rpc-if.c
+index 52aa49430dcb..d818c91b7055 100644
+--- a/drivers/memory/renesas-rpc-if.c
++++ b/drivers/memory/renesas-rpc-if.c
+@@ -603,7 +603,7 @@ static int rpcif_probe(struct platform_device *pdev)
+ 
+ 	rpc->size = resource_size(res);
+ 	rpc->info = of_device_get_match_data(dev);
+-	rpc->rstc = devm_reset_control_get_exclusive(dev, NULL);
++	rpc->rstc = devm_reset_control_array_get_exclusive(dev);
+ 	if (IS_ERR(rpc->rstc))
+ 		return PTR_ERR(rpc->rstc);
+ 

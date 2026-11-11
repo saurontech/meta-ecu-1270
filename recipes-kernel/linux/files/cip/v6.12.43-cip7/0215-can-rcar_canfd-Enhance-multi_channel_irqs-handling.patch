@@ -1,0 +1,49 @@
+From 5187f49a0394dffe9a856d1811f0a4520cd32dab Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:32 +0100
+Subject: [PATCH 215/246] can: rcar_canfd: Enhance multi_channel_irqs handling
+
+commit 0853b7e479a69d1e335665ceec9898c5b9ecc810 upstream.
+
+Currently multi_channel_irqs has only 2 channels. But RZ/G3E has six
+channels. Enhance multi_channel_irqs handling to support more than two
+channels.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-19-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 0bf0e88dfe25..6a9c970364cb 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1857,16 +1857,19 @@ static int rcar_canfd_channel_probe(struct rcar_canfd_global *gpriv, u32 ch,
+ 
+ 	if (info->multi_channel_irqs) {
+ 		char *irq_name;
++		char name[10];
+ 		int err_irq;
+ 		int tx_irq;
+ 
+-		err_irq = platform_get_irq_byname(pdev, ch == 0 ? "ch0_err" : "ch1_err");
++		scnprintf(name, sizeof(name), "ch%u_err", ch);
++		err_irq = platform_get_irq_byname(pdev, name);
+ 		if (err_irq < 0) {
+ 			err = err_irq;
+ 			goto fail;
+ 		}
+ 
+-		tx_irq = platform_get_irq_byname(pdev, ch == 0 ? "ch0_trx" : "ch1_trx");
++		scnprintf(name, sizeof(name), "ch%u_trx", ch);
++		tx_irq = platform_get_irq_byname(pdev, name);
+ 		if (tx_irq < 0) {
+ 			err = tx_irq;
+ 			goto fail;
