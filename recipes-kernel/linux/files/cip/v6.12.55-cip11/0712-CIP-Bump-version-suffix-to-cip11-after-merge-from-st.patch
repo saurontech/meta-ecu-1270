@@ -1,0 +1,18 @@
+From 330e81cffd92ee882cab831898b219e5f15b243c Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Tue, 28 Oct 2025 14:10:10 +0900
+Subject: [PATCH 712/712] CIP: Bump version suffix to -cip11 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 4e18b030f244..a7efddb5ccbe 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip10
++-cip11
