@@ -1,0 +1,66 @@
+From 80fa0f81b9e6627eaa2341e0c6e64dafa9e8d5f1 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 12 Dec 2025 09:19:59 +0000
+Subject: [PATCH 316/724] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable
+ OSTM timers on RZ/V2N EVK
+
+commit 20e32ba344aae133ca3c9dd57287293dd036a881 upstream.
+
+Enable OSTM0-OSTM7 instances in the RZ/V2N EVK device tree so that all
+eight OSTM general timers are active and available.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250514101528.41663-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Message-ID: <20251212091959.22073-6-ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../dts/renesas/r9a09g056n48-rzv2n-evk.dts    | 32 +++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index e27f542c0561..d33a28521c9f 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -63,6 +63,38 @@ &audio_extal_clk {
+ 	clock-frequency = <22579200>;
+ };
+ 
++&ostm0 {
++	status = "okay";
++};
++
++&ostm1 {
++	status = "okay";
++};
++
++&ostm2 {
++	status = "okay";
++};
++
++&ostm3 {
++	status = "okay";
++};
++
++&ostm4 {
++	status = "okay";
++};
++
++&ostm5 {
++	status = "okay";
++};
++
++&ostm6 {
++	status = "okay";
++};
++
++&ostm7 {
++	status = "okay";
++};
++
+ &pinctrl {
+ 	scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";

@@ -1,0 +1,49 @@
+From ff41ea477b3f7c1c266705cfb9446ee9da1ad83d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 3 Dec 2025 15:40:48 +0000
+Subject: [PATCH 119/724] dt-bindings: soc: renesas: Document Renesas RZ/V2N
+ SoC variants and EVK
+
+commit abc43c0f3c3eaa7470004e4e8a190a57c612a686 upstream.
+
+Document the Renesas RZ/V2N (R9A09G056) SoC variants, distinguishing
+between configurations with and without specific hardware features such
+as GPU, ISP, and cryptographic extensions. Also, document the
+"renesas,rzv2n-evk" compatible string for the RZ/V2N EVK board.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407191628.323613-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/soc/renesas/renesas.yaml  | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+index 8e47f36bf4fd..467bf01bc12d 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+@@ -525,6 +525,21 @@ properties:
+               - renesas,rzv2mevk2   # RZ/V2M Eval Board v2.0
+           - const: renesas,r9a09g011
+ 
++      - description: RZ/V2N (R9A09G056)
++        items:
++          - enum:
++              - renesas,rzv2n-evk # RZ/V2N EVK (RTK0EF0186C03000BJ)
++          - enum:
++              - renesas,r9a09g056n41 # RZ/V2N
++              - renesas,r9a09g056n42 # RZ/V2N with Mali-G31 support
++              - renesas,r9a09g056n43 # RZ/V2N with Mali-C55 support
++              - renesas,r9a09g056n44 # RZ/V2N with Mali-G31 + Mali-C55 support
++              - renesas,r9a09g056n45 # RZ/V2N with cryptographic extension support
++              - renesas,r9a09g056n46 # RZ/V2N with Mali-G31 + cryptographic extension support
++              - renesas,r9a09g056n47 # RZ/V2N with Mali-C55 + cryptographic extension support
++              - renesas,r9a09g056n48 # RZ/V2N with Mali-G31 + Mali-C55 + cryptographic extension support
++          - const: renesas,r9a09g056
++
+       - description: RZ/V2H(P) (R9A09G057)
+         items:
+           - enum:

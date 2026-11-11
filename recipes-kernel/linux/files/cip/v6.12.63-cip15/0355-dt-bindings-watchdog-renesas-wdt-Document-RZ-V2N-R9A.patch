@@ -1,0 +1,44 @@
+From 4f3a2bb54c7e3c3237b5cfb802125165d449fe7c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 12 Dec 2025 21:38:40 +0000
+Subject: [PATCH 355/724] dt-bindings: watchdog: renesas,wdt: Document RZ/V2N
+ (R9A09G056) support
+
+commit f55937e42c9951b615e291d9b7e6337747804463 upstream.
+
+Document support for the watchdog IP found on the Renesas RZ/V2N
+(R9A09G056) SoC. The watchdog IP is identical to that on RZ/V2H(P),
+so `renesas,r9a09g057-wdt` will be used as a fallback compatible,
+enabling reuse of the existing driver without changes.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Guenter Roeck <linux@roeck-us.net>
+Link: https://lore.kernel.org/r/20250502120054.47323-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Wim Van Sebroeck <wim@linux-watchdog.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml b/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
+index 3e0a8747a357..78874b90c88c 100644
+--- a/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
++++ b/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
+@@ -76,7 +76,9 @@ properties:
+           - const: renesas,rcar-gen4-wdt # R-Car Gen4
+ 
+       - items:
+-          - const: renesas,r9a09g047-wdt # RZ/G3E
++          - enum:
++              - renesas,r9a09g047-wdt # RZ/G3E
++              - renesas,r9a09g056-wdt # RZ/V2N
+           - const: renesas,r9a09g057-wdt # RZ/V2H(P)
+ 
+       - const: renesas,r9a09g057-wdt       # RZ/V2H(P)

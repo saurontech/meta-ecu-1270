@@ -1,0 +1,74 @@
+From 52bf1e8331d81be1bfeb950a51e3ad683157b805 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 3 Dec 2025 15:40:58 +0000
+Subject: [PATCH 129/724] arm64: dts: renesas: Add CN15 eMMC and SD overlays
+ for RZ/V2H and RZ/V2N EVKs
+
+commit 3d6c2bc7629c8b1bfd75416767122096bb75ba7b upstream.
+
+Introduce device tree overlays for supporting the eMMC (RTK0EF0186B02000BJ)
+and microSD (RTK0EF0186B01000BJ) sub-boards connected via the CN15
+connector on the RZ/V2H and RZ/V2N evaluation kits.
+
+These overlays enable SDHI0 with appropriate pin control settings, power
+regulators, and GPIO handling. Both sub-boards are supported using shared
+overlay files that can be applied to either EVK due to their identical
+connector layout and interface support.
+
+To support this, new DT overlay files are added:
+- `rzv2-evk-cn15-emmc.dtso` for eMMC
+- `rzv2-evk-cn15-sd.dtso` for microSD
+
+Additionally, the base DTS files for both EVKs are updated to include a
+fixed 1.8V regulator (`reg_1p8v`) needed by the eMMC sub-board and
+potential future use cases such as HDMI output.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250627193742.110818-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[OP: cherry-picked missing RZ/V2N bits]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/Makefile                   | 6 ++++++
+ arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts | 9 +++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index 84aaf2ccf3f3..302668a4da05 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -149,6 +149,12 @@ r9a09g047e57-smarc-cru-csi-ov5645-dtbs := r9a09g047e57-smarc.dtb r9a09g047e57-sm
+ dtb-$(CONFIG_ARCH_R9A09G047) += r9a09g047e57-smarc-cru-csi-ov5645.dtb
+ 
+ dtb-$(CONFIG_ARCH_R9A09G056) += r9a09g056n48-rzv2n-evk.dtb
++dtb-$(CONFIG_ARCH_R9A09G056) += rzv2-evk-cn15-emmc.dtbo
++r9a09g056n48-rzv2n-evk-cn15-emmc-dtbs := r9a09g056n48-rzv2n-evk.dtb rzv2-evk-cn15-emmc.dtbo
++dtb-$(CONFIG_ARCH_R9A09G056) += r9a09g056n48-rzv2n-evk-cn15-emmc.dtb
++dtb-$(CONFIG_ARCH_R9A09G056) += rzv2-evk-cn15-sd.dtbo
++r9a09g056n48-rzv2n-evk-cn15-sd-dtbs := r9a09g056n48-rzv2n-evk.dtb rzv2-evk-cn15-sd.dtbo
++dtb-$(CONFIG_ARCH_R9A09G056) += r9a09g056n48-rzv2n-evk-cn15-sd.dtb
+ 
+ dtb-$(CONFIG_ARCH_R9A09G057) += r9a09g057h44-rzv2h-evk.dtb
+ dtb-$(CONFIG_ARCH_R9A09G057) += rzv2-evk-cn15-emmc.dtbo
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index 24343fce7f53..e27f542c0561 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -30,6 +30,15 @@ memory@48000000 {
+ 		reg = <0x0 0x48000000 0x1 0xf8000000>;
+ 	};
+ 
++	reg_1p8v: regulator-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
+ 	reg_3p3v: regulator-3p3v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "fixed-3.3V";

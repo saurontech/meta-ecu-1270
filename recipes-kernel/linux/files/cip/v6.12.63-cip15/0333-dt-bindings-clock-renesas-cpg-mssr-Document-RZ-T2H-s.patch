@@ -1,0 +1,132 @@
+From 4195dc6827b234daadbf0aa07d035594c02a1430 Mon Sep 17 00:00:00 2001
+From: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:37 +0000
+Subject: [PATCH 333/724] dt-bindings: clock: renesas,cpg-mssr: Document RZ/T2H
+ support
+
+commit 4e591b890afa0cbc3479f3b88fa7dc1d28972761 upstream.
+
+Document RZ/T2H (a.k.a. r9a09g077) cpg-mssr (Clock Pulse Generator)
+binding.
+
+Reviewed-by: "Rob Herring (Arm)" <robh@kernel.org>
+Signed-off-by: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250515141828.43444-3-thierry.bultel.yh@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-18-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/clock/renesas,cpg-mssr.yaml      | 46 ++++++++++++++-----
+ .../clock/renesas,r9a09g077-cpg-mssr.h        | 27 +++++++++++
+ 2 files changed, 62 insertions(+), 11 deletions(-)
+ create mode 100644 include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+
+diff --git a/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml b/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml
+index 77ce3615c65a..708ab6bd7d44 100644
+--- a/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml
++++ b/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml
+@@ -52,9 +52,15 @@ properties:
+       - renesas,r8a779f0-cpg-mssr # R-Car S4-8
+       - renesas,r8a779g0-cpg-mssr # R-Car V4H
+       - renesas,r8a779h0-cpg-mssr # R-Car V4M
++      - renesas,r9a09g077-cpg-mssr # RZ/T2H
+ 
+   reg:
+-    maxItems: 1
++    minItems: 1
++    items:
++      - description: base address of register block 0
++      - description: base address of register block 1
++    description: base addresses of clock controller. Some controllers
++      (like r9a09g077) use two blocks instead of a single one.
+ 
+   clocks:
+     minItems: 1
+@@ -92,16 +98,6 @@ properties:
+       the datasheet.
+     const: 1
+ 
+-if:
+-  not:
+-    properties:
+-      compatible:
+-        items:
+-          enum:
+-            - renesas,r7s9210-cpg-mssr
+-then:
+-  required:
+-    - '#reset-cells'
+ 
+ required:
+   - compatible
+@@ -111,6 +107,34 @@ required:
+   - '#clock-cells'
+   - '#power-domain-cells'
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g077-cpg-mssr
++    then:
++      properties:
++        reg:
++          minItems: 2
++        clock-names:
++          items:
++            - const: extal
++    else:
++      properties:
++        reg:
++          maxItems: 1
++  - if:
++      not:
++        properties:
++          compatible:
++            items:
++              enum:
++                - renesas,r7s9210-cpg-mssr
++    then:
++      required:
++        - '#reset-cells'
++
+ additionalProperties: false
+ 
+ examples:
+diff --git a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+new file mode 100644
+index 000000000000..1b22fe88dec7
+--- /dev/null
++++ b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+@@ -0,0 +1,27 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * Copyright (C) 2025 Renesas Electronics Corp.
++ */
++
++#ifndef __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__
++#define __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__
++
++#include <dt-bindings/clock/renesas-cpg-mssr.h>
++
++/* R9A09G077 CPG Core Clocks */
++#define R9A09G077_CLK_CA55C0		0
++#define R9A09G077_CLK_CA55C1		1
++#define R9A09G077_CLK_CA55C2		2
++#define R9A09G077_CLK_CA55C3		3
++#define R9A09G077_CLK_CA55S		4
++#define R9A09G077_CLK_CR52_CPU0		5
++#define R9A09G077_CLK_CR52_CPU1		6
++#define R9A09G077_CLK_CKIO		7
++#define R9A09G077_CLK_PCLKAH		8
++#define R9A09G077_CLK_PCLKAM		9
++#define R9A09G077_CLK_PCLKAL		10
++#define R9A09G077_CLK_PCLKGPTL		11
++#define R9A09G077_CLK_PCLKH		12
++#define R9A09G077_CLK_PCLKM		13
++
++#endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__ */

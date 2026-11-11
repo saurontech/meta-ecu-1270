@@ -1,0 +1,44 @@
+From d329ad82836dae72cf7e7eaebffcffa8c2d3521f Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:53 +0000
+Subject: [PATCH 349/724] arm64: dts: renesas: Add DTSI for R9A09G087M44
+ variant of RZ/N2H
+
+commit bddf6ae4f51755b31ad85906331f4bd4ded7632c upstream.
+
+Add the device tree source include file for the R9A09G087M44 variant of
+the Renesas RZ/N2H SoC, which features a 4-core configuration.
+
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250617171957.162145-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-34-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g087m44.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r9a09g087m44.dtsi
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087m44.dtsi b/arch/arm64/boot/dts/renesas/r9a09g087m44.dtsi
+new file mode 100644
+index 000000000000..ef0343b53309
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a09g087m44.dtsi
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/N2H 4-core SoC
++ *
++ * Copyright (C) 2025 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r9a09g087.dtsi"
++
++/ {
++	compatible = "renesas,r9a09g087m44", "renesas,r9a09g087";
++};

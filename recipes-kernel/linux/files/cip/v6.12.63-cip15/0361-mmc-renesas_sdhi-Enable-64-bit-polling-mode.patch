@@ -1,0 +1,34 @@
+From 54e48fbb3956df527d281ed42b2fc42cb4bdc1f2 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sun, 14 Dec 2025 12:16:18 +0000
+Subject: [PATCH 361/724] mmc: renesas_sdhi: Enable 64-bit polling mode
+
+[ Upstream commit 709fe7aa5aaf8047b528561a0082db8a3a29010c ]
+
+Enable 64-bit polling mode for R-Car gen3 and RZ/G2L SoCs.
+
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250730164618.233117-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/mmc/host/renesas_sdhi_internal_dmac.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_internal_dmac.c b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+index 1dcaa050f264..5652979e09ed 100644
+--- a/drivers/mmc/host/renesas_sdhi_internal_dmac.c
++++ b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+@@ -107,7 +107,8 @@ static const struct renesas_sdhi_of_data of_data_rza2 = {
+ 
+ static const struct renesas_sdhi_of_data of_data_rcar_gen3 = {
+ 	.tmio_flags	= TMIO_MMC_HAS_IDLE_WAIT | TMIO_MMC_CLK_ACTUAL |
+-			  TMIO_MMC_HAVE_CBSY | TMIO_MMC_MIN_RCAR2,
++			  TMIO_MMC_HAVE_CBSY | TMIO_MMC_MIN_RCAR2 |
++			  TMIO_MMC_64BIT_DATA_PORT,
+ 	.capabilities	= MMC_CAP_SD_HIGHSPEED | MMC_CAP_SDIO_IRQ |
+ 			  MMC_CAP_CMD23 | MMC_CAP_WAIT_WHILE_BUSY,
+ 	.capabilities2	= MMC_CAP2_NO_WRITE_PROTECT | MMC_CAP2_MERGE_CAPABLE,

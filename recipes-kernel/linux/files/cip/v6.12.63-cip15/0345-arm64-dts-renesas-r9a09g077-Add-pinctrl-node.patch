@@ -1,0 +1,46 @@
+From 9ca5c065f76ef12377710ec21fa7f6dc3db3ea70 Mon Sep 17 00:00:00 2001
+From: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:49 +0000
+Subject: [PATCH 345/724] arm64: dts: renesas: r9a09g077: Add pinctrl node
+
+commit 98340bf91dd9e8f08f25364edd8819ee903c1b84 upstream.
+
+Add pinctrl node to RZ/T2H ("R9A09G077") SoC DTSI.
+
+Signed-off-by: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250812200344.3253781-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-30-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index 42c3b86196d6..107b7e6b7164 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -101,6 +101,19 @@ cpg: clock-controller@80280000 {
+ 			#power-domain-cells = <0>;
+ 		};
+ 
++		pinctrl: pinctrl@802c0000 {
++			compatible = "renesas,r9a09g077-pinctrl";
++			reg = <0 0x802c0000 0 0x10000>,
++			      <0 0x812c0000 0 0x10000>,
++			      <0 0x802b0000 0 0x10000>;
++			reg-names = "nsr", "srs", "srn";
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKM>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pinctrl 0 0 288>;
++			power-domains = <&cpg>;
++		};
++
+ 		gic: interrupt-controller@83000000 {
+ 			compatible = "arm,gic-v3";
+ 			reg = <0x0 0x83000000 0 0x40000>,

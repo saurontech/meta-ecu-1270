@@ -1,0 +1,45 @@
+From 3c2231036f900b77e38b17d4e8bdfa59f74323b7 Mon Sep 17 00:00:00 2001
+From: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:32 +0000
+Subject: [PATCH 328/724] dt-bindings: soc: renesas: Add Renesas RZ/T2H
+ (R9A09G077) SoC
+
+commit 6147c5f081708485e32c656931f6a57b14618fcc upstream.
+
+Add RZ/T2H (R9A09G077), its variants, and the RZT2H-EVK evaluation board
+in documentation.
+
+Acked-by: "Rob Herring (Arm)" <robh@kernel.org>
+Signed-off-by: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250403212919.1137670-2-thierry.bultel.yh@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-13-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/soc/renesas/renesas.yaml       | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+index d05e8b158589..878498b18a4b 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+@@ -567,6 +567,16 @@ properties:
+               - renesas,r9a09g057h44 # RZ/V2HP with Mali-G31 + Mali-C55 support
+           - const: renesas,r9a09g057
+ 
++      - description: RZ/T2H (R9A09G077)
++        items:
++          - enum:
++              - renesas,rzt2h-evk # RZ/T2H Evaluation Board
++          - enum:
++              - renesas,r9a09g077m04 # RZ/T2H with Single Cortex-A55 + Dual Cortex-R52 - no security
++              - renesas,r9a09g077m24 # RZ/T2H with Dual Cortex-A55 + Dual Cortex-R52 - no security
++              - renesas,r9a09g077m44 # RZ/T2H with Quad Cortex-A55 + Dual Cortex-R52 - no security
++          - const: renesas,r9a09g077
++
+ additionalProperties: true
+ 
+ ...

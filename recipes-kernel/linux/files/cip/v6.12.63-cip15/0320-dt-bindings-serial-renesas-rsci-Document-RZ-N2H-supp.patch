@@ -1,0 +1,45 @@
+From fbe685a8bf33f0d5b14102515cd53f47a2e28b29 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:24 +0000
+Subject: [PATCH 320/724] dt-bindings: serial: renesas,rsci: Document RZ/N2H
+ support
+
+commit 7dfd023dc7a9050554b28a16a31b8b06f76bb862 upstream.
+
+Add documentation for the serial communication interface (RSCI) found on
+the Renesas RZ/N2H (R9A09G087) SoC. The RSCI IP on this SoC is identical
+to that on the RZ/T2H (R9A09G077) SoC. Therefore, "renesas,r9a09g077-rsci"
+is used as a fallback compatible string for RZ/N2H.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250609192344.293317-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-5-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/serial/renesas,rsci.yaml          | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/serial/renesas,rsci.yaml b/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
+index 548225e509e5..f50d8e02f476 100644
+--- a/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
++++ b/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
+@@ -15,7 +15,13 @@ allOf:
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g077-rsci      # RZ/T2H
++    oneOf:
++      - items:
++          - const: renesas,r9a09g087-rsci # RZ/N2H
++          - const: renesas,r9a09g077-rsci # RZ/T2H
++
++      - items:
++          - const: renesas,r9a09g077-rsci # RZ/T2H
+ 
+   reg:
+     maxItems: 1

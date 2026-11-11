@@ -1,0 +1,39 @@
+From 9c4d9af86f64930e0cf01b18586c7d2504e6d1ad Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:36 +0000
+Subject: [PATCH 332/724] soc: renesas: Add RZ/N2H (R9A09G087) config option
+
+commit c7968f5e7c7c7b46cad1e92294c211417a7ba90f upstream.
+
+Add a new Kconfig option, ARCH_R9A09G087, to enable ARM64 platform
+support for the Renesas RZ/N2H SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250609203656.333138-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-17-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/soc/renesas/Kconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index 24fab4c39ea7..bbe9aba2d5c9 100644
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -372,6 +372,12 @@ config ARCH_R9A09G077
+ 	help
+ 	  This enables support for the Renesas RZ/T2H SoC variants.
+ 
++config ARCH_R9A09G087
++	bool "ARM64 Platform support for RZ/N2H"
++	default y if ARCH_RENESAS
++	help
++	  This enables support for the Renesas RZ/N2H SoC variants.
++
+ endif # ARM64
+ 
+ if RISCV

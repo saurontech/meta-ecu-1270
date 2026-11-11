@@ -1,0 +1,32 @@
+From aa7004823ff1615cfd1d8919cd875074ff44d9a4 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Fri, 5 Dec 2025 14:32:34 +0000
+Subject: [PATCH 330/724] dt-bindings: soc: renesas: Document RZ/T2H Evaluation
+ Board part number
+
+commit 37c78e3a456fc754e6b9aa7d94365017a33de8f8 upstream.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/0703ecbc355164e35b90a9fe088438c821f13cd3.1749741263.git.geert+renesas@glider.be
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-15-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ Documentation/devicetree/bindings/soc/renesas/renesas.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+index 35d405931d99..2006c6975b30 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+@@ -570,7 +570,7 @@ properties:
+       - description: RZ/T2H (R9A09G077)
+         items:
+           - enum:
+-              - renesas,rzt2h-evk # RZ/T2H Evaluation Board
++              - renesas,rzt2h-evk # RZ/T2H Evaluation Board (RTK9RZT2H0S00000BJ)
+           - enum:
+               - renesas,r9a09g077m04 # RZ/T2H with Single Cortex-A55 + Dual Cortex-R52 - no security
+               - renesas,r9a09g077m24 # RZ/T2H with Dual Cortex-A55 + Dual Cortex-R52 - no security

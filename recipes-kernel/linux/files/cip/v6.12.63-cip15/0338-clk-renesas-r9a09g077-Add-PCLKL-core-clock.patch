@@ -1,0 +1,47 @@
+From 5ae584938c5cebfe4a94de9526d79d92af2eb449 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:42 +0000
+Subject: [PATCH 338/724] clk: renesas: r9a09g077: Add PCLKL core clock
+
+commit 275e2b544d6666bc79db7f677a658034437e7828 upstream.
+
+Add the Peripheral Module Clock L (PCLKL) for the RZ/T2H (R9A09G077)
+SoC.  PCLKL is sourced from PLL1 and runs at 62.5MHz.  It is used by
+various low-speed peripherals such as IIC and WDT.
+
+Also update LAST_DT_CORE_CLK to reflect the addition of PCLKL, ensuring
+correct enumeration of core clocks exposed to DT.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250617155757.149597-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-23-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index 206816a2df23..b83ef933ae0f 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -66,7 +66,7 @@ enum rzt2h_clk_types {
+ 
+ enum clk_ids {
+ 	/* Core Clock Outputs exported to DT */
+-	LAST_DT_CORE_CLK = R9A09G077_CLK_PCLKM,
++	LAST_DT_CORE_CLK = R9A09G077_CLK_PCLKL,
+ 
+ 	/* External Input Clocks */
+ 	CLK_EXTAL,
+@@ -140,6 +140,7 @@ static const struct cpg_core_clk r9a09g077_core_clks[] __initconst = {
+ 		dtable_1_2),
+ 	DEF_FIXED("PCLKGPTL", R9A09G077_CLK_PCLKGPTL, CLK_SEL_CLK_PLL1, 2, 1),
+ 	DEF_FIXED("PCLKM", R9A09G077_CLK_PCLKM, CLK_SEL_CLK_PLL1, 8, 1),
++	DEF_FIXED("PCLKL", R9A09G077_CLK_PCLKL, CLK_SEL_CLK_PLL1, 16, 1),
+ };
+ 
+ static const struct mssr_mod_clk r9a09g077_mod_clks[] __initconst = {
