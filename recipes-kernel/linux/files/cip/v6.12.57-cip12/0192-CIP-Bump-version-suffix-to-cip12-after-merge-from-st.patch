@@ -1,0 +1,18 @@
+From 1f2c83cc9df00f9694aa21974a4af4d4cfb5cd0e Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+Date: Wed, 12 Nov 2025 20:22:47 +0900
+Subject: [PATCH 192/192] CIP: Bump version suffix to -cip12 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index a7efddb5ccbe..4a6a5e8b1447 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip11
++-cip12

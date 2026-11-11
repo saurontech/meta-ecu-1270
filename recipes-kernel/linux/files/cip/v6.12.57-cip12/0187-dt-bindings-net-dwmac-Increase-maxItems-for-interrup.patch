@@ -1,0 +1,67 @@
+From b5156bffd2181ae8ab66ea77e4c65f4d93037032 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 6 Nov 2025 10:40:20 +0000
+Subject: [PATCH 187/192] dt-bindings: net: dwmac: Increase 'maxItems' for
+ 'interrupts' and 'interrupt-names'
+
+commit 8c989368c04c17a6ed834ae528458844f553bead upstream.
+
+Increase the `maxItems` value for the `interrupts` and `interrupt-names`
+properties to 11 to support additional per-channel Tx/Rx completion
+interrupts on the Renesas RZ/V2H(P) SoC, which features the
+`snps,dwmac-5.20` IP.
+
+Refactor the `interrupt-names` property by replacing repeated `enum`
+entries with a `oneOf` list. Add support for per-channel receive and
+transmit completion interrupts using regex patterns.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://patch.msgid.link/20250417084015.74154-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/net/snps,dwmac.yaml   | 24 ++++++++++++-------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+index f1cc9271e0c4..073b9dcc7c9e 100644
+--- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+@@ -107,19 +107,25 @@ properties:
+ 
+   interrupts:
+     minItems: 1
+-    items:
+-      - description: Combined signal for various interrupt events
+-      - description: The interrupt to manage the remote wake-up packet detection
+-      - description: The interrupt that occurs when Rx exits the LPI state
+-      - description: The interrupt that occurs when HW safety error triggered
++    maxItems: 11
+ 
+   interrupt-names:
+     minItems: 1
++    maxItems: 11
+     items:
+-      - const: macirq
+-      - enum: [eth_wake_irq, eth_lpi, sfty]
+-      - enum: [eth_wake_irq, eth_lpi, sfty]
+-      - enum: [eth_wake_irq, eth_lpi, sfty]
++      oneOf:
++        - description: Combined signal for various interrupt events
++          const: macirq
++        - description: The interrupt to manage the remote wake-up packet detection
++          const: eth_wake_irq
++        - description: The interrupt that occurs when Rx exits the LPI state
++          const: eth_lpi
++        - description: The interrupt that occurs when HW safety error triggered
++          const: sfty
++        - description: Per channel receive completion interrupt
++          pattern: '^rx-queue-[0-3]$'
++        - description: Per channel transmit completion interrupt
++          pattern: '^tx-queue-[0-3]$'
+ 
+   clocks:
+     minItems: 1

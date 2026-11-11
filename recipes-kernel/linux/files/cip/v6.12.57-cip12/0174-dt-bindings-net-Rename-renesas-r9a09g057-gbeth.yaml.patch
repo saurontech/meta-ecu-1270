@@ -1,0 +1,40 @@
+From f923e81c7f700ed2aa42b410eed15295da54e649 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Mon, 3 Nov 2025 12:37:58 +0100
+Subject: [PATCH 174/192] dt-bindings: net: Rename renesas,r9a09g057-gbeth.yaml
+
+[ Upstream commit d53320aeef18ece4999c0cf07cb802d1dd990885 ]
+
+The DT bindings file "renesas,r9a09g057-gbeth.yaml" applies to a whole
+family of SoCs, and uses "renesas,rzv2h-gbeth" as a fallback compatible
+value.  Hence rename it to the more generic "renesas,rzv2h-gbeth.yaml".
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://patch.msgid.link/721f6e0e09777e0842ecaca4578bc50c953d2428.1750838954.git.geert+renesas@glider.be
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../{renesas,r9a09g057-gbeth.yaml => renesas,rzv2h-gbeth.yaml}  | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+ rename Documentation/devicetree/bindings/net/{renesas,r9a09g057-gbeth.yaml => renesas,rzv2h-gbeth.yaml} (98%)
+
+diff --git a/Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+similarity index 98%
+rename from Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml
+rename to Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+index 91f637b048ab..ee8fbb6c7994 100644
+--- a/Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml
++++ b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+ %YAML 1.2
+ ---
+-$id: http://devicetree.org/schemas/net/renesas,r9a09g057-gbeth.yaml#
++$id: http://devicetree.org/schemas/net/renesas,rzv2h-gbeth.yaml#
+ $schema: http://devicetree.org/meta-schemas/core.yaml#
+ 
+ title: GBETH glue layer for Renesas RZ/V2H(P) (and similar SoCs)

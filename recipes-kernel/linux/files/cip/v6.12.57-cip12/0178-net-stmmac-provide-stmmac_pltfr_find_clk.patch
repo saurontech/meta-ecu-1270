@@ -1,0 +1,74 @@
+From 6f7b6a7306449871721fc5e16b0eb9249efa987c Mon Sep 17 00:00:00 2001
+From: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
+Date: Mon, 3 Nov 2025 12:38:02 +0100
+Subject: [PATCH 178/192] net: stmmac: provide stmmac_pltfr_find_clk()
+
+[ Upstream commit de64872019492e4a84ee053e635cdf8f63f853d2 ]
+
+Provide a generic way to find a clock in the bulk data.
+
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Link: https://patch.msgid.link/E1u2QO4-001Rp2-Dy@rmk-PC.armlinux.org.uk
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+[john.madieu:
+ - Added clks and num_clks fields in plat_stmmacenet_data]
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c | 11 +++++++++++
+ drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h |  3 +++
+ include/linux/stmmac.h                                |  2 ++
+ 3 files changed, 16 insertions(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
+index 8fd868b671a2..0c7c7c29d6eb 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
+@@ -705,6 +705,17 @@ devm_stmmac_probe_config_dt(struct platform_device *pdev, u8 *mac)
+ #endif /* CONFIG_OF */
+ EXPORT_SYMBOL_GPL(devm_stmmac_probe_config_dt);
+ 
++struct clk *stmmac_pltfr_find_clk(struct plat_stmmacenet_data *plat_dat,
++				  const char *name)
++{
++	for (int i = 0; i < plat_dat->num_clks; i++)
++		if (strcmp(plat_dat->clks[i].id, name) == 0)
++			return plat_dat->clks[i].clk;
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(stmmac_pltfr_find_clk);
++
+ int stmmac_get_platform_resources(struct platform_device *pdev,
+ 				  struct stmmac_resources *stmmac_res)
+ {
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h
+index 72dc1a32e46d..6e6561e29d6e 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h
+@@ -14,6 +14,9 @@
+ struct plat_stmmacenet_data *
+ devm_stmmac_probe_config_dt(struct platform_device *pdev, u8 *mac);
+ 
++struct clk *stmmac_pltfr_find_clk(struct plat_stmmacenet_data *plat_dat,
++				  const char *name);
++
+ int stmmac_get_platform_resources(struct platform_device *pdev,
+ 				  struct stmmac_resources *stmmac_res);
+ 
+diff --git a/include/linux/stmmac.h b/include/linux/stmmac.h
+index dadf861138e3..69b246b6ebef 100644
+--- a/include/linux/stmmac.h
++++ b/include/linux/stmmac.h
+@@ -256,6 +256,8 @@ struct plat_stmmacenet_data {
+ 	struct clk *clk_tx_i;		/* clk_tx_i to MAC core */
+ 	unsigned int clk_ptp_rate;
+ 	unsigned int clk_ref_rate;
++	struct clk_bulk_data *clks;
++	int num_clks;
+ 	unsigned int mult_fact_100ns;
+ 	s32 ptp_max_adj;
+ 	u32 cdc_error_adj;
