@@ -1,0 +1,33 @@
+From 560860db96d31ca78130559b450e24973a27795b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:26 +0000
+Subject: [PATCH 039/838] arm64: dts: renesas: rzt2h-n2h-evk-common: Enable
+ WDT2
+
+commit da23f1bdce81712096601d9e5e59cfe071aa1c92 upstream.
+
+Enable watchdog (WDT2) on RZ/T2H and RZ/N2H EVKs.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250821161946.1096033-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+index 8b9d04dce8ae..91068042bec0 100644
+--- a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+@@ -217,3 +217,8 @@ &sdhi1 {
+ 	status = "okay";
+ };
+ #endif
++
++&wdt2 {
++	status = "okay";
++	timeout-sec = <60>;
++};

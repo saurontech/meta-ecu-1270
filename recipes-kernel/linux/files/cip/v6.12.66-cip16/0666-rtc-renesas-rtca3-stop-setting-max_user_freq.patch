@@ -1,0 +1,32 @@
+From b1b2e24084bc3137c20c64536d078f0631971f34 Mon Sep 17 00:00:00 2001
+From: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Date: Fri, 9 Jan 2026 12:17:14 +0000
+Subject: [PATCH 666/838] rtc: renesas-rtca3: stop setting max_user_freq
+
+commit 358867b551660ac7d0987fe5fad8518cbfd5e415 upstream.
+
+max_user_freq has not been related to the hardware RTC since commit
+6610e0893b8b ("RTC: Rework RTC code to use timerqueue for events"). Stop
+setting it from individual driver to avoid confusing new contributors.
+
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20251101-max_user_freq-v1-4-c9a274fd6883@bootlin.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/rtc/rtc-renesas-rtca3.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/rtc/rtc-renesas-rtca3.c b/drivers/rtc/rtc-renesas-rtca3.c
+index 598bf943cc5b..09131a5a9c38 100644
+--- a/drivers/rtc/rtc-renesas-rtca3.c
++++ b/drivers/rtc/rtc-renesas-rtca3.c
+@@ -772,7 +772,6 @@ static int rtca3_probe(struct platform_device *pdev)
+ 		return PTR_ERR(priv->rtc_dev);
+ 
+ 	priv->rtc_dev->ops = &rtca3_ops;
+-	priv->rtc_dev->max_user_freq = 256;
+ 	priv->rtc_dev->range_min = RTC_TIMESTAMP_BEGIN_2000;
+ 	priv->rtc_dev->range_max = RTC_TIMESTAMP_END_2099;
+ 

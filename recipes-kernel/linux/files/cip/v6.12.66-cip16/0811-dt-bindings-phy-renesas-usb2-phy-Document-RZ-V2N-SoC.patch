@@ -1,0 +1,41 @@
+From c93539eea71ae5e511464b9dca361ffc773037de Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 19 Jan 2026 12:51:45 +0000
+Subject: [PATCH 811/838] dt-bindings: phy: renesas,usb2-phy: Document RZ/V2N
+ SoC support
+
+commit 00399bbe02d2bb6fd8d6eb90573ec305616449f4 upstream.
+
+Document support for the USB2.0 phy found on the Renesas RZ/V2N
+(R9A09G056) SoC. The USB2.0 phy is functionally identical to that on the
+RZ/V2H(P) SoC, so no driver changes are needed. The existing
+`renesas,usb2-phy-r9a09g057` compatible will be used as a fallback
+for the RZ/V2N SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250528133858.168582-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+index 2822dce8d9f4..f45c5f039ae8 100644
+--- a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+@@ -40,6 +40,10 @@ properties:
+               - renesas,usb2-phy-r9a07g054 # RZ/V2L
+           - const: renesas,rzg2l-usb2-phy
+ 
++      - items:
++          - const: renesas,usb2-phy-r9a09g056 # RZ/V2N
++          - const: renesas,usb2-phy-r9a09g057
++
+   reg:
+     maxItems: 1
+ 

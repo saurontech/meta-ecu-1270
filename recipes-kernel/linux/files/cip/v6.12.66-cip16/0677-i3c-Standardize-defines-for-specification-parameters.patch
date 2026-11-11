@@ -1,0 +1,114 @@
+From e26d5594689aae481c8b803f8f802ecd0957ef68 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Thu, 8 Jan 2026 10:30:11 +0100
+Subject: [PATCH 677/838] i3c: Standardize defines for specification parameters
+
+commit 9c0609d685b27a0bb392390680207baa820ed118 upstream.
+
+Align existing defines to follow the consistent pattern:
+I3C_BUS_<PARAM>_<MAX|MIN|TYP>_<UNIT>. Prepare the codebase for adding
+new parameters and help avoid duplication.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Link: https://lore.kernel.org/r/20250724094146.6443-2-wsa+renesas@sang-engineering.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i3c/master.c               | 12 ++++++------
+ drivers/i3c/master/dw-i3c-master.c |  4 ++--
+ include/linux/i3c/master.h         |  9 +++++----
+ 3 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+index 6eb779affaba..8e41c15d2c97 100644
+--- a/drivers/i3c/master.c
++++ b/drivers/i3c/master.c
+@@ -727,12 +727,12 @@ static int i3c_bus_set_mode(struct i3c_bus *i3cbus, enum i3c_bus_mode mode,
+ 	switch (i3cbus->mode) {
+ 	case I3C_BUS_MODE_PURE:
+ 		if (!i3cbus->scl_rate.i3c)
+-			i3cbus->scl_rate.i3c = I3C_BUS_TYP_I3C_SCL_RATE;
++			i3cbus->scl_rate.i3c = I3C_BUS_I3C_SCL_TYP_RATE;
+ 		break;
+ 	case I3C_BUS_MODE_MIXED_FAST:
+ 	case I3C_BUS_MODE_MIXED_LIMITED:
+ 		if (!i3cbus->scl_rate.i3c)
+-			i3cbus->scl_rate.i3c = I3C_BUS_TYP_I3C_SCL_RATE;
++			i3cbus->scl_rate.i3c = I3C_BUS_I3C_SCL_TYP_RATE;
+ 		if (!i3cbus->scl_rate.i2c)
+ 			i3cbus->scl_rate.i2c = max_i2c_scl_rate;
+ 		break;
+@@ -754,8 +754,8 @@ static int i3c_bus_set_mode(struct i3c_bus *i3cbus, enum i3c_bus_mode mode,
+ 	 * I3C/I2C frequency may have been overridden, check that user-provided
+ 	 * values are not exceeding max possible frequency.
+ 	 */
+-	if (i3cbus->scl_rate.i3c > I3C_BUS_MAX_I3C_SCL_RATE ||
+-	    i3cbus->scl_rate.i2c > I3C_BUS_I2C_FM_PLUS_SCL_RATE)
++	if (i3cbus->scl_rate.i3c > I3C_BUS_I3C_SCL_MAX_RATE ||
++	    i3cbus->scl_rate.i2c > I3C_BUS_I2C_FM_PLUS_SCL_MAX_RATE)
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -2785,7 +2785,7 @@ int i3c_master_register(struct i3c_master_controller *master,
+ 			const struct i3c_master_controller_ops *ops,
+ 			bool secondary)
+ {
+-	unsigned long i2c_scl_rate = I3C_BUS_I2C_FM_PLUS_SCL_RATE;
++	unsigned long i2c_scl_rate = I3C_BUS_I2C_FM_PLUS_SCL_MAX_RATE;
+ 	struct i3c_bus *i3cbus = i3c_master_get_bus(master);
+ 	enum i3c_bus_mode mode = I3C_BUS_MODE_PURE;
+ 	struct i2c_dev_boardinfo *i2cbi;
+@@ -2844,7 +2844,7 @@ int i3c_master_register(struct i3c_master_controller *master,
+ 		}
+ 
+ 		if (i2cbi->lvr & I3C_LVR_I2C_FM_MODE)
+-			i2c_scl_rate = I3C_BUS_I2C_FM_SCL_RATE;
++			i2c_scl_rate = I3C_BUS_I2C_FM_SCL_MAX_RATE;
+ 	}
+ 
+ 	ret = i3c_bus_set_mode(i3cbus, mode, i2c_scl_rate);
+diff --git a/drivers/i3c/master/dw-i3c-master.c b/drivers/i3c/master/dw-i3c-master.c
+index 577368467b8b..2c0b2abdb7c1 100644
+--- a/drivers/i3c/master/dw-i3c-master.c
++++ b/drivers/i3c/master/dw-i3c-master.c
+@@ -622,14 +622,14 @@ static int dw_i2c_clk_cfg(struct dw_i3c_master *master)
+ 	core_period = DIV_ROUND_UP(1000000000, core_rate);
+ 
+ 	lcnt = DIV_ROUND_UP(I3C_BUS_I2C_FMP_TLOW_MIN_NS, core_period);
+-	hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_PLUS_SCL_RATE) - lcnt;
++	hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_PLUS_SCL_MAX_RATE) - lcnt;
+ 	scl_timing = SCL_I2C_FMP_TIMING_HCNT(hcnt) |
+ 		     SCL_I2C_FMP_TIMING_LCNT(lcnt);
+ 	writel(scl_timing, master->regs + SCL_I2C_FMP_TIMING);
+ 	master->i2c_fmp_timing = scl_timing;
+ 
+ 	lcnt = DIV_ROUND_UP(I3C_BUS_I2C_FM_TLOW_MIN_NS, core_period);
+-	hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_SCL_RATE) - lcnt;
++	hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_SCL_MAX_RATE) - lcnt;
+ 	scl_timing = SCL_I2C_FM_TIMING_HCNT(hcnt) |
+ 		     SCL_I2C_FM_TIMING_LCNT(lcnt);
+ 	writel(scl_timing, master->regs + SCL_I2C_FM_TIMING);
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index c67922ece617..7dfcbe530515 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -249,10 +249,11 @@ struct i3c_device {
+  */
+ #define I3C_BUS_MAX_DEVS		11
+ 
+-#define I3C_BUS_MAX_I3C_SCL_RATE	12900000
+-#define I3C_BUS_TYP_I3C_SCL_RATE	12500000
+-#define I3C_BUS_I2C_FM_PLUS_SCL_RATE	1000000
+-#define I3C_BUS_I2C_FM_SCL_RATE		400000
++/* Taken from the I3C Spec V1.1.1, chapter 6.2. "Timing specification" */
++#define I3C_BUS_I2C_FM_PLUS_SCL_MAX_RATE	1000000
++#define I3C_BUS_I2C_FM_SCL_MAX_RATE		400000
++#define I3C_BUS_I3C_SCL_MAX_RATE	12900000
++#define I3C_BUS_I3C_SCL_TYP_RATE	12500000
+ #define I3C_BUS_TLOW_OD_MIN_NS		200
+ 
+ /**

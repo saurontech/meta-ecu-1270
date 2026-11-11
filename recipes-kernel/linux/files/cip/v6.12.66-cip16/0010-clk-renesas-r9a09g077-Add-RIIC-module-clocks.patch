@@ -1,0 +1,34 @@
+From 93ef679876542a93aa4b4d551f07f8324256aac1 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:38:59 +0000
+Subject: [PATCH 010/838] clk: renesas: r9a09g077: Add RIIC module clocks
+
+commit 0475a478d0a88c7ec31763697eb01b25957bece3 upstream.
+
+Add RIIC module clocks for: iic0, iic1, and iic2.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250625141705.151383-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[PL:manually applied the changes]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index 04fbc0539241..5e39f3afc3b7 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -146,6 +146,9 @@ static const struct cpg_core_clk r9a09g077_core_clks[] __initconst = {
+ 
+ static const struct mssr_mod_clk r9a09g077_mod_clks[] __initconst = {
+ 	DEF_MOD("sci0fck", 8, CLK_SCI0ASYNC),
++	DEF_MOD("iic0", 100, R9A09G077_CLK_PCLKL),
++	DEF_MOD("iic1", 101, R9A09G077_CLK_PCLKL),
++	DEF_MOD("iic2", 601, R9A09G077_CLK_PCLKL),
+ };
+ 
+ static struct clk * __init

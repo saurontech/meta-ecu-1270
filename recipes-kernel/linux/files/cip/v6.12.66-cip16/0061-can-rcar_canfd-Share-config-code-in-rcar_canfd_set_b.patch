@@ -1,0 +1,73 @@
+From b00dffdfb1ba54a21dbe65d63466cb458d884390 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:31 +0000
+Subject: [PATCH 061/838] can: rcar_canfd: Share config code in
+ rcar_canfd_set_bittiming()
+
+[ Upstream commit 0a0c94c682fd2606b65a512ba24478a3b5e73d7d ]
+
+The configuration register format for nominal bit timings in CAN-FD mode
+and the format for bit timings in CAN mode on CAN-FD controllers with
+shared Classical CAN registers are the same.
+
+Restructure the code to make this clear, also reducing kernel size by 80
+bytes.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/b7643a3c49777989d02145a85b85cf773ec2123f.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 25 +++++++------------------
+ 1 file changed, 7 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 2f84393d95c1..c7306c93d16b 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1482,13 +1482,17 @@ static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ 	tseg1 = bt->prop_seg + bt->phase_seg1 - 1;
+ 	tseg2 = bt->phase_seg2 - 1;
+ 
+-	if (priv->can.ctrlmode & CAN_CTRLMODE_FD) {
+-		/* CAN FD only mode */
++	if ((priv->can.ctrlmode & CAN_CTRLMODE_FD) || gpriv->info->shared_can_regs) {
+ 		cfg = (RCANFD_NCFG_NTSEG1(gpriv, tseg1) | RCANFD_NCFG_NBRP(brp) |
+ 		       RCANFD_NCFG_NSJW(gpriv, sjw) | RCANFD_NCFG_NTSEG2(gpriv, tseg2));
++	} else {
++		cfg = (RCANFD_CFG_TSEG1(tseg1) | RCANFD_CFG_BRP(brp) |
++		       RCANFD_CFG_SJW(sjw) | RCANFD_CFG_TSEG2(tseg2));
++	}
+ 
+-		rcar_canfd_write(priv->base, RCANFD_CCFG(ch), cfg);
++	rcar_canfd_write(priv->base, RCANFD_CCFG(ch), cfg);
+ 
++	if (priv->can.ctrlmode & CAN_CTRLMODE_FD) {
+ 		/* Data bit timing settings */
+ 		brp = dbt->brp - 1;
+ 		sjw = dbt->sjw - 1;
+@@ -1499,21 +1503,6 @@ static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ 		       RCANFD_DCFG_DSJW(gpriv, sjw) | RCANFD_DCFG_DTSEG2(gpriv, tseg2));
+ 
+ 		rcar_canfd_write(priv->base, rcar_canfd_f_dcfg(gpriv, ch), cfg);
+-	} else {
+-		/* Classical CAN only mode */
+-		if (gpriv->info->shared_can_regs) {
+-			cfg = (RCANFD_NCFG_NTSEG1(gpriv, tseg1) |
+-			       RCANFD_NCFG_NBRP(brp) |
+-			       RCANFD_NCFG_NSJW(gpriv, sjw) |
+-			       RCANFD_NCFG_NTSEG2(gpriv, tseg2));
+-		} else {
+-			cfg = (RCANFD_CFG_TSEG1(tseg1) |
+-			       RCANFD_CFG_BRP(brp) |
+-			       RCANFD_CFG_SJW(sjw) |
+-			       RCANFD_CFG_TSEG2(tseg2));
+-		}
+-
+-		rcar_canfd_write(priv->base, RCANFD_CCFG(ch), cfg);
+ 	}
+ }
+ 

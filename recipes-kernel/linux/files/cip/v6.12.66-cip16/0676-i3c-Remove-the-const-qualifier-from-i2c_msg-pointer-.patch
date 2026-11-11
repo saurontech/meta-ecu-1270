@@ -1,0 +1,98 @@
+From 5e02e1e01b8e88e9b80904d7779c7f7597027c08 Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Thu, 8 Jan 2026 10:30:10 +0100
+Subject: [PATCH 676/838] i3c: Remove the const qualifier from i2c_msg pointer
+ in i2c_xfers API
+
+commit 6866c91f8c2327546d850d5a85025fb81e2089bf upstream.
+
+The change is necessary to enable the use of the
+`i2c_get_dma_safe_msg_buf()` API, which requires a non-const
+`struct i2c_msg *` to operate. The `i2c_get_dma_safe_msg_buf()` function
+ensures safe handling of I2C messages when using DMA, making it essential
+for scenarios where DMA transfers are involved. By removing the `const`
+qualifier, this patch allows drivers to prepare and manage DMA-safe
+buffers directly.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Acked-by: Mukesh Kumar Savaliya <quic_msavaliy@quicinc.com>
+Link: https://lore.kernel.org/r/20250204091702.4014466-1-billy_tsai@aspeedtech.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i3c/master/dw-i3c-master.c     | 2 +-
+ drivers/i3c/master/i3c-master-cdns.c   | 2 +-
+ drivers/i3c/master/mipi-i3c-hci/core.c | 2 +-
+ drivers/i3c/master/svc-i3c-master.c    | 2 +-
+ include/linux/i3c/master.h             | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/i3c/master/dw-i3c-master.c b/drivers/i3c/master/dw-i3c-master.c
+index dbcd3984f257..577368467b8b 100644
+--- a/drivers/i3c/master/dw-i3c-master.c
++++ b/drivers/i3c/master/dw-i3c-master.c
+@@ -1066,7 +1066,7 @@ static void dw_i3c_master_detach_i3c_dev(struct i3c_dev_desc *dev)
+ }
+ 
+ static int dw_i3c_master_i2c_xfers(struct i2c_dev_desc *dev,
+-				   const struct i2c_msg *i2c_xfers,
++				   struct i2c_msg *i2c_xfers,
+ 				   int i2c_nxfers)
+ {
+ 	struct dw_i3c_i2c_dev_data *data = i2c_dev_get_master_data(dev);
+diff --git a/drivers/i3c/master/i3c-master-cdns.c b/drivers/i3c/master/i3c-master-cdns.c
+index fe4d59833ad5..ce2933c912d0 100644
+--- a/drivers/i3c/master/i3c-master-cdns.c
++++ b/drivers/i3c/master/i3c-master-cdns.c
+@@ -813,7 +813,7 @@ static int cdns_i3c_master_priv_xfers(struct i3c_dev_desc *dev,
+ }
+ 
+ static int cdns_i3c_master_i2c_xfers(struct i2c_dev_desc *dev,
+-				     const struct i2c_msg *xfers, int nxfers)
++				     struct i2c_msg *xfers, int nxfers)
+ {
+ 	struct i3c_master_controller *m = i2c_dev_get_master(dev);
+ 	struct cdns_i3c_master *master = to_cdns_i3c_master(m);
+diff --git a/drivers/i3c/master/mipi-i3c-hci/core.c b/drivers/i3c/master/mipi-i3c-hci/core.c
+index a82c47c9986d..5bc22d9635eb 100644
+--- a/drivers/i3c/master/mipi-i3c-hci/core.c
++++ b/drivers/i3c/master/mipi-i3c-hci/core.c
+@@ -369,7 +369,7 @@ static int i3c_hci_priv_xfers(struct i3c_dev_desc *dev,
+ }
+ 
+ static int i3c_hci_i2c_xfers(struct i2c_dev_desc *dev,
+-			     const struct i2c_msg *i2c_xfers, int nxfers)
++			     struct i2c_msg *i2c_xfers, int nxfers)
+ {
+ 	struct i3c_master_controller *m = i2c_dev_get_master(dev);
+ 	struct i3c_hci *hci = to_i3c_hci(m);
+diff --git a/drivers/i3c/master/svc-i3c-master.c b/drivers/i3c/master/svc-i3c-master.c
+index 985f30ef0c93..7b4a62efd066 100644
+--- a/drivers/i3c/master/svc-i3c-master.c
++++ b/drivers/i3c/master/svc-i3c-master.c
+@@ -1572,7 +1572,7 @@ static int svc_i3c_master_priv_xfers(struct i3c_dev_desc *dev,
+ }
+ 
+ static int svc_i3c_master_i2c_xfers(struct i2c_dev_desc *dev,
+-				    const struct i2c_msg *xfers,
++				    struct i2c_msg *xfers,
+ 				    int nxfers)
+ {
+ 	struct i3c_master_controller *m = i2c_dev_get_master(dev);
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index 12d532b012c5..c67922ece617 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -475,7 +475,7 @@ struct i3c_master_controller_ops {
+ 	int (*attach_i2c_dev)(struct i2c_dev_desc *dev);
+ 	void (*detach_i2c_dev)(struct i2c_dev_desc *dev);
+ 	int (*i2c_xfers)(struct i2c_dev_desc *dev,
+-			 const struct i2c_msg *xfers, int nxfers);
++			 struct i2c_msg *xfers, int nxfers);
+ 	int (*request_ibi)(struct i3c_dev_desc *dev,
+ 			   const struct i3c_ibi_setup *req);
+ 	void (*free_ibi)(struct i3c_dev_desc *dev);

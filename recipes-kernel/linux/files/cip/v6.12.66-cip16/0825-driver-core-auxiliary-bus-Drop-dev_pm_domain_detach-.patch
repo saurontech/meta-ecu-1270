@@ -1,0 +1,64 @@
+From d9d000fd15e97c6937a13bc56ea6cbe0904e2fbc Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:35:51 +0200
+Subject: [PATCH 825/838] driver core: auxiliary bus: Drop
+ dev_pm_domain_detach() call
+
+commit eca710386972f2a72708b0b2a615eb150d218e18 upstream.
+
+Starting with commit f99508074e78 ("PM: domains: Detach on
+device_unbind_cleanup()"), there is no longer a need to call
+dev_pm_domain_detach() in the bus remove function. The
+device_unbind_cleanup() function now handles this to avoid
+invoking devres cleanup handlers while the PM domain is
+powered off, which could otherwise lead to failures as
+described in the above-mentioned commit.
+
+Drop the explicit dev_pm_domain_detach() call and rely instead
+on the flags passed to dev_pm_domain_attach() to power off the
+domain.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Link: https://lore.kernel.org/r/20250827100541.926350-1-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+[claudiu.beznea: drop dev_pm_domain_detach() conditionally]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/base/auxiliary.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/base/auxiliary.c b/drivers/base/auxiliary.c
+index 5d5b2a9fee0c..f1319ebf8532 100644
+--- a/drivers/base/auxiliary.c
++++ b/drivers/base/auxiliary.c
+@@ -207,14 +207,15 @@ static int auxiliary_bus_probe(struct device *dev)
+ 	struct auxiliary_device *auxdev = to_auxiliary_dev(dev);
+ 	int ret;
+ 
+-	ret = dev_pm_domain_attach(dev, PD_FLAG_ATTACH_POWER_ON);
++	ret = dev_pm_domain_attach(dev, PD_FLAG_ATTACH_POWER_ON |
++					PD_FLAG_DETACH_POWER_OFF);
+ 	if (ret) {
+ 		dev_warn(dev, "Failed to attach to PM Domain : %d\n", ret);
+ 		return ret;
+ 	}
+ 
+ 	ret = auxdrv->probe(auxdev, auxiliary_match_id(auxdrv->id_table, auxdev));
+-	if (ret)
++	if (ret && !dev_pm_domain_allow_detach_on_unbind_cleanup())
+ 		dev_pm_domain_detach(dev, true);
+ 
+ 	return ret;
+@@ -227,7 +228,8 @@ static void auxiliary_bus_remove(struct device *dev)
+ 
+ 	if (auxdrv->remove)
+ 		auxdrv->remove(auxdev);
+-	dev_pm_domain_detach(dev, true);
++	if (!dev_pm_domain_allow_detach_on_unbind_cleanup())
++		dev_pm_domain_detach(dev, true);
+ }
+ 
+ static void auxiliary_bus_shutdown(struct device *dev)

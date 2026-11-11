@@ -1,0 +1,54 @@
+From 35418feaa510c42f75a6323654da16dd3515ba81 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:28 +0000
+Subject: [PATCH 058/838] can: rcar_canfd: Simplify data access in
+ rcar_canfd_{ge,pu}t_data()
+
+[ Upstream commit f5e3150b1a0f0f80b162c1ac6178344959a2506d ]
+
+Replace the repeated casts, pointer additions, and pointer dereferences
+by array accesses to improve readability.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/4f43f44dcfda13d48a2c502648833934a51d9d6c.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index ac6a942c3c85..d7ab9a7ec4c8 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -781,23 +781,23 @@ static void rcar_canfd_update_bit(void __iomem *base, u32 reg,
+ static void rcar_canfd_get_data(struct rcar_canfd_channel *priv,
+ 				struct canfd_frame *cf, u32 off)
+ {
++	u32 *data = (u32 *)cf->data;
+ 	u32 i, lwords;
+ 
+ 	lwords = DIV_ROUND_UP(cf->len, sizeof(u32));
+ 	for (i = 0; i < lwords; i++)
+-		*((u32 *)cf->data + i) =
+-			rcar_canfd_read(priv->base, off + i * sizeof(u32));
++		data[i] = rcar_canfd_read(priv->base, off + i * sizeof(u32));
+ }
+ 
+ static void rcar_canfd_put_data(struct rcar_canfd_channel *priv,
+ 				struct canfd_frame *cf, u32 off)
+ {
++	const u32 *data = (u32 *)cf->data;
+ 	u32 i, lwords;
+ 
+ 	lwords = DIV_ROUND_UP(cf->len, sizeof(u32));
+ 	for (i = 0; i < lwords; i++)
+-		rcar_canfd_write(priv->base, off + i * sizeof(u32),
+-				 *((u32 *)cf->data + i));
++		rcar_canfd_write(priv->base, off + i * sizeof(u32), data[i]);
+ }
+ 
+ static void rcar_canfd_tx_failure_cleanup(struct net_device *ndev)

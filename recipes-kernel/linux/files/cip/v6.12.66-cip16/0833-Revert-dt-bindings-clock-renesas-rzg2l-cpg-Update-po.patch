@@ -1,0 +1,63 @@
+From 272116538b2fc965a551d0d4f958c358d99a4145 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:35:59 +0200
+Subject: [PATCH 833/838] Revert "dt-bindings: clock: renesas,rzg2l-cpg: Update
+ #power-domain-cells = <1> for RZ/G3S"
+
+commit 705d9f8f180851c60e6a344881661c3d44b92313 upstream.
+
+This reverts commit f33dca9ed6f41c8acf2c17c402738deddb7d7c28.
+
+Since the configuration order between the individual MSTOP and CLKON
+bits cannot be preserved with the power domain abstraction, drop the
+power domain IDs.
+Currently, there are no device tree users for #power-domain-cell = <1>.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: "Rob Herring (Arm)" <robh@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20250527112403.1254122-9-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/clock/renesas,rzg2l-cpg.yaml      | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/clock/renesas,rzg2l-cpg.yaml b/Documentation/devicetree/bindings/clock/renesas,rzg2l-cpg.yaml
+index 0440f23da059..8c18616e5c4d 100644
+--- a/Documentation/devicetree/bindings/clock/renesas,rzg2l-cpg.yaml
++++ b/Documentation/devicetree/bindings/clock/renesas,rzg2l-cpg.yaml
+@@ -57,8 +57,7 @@ properties:
+       can be power-managed through Module Standby should refer to the CPG device
+       node in their "power-domains" property, as documented by the generic PM
+       Domain bindings in Documentation/devicetree/bindings/power/power-domain.yaml.
+-      The power domain specifiers defined in <dt-bindings/clock/r9a0*-cpg.h> could
+-      be used to reference individual CPG power domains.
++    const: 0
+ 
+   '#reset-cells':
+     description:
+@@ -77,21 +76,6 @@ required:
+ 
+ additionalProperties: false
+ 
+-allOf:
+-  - if:
+-      properties:
+-        compatible:
+-          contains:
+-            const: renesas,r9a08g045-cpg
+-    then:
+-      properties:
+-        '#power-domain-cells':
+-          const: 1
+-    else:
+-      properties:
+-        '#power-domain-cells':
+-          const: 0
+-
+ examples:
+   - |
+     cpg: clock-controller@11010000 {

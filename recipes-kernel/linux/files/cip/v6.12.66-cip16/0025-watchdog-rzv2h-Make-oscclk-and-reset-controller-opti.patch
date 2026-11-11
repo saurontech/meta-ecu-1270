@@ -1,0 +1,50 @@
+From dbc0231d3293cb6cbe270639abd9bd674e2a3cdc Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:12 +0000
+Subject: [PATCH 025/838] watchdog: rzv2h: Make "oscclk" and reset controller
+ optional
+
+commit 6229b35298af8c3cb983d866e9da1c1ad4803cc6 upstream.
+
+Update the rzv2h_wdt driver to make the "oscclk" clock and reset
+controller optional.
+
+Use devm_clk_get_optional_prepared() to obtain the "oscclk" clock,
+allowing the driver to work on platforms that do not provide this clock,
+such as the RZ/T2H SoC.
+
+Similarly, use devm_reset_control_get_optional_exclusive() to allow the
+driver to function on platforms that lack a reset controller.
+
+These changes are preparatory steps for supporting the RZ/T2H SoC, which
+does not provide an "oscclk" clock or a reset controller.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Wim Van Sebroeck <wim@linux-watchdog.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/watchdog/rzv2h_wdt.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/watchdog/rzv2h_wdt.c b/drivers/watchdog/rzv2h_wdt.c
+index 755067800ebb..3c02960b65cf 100644
+--- a/drivers/watchdog/rzv2h_wdt.c
++++ b/drivers/watchdog/rzv2h_wdt.c
+@@ -230,11 +230,11 @@ static int rzv2h_wdt_probe(struct platform_device *pdev)
+ 	if (IS_ERR(priv->pclk))
+ 		return dev_err_probe(dev, PTR_ERR(priv->pclk), "no pclk");
+ 
+-	priv->oscclk = devm_clk_get_prepared(dev, "oscclk");
++	priv->oscclk = devm_clk_get_optional_prepared(dev, "oscclk");
+ 	if (IS_ERR(priv->oscclk))
+ 		return dev_err_probe(dev, PTR_ERR(priv->oscclk), "no oscclk");
+ 
+-	priv->rstc = devm_reset_control_get_exclusive(dev, NULL);
++	priv->rstc = devm_reset_control_get_optional_exclusive(dev, NULL);
+ 	if (IS_ERR(priv->rstc))
+ 		return dev_err_probe(dev, PTR_ERR(priv->rstc),
+ 				     "failed to get cpg reset");

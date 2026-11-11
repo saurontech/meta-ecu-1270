@@ -1,0 +1,64 @@
+From 0342e88df3da37abed11276c625e0b1c8f31c6dc Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:35:52 +0200
+Subject: [PATCH 826/838] i2c: core: Drop dev_pm_domain_detach() call
+
+commit eddfe53b0d84b02802432bf783ccd53b095dd10a upstream.
+
+Starting with commit f99508074e78 ("PM: domains: Detach on
+device_unbind_cleanup()"), there is no longer a need to call
+dev_pm_domain_detach() in the bus remove function. The
+device_unbind_cleanup() function now handles this to avoid
+invoking devres cleanup handlers while the PM domain is
+powered off, which could otherwise lead to failures as
+described in the above-mentioned commit.
+
+Drop the explicit dev_pm_domain_detach() call and rely instead
+on the flags passed to dev_pm_domain_attach() to power off the
+domain.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+[claudiu.beznea: drop dev_pm_domain_detach() conditionally]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i2c/i2c-core-base.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i2c/i2c-core-base.c b/drivers/i2c/i2c-core-base.c
+index d70364e6ea6f..4a4756cd09b0 100644
+--- a/drivers/i2c/i2c-core-base.c
++++ b/drivers/i2c/i2c-core-base.c
+@@ -572,7 +572,8 @@ static int i2c_device_probe(struct device *dev)
+ 		goto err_clear_wakeup_irq;
+ 
+ 	do_power_on = !i2c_acpi_waive_d0_probe(dev);
+-	status = dev_pm_domain_attach(&client->dev, do_power_on ? PD_FLAG_ATTACH_POWER_ON : 0);
++	status = dev_pm_domain_attach(&client->dev, PD_FLAG_DETACH_POWER_OFF |
++				      (do_power_on ? PD_FLAG_ATTACH_POWER_ON : 0));
+ 	if (status)
+ 		goto err_clear_wakeup_irq;
+ 
+@@ -604,7 +605,8 @@ static int i2c_device_probe(struct device *dev)
+ err_release_driver_resources:
+ 	devres_release_group(&client->dev, client->devres_group_id);
+ err_detach_pm_domain:
+-	dev_pm_domain_detach(&client->dev, do_power_on);
++	if (!dev_pm_domain_allow_detach_on_unbind_cleanup())
++		dev_pm_domain_detach(&client->dev, do_power_on);
+ err_clear_wakeup_irq:
+ 	dev_pm_clear_wake_irq(&client->dev);
+ 	device_init_wakeup(&client->dev, false);
+@@ -629,7 +631,8 @@ static void i2c_device_remove(struct device *dev)
+ 
+ 	devres_release_group(&client->dev, client->devres_group_id);
+ 
+-	dev_pm_domain_detach(&client->dev, true);
++	if (!dev_pm_domain_allow_detach_on_unbind_cleanup())
++		dev_pm_domain_detach(&client->dev, true);
+ 
+ 	dev_pm_clear_wake_irq(&client->dev);
+ 	device_init_wakeup(&client->dev, false);

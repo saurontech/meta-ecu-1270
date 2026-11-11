@@ -1,0 +1,37 @@
+From ecd150ff7fc4f801911050baea657dd7c2388c0d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 14 Jan 2026 12:53:57 +0000
+Subject: [PATCH 685/838] dt-bindings: i2c: renesas,riic: Document RZ/V2N
+ (R9A09G056) support
+
+commit 8b284979f7fb2f1acfd88a6b96c8863c410eb27f upstream.
+
+Document support for the I2C Bus Interface (RIIC) found on the Renesas
+RZ/V2N (R9A09G056) SoC. The RIIC IP is identical to that on RZ/V2H(P),
+so `renesas,riic-r9a09g057` will be used as a fallback compatible,
+enabling reuse of the existing driver without changes.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250501203310.140137-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Andi Shyti <andi.shyti@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/i2c/renesas,riic.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+index 207cb2eb25c8..6876eade431b 100644
+--- a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
++++ b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+@@ -26,6 +26,7 @@ properties:
+           - enum:
+               - renesas,riic-r9a08g045   # RZ/G3S
+               - renesas,riic-r9a09g047   # RZ/G3E
++              - renesas,riic-r9a09g056   # RZ/V2N
+           - const: renesas,riic-r9a09g057   # RZ/V2H(P)
+ 
+       - enum:

@@ -1,0 +1,57 @@
+From ba488c38875d4b270fd557fc1d0e61a94c431db8 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:17 +0000
+Subject: [PATCH 030/838] clk: renesas: cpg-mssr: Add read-back and delay
+ handling for RZ/T2H MSTP
+
+commit 934dcccf3ffc7568fdeb363842bb9fc36e1be608 upstream.
+
+On the RZ/T2H SoC, a specific sequence is required when releasing a
+module from the module stop state (i.e. when clearing the corresponding
+bit in the MSTPCRm register to '0'). After writing to the MSTPCRm
+register, a read-back of the same register must be performed, followed
+by at least seven dummy reads of any register within the IP block that
+is being released.
+
+To avoid mapping device registers for this purpose, a short delay is
+introduced after the read-back to ensure proper hardware stabilization
+before the module becomes accessible.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251014105348.93705-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/renesas-cpg-mssr.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/renesas/renesas-cpg-mssr.c b/drivers/clk/renesas/renesas-cpg-mssr.c
+index 5a61b6aafd62..eb469a06e690 100644
+--- a/drivers/clk/renesas/renesas-cpg-mssr.c
++++ b/drivers/clk/renesas/renesas-cpg-mssr.c
+@@ -308,10 +308,21 @@ static int cpg_mstp_clock_endisable(struct clk_hw *hw, bool enable)
+ 
+ 	spin_unlock_irqrestore(&priv->pub.rmw_lock, flags);
+ 
+-	if (!enable || priv->reg_layout == CLK_REG_LAYOUT_RZ_A ||
+-	    priv->reg_layout == CLK_REG_LAYOUT_RZ_T2H)
++	if (!enable || priv->reg_layout == CLK_REG_LAYOUT_RZ_A)
+ 		return 0;
+ 
++	if (priv->reg_layout == CLK_REG_LAYOUT_RZ_T2H) {
++		/*
++		 * For the RZ/T2H case, it is necessary to perform a read-back after
++		 * accessing the MSTPCRm register and to dummy-read any register of
++		 * the IP at least seven times. Instead of memory-mapping the IP
++		 * register, we simply add a delay after the read operation.
++		 */
++		cpg_rzt2h_mstp_read(hw, priv->control_regs[reg]);
++		udelay(10);
++		return 0;
++	}
++
+ 	error = readl_poll_timeout_atomic(priv->pub.base0 + priv->status_regs[reg],
+ 					  value, !(value & bitmask), 0, 10);
+ 	if (error)

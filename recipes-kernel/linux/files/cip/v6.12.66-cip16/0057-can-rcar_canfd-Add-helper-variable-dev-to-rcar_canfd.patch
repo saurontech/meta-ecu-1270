@@ -1,0 +1,62 @@
+From 125e023ddeeedfa168f3fc49b75e51f06c808a78 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:27 +0000
+Subject: [PATCH 057/838] can: rcar_canfd: Add helper variable dev to
+ rcar_canfd_reset_controller()
+
+[ Upstream commit 1f9b5003d4baf72055371fcdb15dda5759a8e908 ]
+
+rcar_canfd_reset_controller() has many users of "pdev->dev".  Introduce
+a shorthand to simplify the code.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/21e64816808eb3eba722f4c547f4f5112d5d62a6.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 9b40b787d913..ac6a942c3c85 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -821,6 +821,7 @@ static void rcar_canfd_setrnc(struct rcar_canfd_global *gpriv, unsigned int ch,
+ 
+ static int rcar_canfd_reset_controller(struct rcar_canfd_global *gpriv)
+ {
++	struct device *dev = &gpriv->pdev->dev;
+ 	u32 sts, ch;
+ 	int err;
+ 
+@@ -830,7 +831,7 @@ static int rcar_canfd_reset_controller(struct rcar_canfd_global *gpriv)
+ 	err = readl_poll_timeout((gpriv->base + RCANFD_GSTS), sts,
+ 				 !(sts & RCANFD_GSTS_GRAMINIT), 2, 500000);
+ 	if (err) {
+-		dev_dbg(&gpriv->pdev->dev, "global raminit failed\n");
++		dev_dbg(dev, "global raminit failed\n");
+ 		return err;
+ 	}
+ 
+@@ -843,7 +844,7 @@ static int rcar_canfd_reset_controller(struct rcar_canfd_global *gpriv)
+ 	err = readl_poll_timeout((gpriv->base + RCANFD_GSTS), sts,
+ 				 (sts & RCANFD_GSTS_GRSTSTS), 2, 500000);
+ 	if (err) {
+-		dev_dbg(&gpriv->pdev->dev, "global reset failed\n");
++		dev_dbg(dev, "global reset failed\n");
+ 		return err;
+ 	}
+ 
+@@ -874,8 +875,7 @@ static int rcar_canfd_reset_controller(struct rcar_canfd_global *gpriv)
+ 					 (sts & RCANFD_CSTS_CRSTSTS),
+ 					 2, 500000);
+ 		if (err) {
+-			dev_dbg(&gpriv->pdev->dev,
+-				"channel %u reset failed\n", ch);
++			dev_dbg(dev, "channel %u reset failed\n", ch);
+ 			return err;
+ 		}
+ 

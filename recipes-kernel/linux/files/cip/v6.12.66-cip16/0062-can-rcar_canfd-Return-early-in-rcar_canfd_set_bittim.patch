@@ -1,0 +1,57 @@
+From c405eac88d5d86025d2fe7b7373e0400e07bc86c Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:32 +0000
+Subject: [PATCH 062/838] can: rcar_canfd: Return early in
+ rcar_canfd_set_bittiming() when not FD
+
+[ Upstream commit 0acd46190ea2157a175b4b2b8e764843e2c93b66 ]
+
+Return early after completing all setup for non-FD mode in
+rcar_canfd_set_bittiming(), to prepare for the advent of more FD-only
+setup.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/35fcdcad026cfdd0fd361637f065842d99a6c19d.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index c7306c93d16b..f567ed7fa8e7 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1492,18 +1492,19 @@ static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ 
+ 	rcar_canfd_write(priv->base, RCANFD_CCFG(ch), cfg);
+ 
+-	if (priv->can.ctrlmode & CAN_CTRLMODE_FD) {
+-		/* Data bit timing settings */
+-		brp = dbt->brp - 1;
+-		sjw = dbt->sjw - 1;
+-		tseg1 = dbt->prop_seg + dbt->phase_seg1 - 1;
+-		tseg2 = dbt->phase_seg2 - 1;
++	if (!(priv->can.ctrlmode & CAN_CTRLMODE_FD))
++		return;
+ 
+-		cfg = (RCANFD_DCFG_DTSEG1(gpriv, tseg1) | RCANFD_DCFG_DBRP(brp) |
+-		       RCANFD_DCFG_DSJW(gpriv, sjw) | RCANFD_DCFG_DTSEG2(gpriv, tseg2));
++	/* Data bit timing settings */
++	brp = dbt->brp - 1;
++	sjw = dbt->sjw - 1;
++	tseg1 = dbt->prop_seg + dbt->phase_seg1 - 1;
++	tseg2 = dbt->phase_seg2 - 1;
+ 
+-		rcar_canfd_write(priv->base, rcar_canfd_f_dcfg(gpriv, ch), cfg);
+-	}
++	cfg = (RCANFD_DCFG_DTSEG1(gpriv, tseg1) | RCANFD_DCFG_DBRP(brp) |
++	       RCANFD_DCFG_DSJW(gpriv, sjw) | RCANFD_DCFG_DTSEG2(gpriv, tseg2));
++
++	rcar_canfd_write(priv->base, rcar_canfd_f_dcfg(gpriv, ch), cfg);
+ }
+ 
+ static int rcar_canfd_start(struct net_device *ndev)

@@ -1,0 +1,56 @@
+From cf2ba8c0862fb4eedcc0c16def17fc30cf3e1895 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Thu, 8 Jan 2026 10:30:07 +0100
+Subject: [PATCH 673/838] i3c: controllers do not need to depend on I3C
+
+commit 00286d7d643d3c98e48d9cc3a9f471b37154f462 upstream.
+
+The Kconfig file for controller drivers is only sourced if the I3C
+symbol is enabled. No need to check for that in individual drivers.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/r/20250506075247.1545-2-wsa+renesas@sang-engineering.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i3c/master/Kconfig | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/i3c/master/Kconfig b/drivers/i3c/master/Kconfig
+index 77da199c7413..7b30db3253af 100644
+--- a/drivers/i3c/master/Kconfig
++++ b/drivers/i3c/master/Kconfig
+@@ -1,7 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config CDNS_I3C_MASTER
+ 	tristate "Cadence I3C master driver"
+-	depends on I3C
+ 	depends on HAS_IOMEM
+ 	depends on !(ALPHA || PARISC)
+ 	help
+@@ -9,7 +8,6 @@ config CDNS_I3C_MASTER
+ 
+ config DW_I3C_MASTER
+ 	tristate "Synospsys DesignWare I3C master driver"
+-	depends on I3C
+ 	depends on HAS_IOMEM
+ 	depends on !(ALPHA || PARISC)
+ 	# ALPHA and PARISC needs {read,write}sl()
+@@ -38,7 +36,6 @@ config AST2600_I3C_MASTER
+ 
+ config SVC_I3C_MASTER
+ 	tristate "Silvaco I3C Dual-Role Master driver"
+-	depends on I3C
+ 	depends on HAS_IOMEM
+ 	depends on !(ALPHA || PARISC)
+ 	help
+@@ -46,7 +43,6 @@ config SVC_I3C_MASTER
+ 
+ config MIPI_I3C_HCI
+ 	tristate "MIPI I3C Host Controller Interface driver (EXPERIMENTAL)"
+-	depends on I3C
+ 	depends on HAS_IOMEM
+ 	help
+ 	  Support for hardware following the MIPI Aliance's I3C Host Controller

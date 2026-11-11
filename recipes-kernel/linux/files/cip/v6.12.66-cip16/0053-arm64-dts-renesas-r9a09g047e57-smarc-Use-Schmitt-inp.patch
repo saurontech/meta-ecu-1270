@@ -1,0 +1,35 @@
+From b975a1bce5ff5768dc2ee21c87d2315c69721e3d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 6 Jan 2026 10:41:48 +0000
+Subject: [PATCH 053/838] arm64: dts: renesas: r9a09g047e57-smarc: Use Schmitt
+ input for NMI function
+
+[ Upstream commit 4b9e0d8aa96c92be0073825344b661afc49242aa ]
+
+The latest RZ/G3E pin control document (rev 1.2) recommends using
+Schmitt input when PS0 pin used as NMI function.  Enable Schmitt input
+for PS0 pin.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250817145135.166591-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 4a3153b33eb8..ed6fcdc337a0 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -131,6 +131,7 @@ i2c0_pins: i2c0 {
+ 
+ 	nmi_pins: nmi {
+ 		pinmux = <RZG3E_PORT_PINMUX(S, 0, 0)>; /* NMI */
++		input-schmitt-enable;
+ 	};
+ 
+ 	scif_pins: scif {

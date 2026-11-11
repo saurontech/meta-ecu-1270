@@ -1,0 +1,43 @@
+From ad6b858587c9e34b0eae5d189ba2a1c531e9b98e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 08:42:34 +0000
+Subject: [PATCH 002/838] dt-bindings: net: renesas-gbeth: Add support for
+ RZ/V2N (R9A09G056) SoC
+
+commit 6b466efc6365e904b4b7eb65218a5b2969f978e2 upstream.
+
+Document support for the GBETH IP found on the Renesas RZ/V2N (R9A09G056)
+SoC. The GBETH controller on the RZ/V2N SoC is functionally identical to
+the one found on the RZ/V2H(P) (R9A09G057) SoC, so `renesas,rzv2h-gbeth`
+will be used as a fallback compatible.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250507173551.100280-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+index ee8fbb6c7994..23e39bcea96b 100644
+--- a/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
++++ b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+@@ -15,6 +15,7 @@ select:
+       contains:
+         enum:
+           - renesas,r9a09g047-gbeth
++          - renesas,r9a09g056-gbeth
+           - renesas,r9a09g057-gbeth
+           - renesas,rzv2h-gbeth
+   required:
+@@ -25,6 +26,7 @@ properties:
+     items:
+       - enum:
+           - renesas,r9a09g047-gbeth # RZ/G3E
++          - renesas,r9a09g056-gbeth # RZ/V2N
+           - renesas,r9a09g057-gbeth # RZ/V2H(P)
+       - const: renesas,rzv2h-gbeth
+       - const: snps,dwmac-5.20

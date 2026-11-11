@@ -1,0 +1,154 @@
+From 75d28cfd5f4369bfcd939372e46b415f0cad677c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:22 +0000
+Subject: [PATCH 035/838] arm64: dts: renesas: rzt2h-rzn2h-evk: Enable MicroSD
+ card slot
+
+commit dba8ee27c5de15c3c347816bb189af939092aea9 upstream.
+
+Enable MicroSD card slot which is connected to SDHI1 on the RZ/T2H and
+RZ/N2H EVKs.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250820200659.2048755-9-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g077m44-rzt2h-evk.dts    |  9 ++++
+ .../dts/renesas/r9a09g087m44-rzn2h-evk.dts    |  6 +++
+ .../dts/renesas/rzt2h-n2h-evk-common.dtsi     | 51 +++++++++++++++++++
+ 3 files changed, 66 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+index 7f196f1d1a2d..e9c691d56844 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+@@ -19,6 +19,13 @@
+  */
+ #define SD0_EMMC	1
+ 
++/*
++ * P17_4 = SD1_CD; SW2[3] = ON
++ * P08_5 = SD1_PWEN; SW2[3] = ON
++ * P08_6 = SD1_IOVS; SW2[3] = ON; SW5[3] = OFF; SW5[4] = ON
++ */
++#define SD1_MICRO_SD	1
++
+ #include "rzt2h-n2h-evk-common.dtsi"
+ 
+ / {
+@@ -51,6 +58,7 @@ led-2 {
+ 			function-enumerator = <2>;
+ 		};
+ 
++#if (!SD1_MICRO_SD)
+ 		led-3 {
+ 			/* SW2-3: OFF */
+ 			gpios = <&pinctrl RZT2H_GPIO(8, 5) GPIO_ACTIVE_HIGH>;
+@@ -58,6 +66,7 @@ led-3 {
+ 			function = LED_FUNCTION_DEBUG;
+ 			function-enumerator = <3>;
+ 		};
++#endif
+ 
+ 		led-4 {
+ 			/* SW8-3: ON, SW8-4: OFF */
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
+index 87e362f6f09f..87178933bee8 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
+@@ -18,6 +18,12 @@
+  */
+ #define SD0_EMMC       1
+ 
++/*
++ * P17_4 = SD1_CD; DSW5[3] = ON; DSW19[1] = OFF; DSW19[2] = ON
++ * P08_6 = SD1_IOVS; DSW5[3] = ON
++ */
++#define SD1_MICRO_SD	1
++
+ #include "rzt2h-n2h-evk-common.dtsi"
+ 
+ /*
+diff --git a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+index 68d493bf5e8c..34572630ecbe 100644
+--- a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+@@ -14,6 +14,7 @@ aliases {
+ 		i2c0 = &i2c0;
+ 		i2c1 = &i2c1;
+ 		mmc0 = &sdhi0;
++		mmc1 = &sdhi1;
+ 		serial0 = &sci0;
+ 	};
+ 
+@@ -38,6 +39,18 @@ reg_3p3v: regulator-3p3v {
+ 		regulator-boot-on;
+ 		regulator-always-on;
+ 	};
++
++#if SD1_MICRO_SD
++	vccq_sdhi1: regulator-vccq-sdhi1 {
++		compatible = "regulator-gpio";
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		gpios = <&pinctrl RZT2H_GPIO(8, 6) GPIO_ACTIVE_HIGH>;
++		gpios-states = <0>;
++		states = <3300000 0>, <1800000 1>;
++	};
++#endif
+ };
+ 
+ &extal_clk {
+@@ -93,6 +106,30 @@ ctrl-pins {
+ 				 <RZT2H_PORT_PINMUX(13, 2, 0x29)>; /* SD0_RST# */
+ 		};
+ 	};
++
++#if SD1_MICRO_SD
++	sdhi1-pwen-hog {
++		gpio-hog;
++		gpios = <RZT2H_GPIO(8, 5) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "SD1_PWEN";
++	};
++#endif
++
++	sdhi1_pins: sd1-group {
++		data-pins {
++			pinmux = <RZT2H_PORT_PINMUX(16, 7, 0x29)>, /* SD1_DATA0 */
++				 <RZT2H_PORT_PINMUX(17, 0, 0x29)>, /* SD1_DATA1 */
++				 <RZT2H_PORT_PINMUX(17, 1, 0x29)>, /* SD1_DATA2 */
++				 <RZT2H_PORT_PINMUX(17, 2, 0x29)>; /* SD1_DATA3 */
++		};
++
++		ctrl-pins {
++			pinmux = <RZT2H_PORT_PINMUX(16, 5, 0x29)>, /* SD1_CLK */
++				 <RZT2H_PORT_PINMUX(16, 6, 0x29)>, /* SD1_CMD */
++				 <RZT2H_PORT_PINMUX(17, 4, 0x29)>; /* SD1_CD */
++		};
++	};
+ };
+ 
+ &sci0 {
+@@ -115,3 +152,17 @@ &sdhi0 {
+ 	status = "okay";
+ };
+ #endif
++
++#if SD1_MICRO_SD
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-1 = <&sdhi1_pins>;
++	pinctrl-names = "default", "state_uhs";
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vccq_sdhi1>;
++	bus-width = <4>;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	status = "okay";
++};
++#endif

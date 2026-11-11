@@ -1,0 +1,35 @@
+From f573ed507d9e5f8e9719a974e231180f611195b8 Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Fri, 9 Jan 2026 12:17:17 +0000
+Subject: [PATCH 669/838] arm64: dts: renesas: r9a09g057h44-rzv2h-evk: Enable
+ RTC
+
+commit 1eb61aa4d88d916f2d5aaf2a1fe30b3d01354bbe upstream.
+
+Enable RTC.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251107210706.45044-5-ovidiu.panait.rb@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+index 3a413837c58f..3225d6065a85 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+@@ -358,6 +358,10 @@ &qextal_clk {
+ 	clock-frequency = <24000000>;
+ };
+ 
++&rtc {
++	status = "okay";
++};
++
+ &rtxin_clk {
+ 	clock-frequency = <32768>;
+ };
