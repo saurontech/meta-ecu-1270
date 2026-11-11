@@ -1,0 +1,53 @@
+From 2245c87a1dcccb12008ae71aabf281e95506e8f0 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 20 Nov 2025 17:03:48 +0000
+Subject: [PATCH 564/768] dt-bindings: usb: renesas,usbhs: Add RZ/V2H(P) SoC
+ support
+
+commit c0a1d1e9a48f36086ef5a2863844175476bd3b8e upstream.
+
+Document the Renesas USBHS controller found on the Renesas RZ/V2H(P) SoC.
+The USBHS block on RZ/V2H(P) is functionally identical to the one on the
+RZ/G2L family, so no driver changes are needed. The existing
+"renesas,rzg2l-usbhs" fallback compatible will continue to be used for
+handling this IP.
+
+In addition, update the schema validation logic by replacing the enum list
+of SoC-specific compatibles with a const "renesas,rzg2l-usbhs" as all
+listed SoCs share identical USBHS hardware and already include the fallback
+compatible. This will help to simplify the schema and avoid redundancy.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250414165201.362262-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+index c63db3ebd07b..45d133253094 100644
+--- a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
++++ b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+@@ -26,6 +26,7 @@ properties:
+               - renesas,usbhs-r9a07g043 # RZ/G2UL and RZ/Five
+               - renesas,usbhs-r9a07g044 # RZ/G2{L,LC}
+               - renesas,usbhs-r9a07g054 # RZ/V2L
++              - renesas,usbhs-r9a09g057 # RZ/V2H(P)
+           - const: renesas,rzg2l-usbhs
+ 
+       - items:
+@@ -122,10 +123,7 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            enum:
+-              - renesas,usbhs-r9a07g043
+-              - renesas,usbhs-r9a07g044
+-              - renesas,usbhs-r9a07g054
++            const: renesas,rzg2l-usbhs
+     then:
+       properties:
+         interrupts:

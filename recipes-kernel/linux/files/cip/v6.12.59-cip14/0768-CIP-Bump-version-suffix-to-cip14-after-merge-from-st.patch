@@ -1,0 +1,18 @@
+From 6c8999a8345015bf905b43fc7faca46313efb125 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Tue, 2 Dec 2025 14:29:11 +0900
+Subject: [PATCH 768/768] CIP: Bump version suffix to -cip14 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index af4f7b6e9dab..0467784cb568 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip13
++-cip14

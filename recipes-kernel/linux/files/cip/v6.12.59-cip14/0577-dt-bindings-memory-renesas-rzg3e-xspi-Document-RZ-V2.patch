@@ -1,0 +1,48 @@
+From 6961b101f6338c88c2350679b1d06a2eea02c7f6 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 21 Nov 2025 08:07:35 +0000
+Subject: [PATCH 577/768] dt-bindings: memory: renesas,rzg3e-xspi: Document
+ RZ/V2H(P) and RZ/V2N support
+
+commit 93a7aedc4cc4476da54ea45f3ed5308aabafef75 upstream.
+
+Document support for the Expanded Serial Peripheral Interface (xSPI)
+controller found on the Renesas RZ/V2H(P) (R9A09G057) and RZ/V2N
+(R9A09G056) SoCs.
+
+The xSPI hardware block on these SoCs is functionally identical to the
+one on the RZ/G3E (R9A09G047) SoC. Therefore, the existing driver can be
+reused without modification by using `renesas,r9a09g047-xspi` as a
+fallback compatible.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250624171605.469724-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/memory-controllers/renesas,rzg3e-xspi.yaml  | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml b/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml
+index 2bfe63ec62dc..7a84f5bb7284 100644
+--- a/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml
++++ b/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml
+@@ -23,7 +23,14 @@ allOf:
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g047-xspi  # RZ/G3E
++    oneOf:
++      - const: renesas,r9a09g047-xspi  # RZ/G3E
++
++      - items:
++          - enum:
++              - renesas,r9a09g056-xspi  # RZ/V2N
++              - renesas,r9a09g057-xspi  # RZ/V2H(P)
++          - const: renesas,r9a09g047-xspi
+ 
+   reg:
+     items:

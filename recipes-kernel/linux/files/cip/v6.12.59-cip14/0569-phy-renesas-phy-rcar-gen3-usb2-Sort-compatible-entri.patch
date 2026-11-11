@@ -1,0 +1,45 @@
+From 0477b287c2c4cbe0ead558ff95c94a2c53bca591 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 20 Nov 2025 17:03:53 +0000
+Subject: [PATCH 569/768] phy: renesas: phy-rcar-gen3-usb2: Sort compatible
+ entries by SoC part number
+
+commit 9414ceb38a74470249dee69784d6079daa452c3a upstream.
+
+Reorder the compatible entries in `rcar_gen3_phy_usb2_match_table` to
+maintain sorting based on SoC part numbers. Keep the entries ordered
+numerically while ensuring the existing generic compatible strings
+remain at the bottom.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250414145729.343133-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index b45aee8f5964..bfc49236a28e 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -609,14 +609,14 @@ static const struct of_device_id rcar_gen3_phy_usb2_match_table[] = {
+ 		.compatible = "renesas,usb2-phy-r8a77965",
+ 		.data = &rcar_gen3_phy_usb2_data,
+ 	},
+-	{
+-		.compatible = "renesas,rzg2l-usb2-phy",
+-		.data = &rz_g2l_phy_usb2_data,
+-	},
+ 	{
+ 		.compatible = "renesas,usb2-phy-r9a08g045",
+ 		.data = &rz_g3s_phy_usb2_data,
+ 	},
++	{
++		.compatible = "renesas,rzg2l-usb2-phy",
++		.data = &rz_g2l_phy_usb2_data,
++	},
+ 	{
+ 		.compatible = "renesas,rcar-gen3-usb2-phy",
+ 		.data = &rcar_gen3_phy_usb2_data,

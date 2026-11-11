@@ -1,0 +1,36 @@
+From 99e154bbdcad673d1055457cc65fc917246a8dc7 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 20 Nov 2025 17:03:51 +0000
+Subject: [PATCH 567/768] dt-bindings: phy: renesas,usb2-phy: Add clock
+ constraint for RZ/G2L family
+
+commit 31eebeef8cdd4c9bddc9d34053cab6553616d0b7 upstream.
+
+The RZ/G2L family requires two clocks for USB2 PHY, which are already
+defined in the DTSI files. Add a constraint in the DT binding document
+to ensure validation with `dtbs_check`.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250414145729.343133-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+index af275cea3456..f8d15f239b18 100644
+--- a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+@@ -107,6 +107,9 @@ allOf:
+           contains:
+             const: renesas,rzg2l-usb2-phy
+     then:
++      properties:
++        clocks:
++          minItems: 2
+       required:
+         - resets
+ 
