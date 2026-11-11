@@ -1,0 +1,29 @@
+From eba3bc49971d6323b496b0a9d310024dc077475d Mon Sep 17 00:00:00 2001
+From: Tim Huang <tim.huang@amd.com>
+Date: Thu, 12 Dec 2024 10:46:47 +0800
+Subject: [PATCH 0737/1190] drm/amdgpu: add support for HDP IP version 6.1.1
+
+[ Upstream commit e2fd14f579b841f54a9b7162fef15234d8c0627a ]
+
+This initializes HDP IP version 6.1.1.
+
+Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
+Signed-off-by: Tim Huang <tim.huang@amd.com>
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_discovery.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_discovery.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_discovery.c
+index e09db65880e1..f62ac736ed76 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_discovery.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_discovery.c
+@@ -2895,6 +2895,7 @@ int amdgpu_discovery_set_ip_blocks(struct amdgpu_device *adev)
+ 	case IP_VERSION(6, 0, 0):
+ 	case IP_VERSION(6, 0, 1):
+ 	case IP_VERSION(6, 1, 0):
++	case IP_VERSION(6, 1, 1):
+ 		adev->hdp.funcs = &hdp_v6_0_funcs;
+ 		break;
+ 	case IP_VERSION(7, 0, 0):

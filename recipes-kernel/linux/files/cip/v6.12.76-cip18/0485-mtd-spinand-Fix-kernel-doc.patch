@@ -1,0 +1,31 @@
+From 896a54984905c438844a038b6c04fb6c08b21852 Mon Sep 17 00:00:00 2001
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Date: Fri, 9 Jan 2026 18:18:02 +0100
+Subject: [PATCH 0485/1190] mtd: spinand: Fix kernel doc
+
+[ Upstream commit a57b1f07d2d35843a7ada30c8cf9a215c0931868 ]
+
+The @data buffer is 5 bytes, not 4, it has been extended for the need of
+devices with an extra ID bytes.
+
+Fixes: 34a956739d29 ("mtd: spinand: Add support for 5-byte IDs")
+Reviewed-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ include/linux/mtd/spinand.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/mtd/spinand.h b/include/linux/mtd/spinand.h
+index 702e5fb13dae..4bf33cefbae5 100644
+--- a/include/linux/mtd/spinand.h
++++ b/include/linux/mtd/spinand.h
+@@ -195,7 +195,7 @@ struct spinand_device;
+ 
+ /**
+  * struct spinand_id - SPI NAND id structure
+- * @data: buffer containing the id bytes. Currently 4 bytes large, but can
++ * @data: buffer containing the id bytes. Currently 5 bytes large, but can
+  *	  be extended if required
+  * @len: ID length
+  */

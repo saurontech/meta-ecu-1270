@@ -1,0 +1,38 @@
+From 3a03b681c90e9f927a870100364fdbc88aa64fd3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Feb 2026 12:12:29 +0000
+Subject: [PATCH 1186/1190] drm: renesas: rz-du: Drop ARCH_RZG2L dependency
+
+commit a31c6c50da013dcd4de4889d402b47bae552a2e2 upstream.
+
+The RZ/G2L DU driver is now also used on other Renesas SoCs such as
+RZ/V2H(P) and RZ/V2N. Restricting it to ARCH_RZG2L prevents enabling it
+on these newer platforms.
+
+Replace the ARCH_RZG2L dependency with ARCH_RENESAS to allow the driver
+to be built on all relevant Renesas SoCs.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20251002123452.146610-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/gpu/drm/renesas/rz-du/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/Kconfig b/drivers/gpu/drm/renesas/rz-du/Kconfig
+index 835d99666424..85d90dabb9e7 100644
+--- a/drivers/gpu/drm/renesas/rz-du/Kconfig
++++ b/drivers/gpu/drm/renesas/rz-du/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ config DRM_RZG2L_DU
+ 	tristate "DRM Support for RZ/G2L Display Unit"
+-	depends on ARCH_RZG2L || COMPILE_TEST
++	depends on ARCH_RENESAS || COMPILE_TEST
+ 	depends on DRM && OF
+ 	depends on VIDEO_RENESAS_VSP1
+ 	select DRM_GEM_DMA_HELPER

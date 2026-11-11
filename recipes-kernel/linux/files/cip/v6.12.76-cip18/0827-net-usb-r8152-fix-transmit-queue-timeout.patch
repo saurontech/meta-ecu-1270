@@ -1,0 +1,37 @@
+From 4cca2bb737174f8e9d464bf5c6ad3f951234bcd6 Mon Sep 17 00:00:00 2001
+From: Mingj Ye <insyelu@gmail.com>
+Date: Tue, 20 Jan 2026 09:59:49 +0800
+Subject: [PATCH 0827/1190] net: usb: r8152: fix transmit queue timeout
+
+[ Upstream commit 833dcd75d54f0bf5aa0a0781ff57456b421fbb40 ]
+
+When the TX queue length reaches the threshold, the netdev watchdog
+immediately detects a TX queue timeout.
+
+This patch updates the trans_start timestamp of the transmit queue
+on every asynchronous USB URB submission along the transmit path,
+ensuring that the network watchdog accurately reflects ongoing
+transmission activity.
+
+Signed-off-by: Mingj Ye <insyelu@gmail.com>
+Reviewed-by: Hayes Wang <hayeswang@realtek.com>
+Link: https://patch.msgid.link/20260120015949.84996-1-insyelu@gmail.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/usb/r8152.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/usb/r8152.c b/drivers/net/usb/r8152.c
+index d27e62939bf1..e4eb4e542536 100644
+--- a/drivers/net/usb/r8152.c
++++ b/drivers/net/usb/r8152.c
+@@ -2447,6 +2447,8 @@ static int r8152_tx_agg_fill(struct r8152 *tp, struct tx_agg *agg)
+ 	ret = usb_submit_urb(agg->urb, GFP_ATOMIC);
+ 	if (ret < 0)
+ 		usb_autopm_put_interface_async(tp->intf);
++	else
++		netif_trans_update(tp->netdev);
+ 
+ out_tx_fill:
+ 	return ret;

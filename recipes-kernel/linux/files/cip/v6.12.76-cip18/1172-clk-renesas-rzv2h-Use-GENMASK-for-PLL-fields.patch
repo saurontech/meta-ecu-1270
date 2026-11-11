@@ -1,0 +1,62 @@
+From 320ba27e630a5d758b59d233d3b352feb9e26527 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Feb 2026 12:12:15 +0000
+Subject: [PATCH 1172/1190] clk: renesas: rzv2h: Use GENMASK for PLL fields
+
+commit a8943f7f0a736e211faa400fa9df1af8dd945347 upstream.
+
+Replace the older FIELD_GET-wrapping helper macros with plain GENMASK
+definitions for the PLL CLK1/CLK2 field masks (CPG_PLL_CLK1_KDIV,
+CPG_PLL_CLK1_MDIV, CPG_PLL_CLK1_PDIV and CPG_PLL_CLK2_SDIV). Update
+rzv2h_cpg_pll_clk_recalc_rate() to explicitly extract those fields with
+FIELD_GET and cast the KDIV extraction to s16 to ensure proper sign
+extension when computing the PLL output rate.
+
+Co-developed-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Tomi Valkeinen <tomi.valkeinen+renesas@ideasonboard.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251015192611.241920-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index f468afbb54e2..125e7aa05ebd 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -49,11 +49,11 @@
+ #define CPG_PLL_STBY_RESETB	BIT(0)
+ #define CPG_PLL_STBY_RESETB_WEN	BIT(16)
+ #define CPG_PLL_CLK1(x)		((x) + 0x004)
+-#define CPG_PLL_CLK1_KDIV(x)	((s16)FIELD_GET(GENMASK(31, 16), (x)))
+-#define CPG_PLL_CLK1_MDIV(x)	FIELD_GET(GENMASK(15, 6), (x))
+-#define CPG_PLL_CLK1_PDIV(x)	FIELD_GET(GENMASK(5, 0), (x))
++#define CPG_PLL_CLK1_KDIV	GENMASK(31, 16)
++#define CPG_PLL_CLK1_MDIV	GENMASK(15, 6)
++#define CPG_PLL_CLK1_PDIV	GENMASK(5, 0)
+ #define CPG_PLL_CLK2(x)		((x) + 0x008)
+-#define CPG_PLL_CLK2_SDIV(x)	FIELD_GET(GENMASK(2, 0), (x))
++#define CPG_PLL_CLK2_SDIV	GENMASK(2, 0)
+ #define CPG_PLL_MON(x)		((x) + 0x010)
+ #define CPG_PLL_MON_RESETB	BIT(0)
+ #define CPG_PLL_MON_LOCK	BIT(4)
+@@ -231,10 +231,11 @@ static unsigned long rzv2h_cpg_pll_clk_recalc_rate(struct clk_hw *hw,
+ 	clk1 = readl(priv->base + CPG_PLL_CLK1(pll.offset));
+ 	clk2 = readl(priv->base + CPG_PLL_CLK2(pll.offset));
+ 
+-	rate = mul_u64_u32_shr(parent_rate, (CPG_PLL_CLK1_MDIV(clk1) << 16) +
+-			       CPG_PLL_CLK1_KDIV(clk1), 16 + CPG_PLL_CLK2_SDIV(clk2));
++	rate = mul_u64_u32_shr(parent_rate, (FIELD_GET(CPG_PLL_CLK1_MDIV, clk1) << 16) +
++			       (s16)FIELD_GET(CPG_PLL_CLK1_KDIV, clk1),
++			       16 + FIELD_GET(CPG_PLL_CLK2_SDIV, clk2));
+ 
+-	return DIV_ROUND_CLOSEST_ULL(rate, CPG_PLL_CLK1_PDIV(clk1));
++	return DIV_ROUND_CLOSEST_ULL(rate, FIELD_GET(CPG_PLL_CLK1_PDIV, clk1));
+ }
+ 
+ static const struct clk_ops rzv2h_cpg_pll_ops = {

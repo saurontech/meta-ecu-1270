@@ -1,0 +1,48 @@
+From 48b2434779845db0e5a1fa1c7ace1ef07e476262 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 26 Feb 2026 19:28:38 +0000
+Subject: [PATCH 0197/1190] ASoC: renesas: rz-ssi: Use dev variable in probe()
+
+[ Upstream commit d6c160d5e86f4e7354dd6c3154b7cb562abc6c7d ]
+
+Replace '&pdev->dev' by 'dev' in probe(), this makes few error paths
+shorter.
+
+Reviewed-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251114075856.4751-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ sound/soc/sh/rz-ssi.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/sound/soc/sh/rz-ssi.c b/sound/soc/sh/rz-ssi.c
+index 8c32e3bdd777..c5658fe0aaea 100644
+--- a/sound/soc/sh/rz-ssi.c
++++ b/sound/soc/sh/rz-ssi.c
+@@ -1127,19 +1127,16 @@ static int rz_ssi_probe(struct platform_device *pdev)
+ 
+ 	audio_clk = devm_clk_get(dev, "audio_clk1");
+ 	if (IS_ERR(audio_clk))
+-		return dev_err_probe(&pdev->dev, PTR_ERR(audio_clk),
+-				     "no audio clk1");
++		return dev_err_probe(dev, PTR_ERR(audio_clk), "no audio clk1");
+ 
+ 	ssi->audio_clk_1 = clk_get_rate(audio_clk);
+ 	audio_clk = devm_clk_get(dev, "audio_clk2");
+ 	if (IS_ERR(audio_clk))
+-		return dev_err_probe(&pdev->dev, PTR_ERR(audio_clk),
+-				     "no audio clk2");
++		return dev_err_probe(dev, PTR_ERR(audio_clk), "no audio clk2");
+ 
+ 	ssi->audio_clk_2 = clk_get_rate(audio_clk);
+ 	if (!(ssi->audio_clk_1 || ssi->audio_clk_2))
+-		return dev_err_probe(&pdev->dev, -EINVAL,
+-				     "no audio clk1 or audio clk2");
++		return dev_err_probe(dev, -EINVAL, "no audio clk1 or audio clk2");
+ 
+ 	ssi->audio_mck = ssi->audio_clk_1 ? ssi->audio_clk_1 : ssi->audio_clk_2;
+ 

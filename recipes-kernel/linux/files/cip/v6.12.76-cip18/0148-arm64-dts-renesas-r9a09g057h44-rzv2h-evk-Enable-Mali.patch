@@ -1,0 +1,54 @@
+From 235dd1adb1ee86c26891e233aa4f02cdef62f113 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Feb 2026 15:18:18 +0000
+Subject: [PATCH 0148/1190] arm64: dts: renesas: r9a09g057h44-rzv2h-evk: Enable
+ Mali-G31
+
+commit 8bf8ad268e46403c7140ea5aaa85e9c659117dbc upstream.
+
+Enable Mali-G31 (GPU) node on EVK board.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250218115922.407816-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts   | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+index b428c0cff030..03bae0a5be7b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+@@ -58,6 +58,16 @@ memory@240000000 {
+ 		reg = <0x2 0x40000000 0x2 0x00000000>;
+ 	};
+ 
++	reg_0p8v: regulator0 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "fixed-0.8V";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
+ 	reg_1p8v: regulator-1p8v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "fixed-1.8V";
+@@ -117,6 +127,11 @@ &eth1 {
+ 	status = "okay";
+ };
+ 
++&gpu {
++	status = "okay";
++	mali-supply = <&reg_0p8v>;
++};
++
+ &hsusb {
+ 	dr_mode = "otg";
+ 	status = "okay";

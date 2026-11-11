@@ -1,0 +1,53 @@
+From f131cd9662b326ff040fce0fe996339704d3f53b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Feb 2026 12:12:26 +0000
+Subject: [PATCH 1183/1190] drm: renesas: rz-du: mipi_dsi: Add LPCLK clock
+ support
+
+commit 99b98993ae010b86d0ec0d779c1c8be890057568 upstream.
+
+Add LPCLK clock handling to the RZ/G2L MIPI DSI driver to support proper
+DSI timing parameter configuration on RZ/V2H SoCs. While lpclk is present
+on both RZ/G2L and RZ/V2H SoCs, the RZ/V2H SoC specifically uses the lpclk
+rate to configure the DSI timing parameter ULPSEXIT.
+
+Introduce a new lpclk field in the rzg2l_mipi_dsi structure and acquire
+the "lpclk" clock during probe to enable lpclk rate-based timing
+calculations on RZ/V2H while maintaining compatibility with RZ/G2L.
+
+Co-developed-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Tomi Valkeinen <tomi.valkeinen+renesas@ideasonboard.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251015192611.241920-7-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+index 9355df091b72..7d7ba72e0733 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+@@ -62,6 +62,7 @@ struct rzg2l_mipi_dsi {
+ 	struct drm_bridge *next_bridge;
+ 
+ 	struct clk *vclk;
++	struct clk *lpclk;
+ 
+ 	enum mipi_dsi_pixel_format format;
+ 	unsigned int num_data_lanes;
+@@ -791,6 +792,10 @@ static int rzg2l_mipi_dsi_probe(struct platform_device *pdev)
+ 	if (IS_ERR(dsi->vclk))
+ 		return PTR_ERR(dsi->vclk);
+ 
++	dsi->lpclk = devm_clk_get(dsi->dev, "lpclk");
++	if (IS_ERR(dsi->lpclk))
++		return PTR_ERR(dsi->lpclk);
++
+ 	dsi->rstc = devm_reset_control_get_optional_exclusive(dsi->dev, "rst");
+ 	if (IS_ERR(dsi->rstc))
+ 		return dev_err_probe(dsi->dev, PTR_ERR(dsi->rstc),

@@ -1,0 +1,36 @@
+From 1147ab1336bc1b493382f6b0eb4da521dd955ff8 Mon Sep 17 00:00:00 2001
+From: "Darrick J. Wong" <djwong@kernel.org>
+Date: Wed, 18 Feb 2026 15:25:35 -0800
+Subject: [PATCH 1153/1190] xfs: fix copy-paste error in previous fix
+
+[ Upstream commit e764dd439d68cfc16724e469db390d779ab49521 ]
+
+Chris Mason noticed that there is a copy-paste error in a recent change
+to xrep_dir_teardown that nulls out pointers after freeing the
+resources.
+
+Fixes: ba408d299a3bb3c ("xfs: only call xf{array,blob}_destroy if we have a valid pointer")
+Link: https://lore.kernel.org/linux-xfs/20260205194211.2307232-1-clm@meta.com/
+Reported-by: Chris Mason <clm@meta.com>
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/xfs/scrub/dir_repair.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+index 81c3fda7590b..a9e2aa5c3968 100644
+--- a/fs/xfs/scrub/dir_repair.c
++++ b/fs/xfs/scrub/dir_repair.c
+@@ -177,7 +177,7 @@ xrep_dir_teardown(
+ 	rd->dir_names = NULL;
+ 	if (rd->dir_entries)
+ 		xfarray_destroy(rd->dir_entries);
+-	rd->dir_names = NULL;
++	rd->dir_entries = NULL;
+ }
+ 
+ /* Set up for a directory repair. */

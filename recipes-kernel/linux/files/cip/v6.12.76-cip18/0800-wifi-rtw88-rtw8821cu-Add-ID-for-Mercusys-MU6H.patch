@@ -1,0 +1,32 @@
+From 1c7ad1b82ec43672b7c2df79da2aa095dd5d0dab Mon Sep 17 00:00:00 2001
+From: Hsiu-Ming Chang <cges30901@gmail.com>
+Date: Fri, 5 Dec 2025 08:32:04 +0800
+Subject: [PATCH 0800/1190] wifi: rtw88: rtw8821cu: Add ID for Mercusys MU6H
+
+[ Upstream commit 77653c327e11c71c5363b18a53fbf2b92ed21da4 ]
+
+Add support for Mercusys MU6H AC650 High Gain Wireless Dual Band USB
+Adapter V1.30. It is based on RTL8811CU, usb device ID is 2c4e:0105.
+
+Signed-off-by: Hsiu-Ming Chang <cges30901@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20251205003245.5762-1-cges30901@gmail.com
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8821cu.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cu.c b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+index a019f4085e73..1f5af09aed99 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+@@ -37,6 +37,8 @@ static const struct usb_device_id rtw_8821cu_id_table[] = {
+ 	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* Edimax */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0xd811, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* Edimax */
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x2c4e, 0x0105, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* Mercusys */
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8821cu_id_table);
