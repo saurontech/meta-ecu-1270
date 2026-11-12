@@ -1,0 +1,41 @@
+From 95014de808b9fc7f4f904a0fc676ecb86a137823 Mon Sep 17 00:00:00 2001
+From: Anna Schumaker <anna.schumaker@oracle.com>
+Date: Tue, 8 Sep 2026 15:28:26 -0400
+Subject: [PATCH 2834/2868] SUNRPC: Introduce xdr_set_scratch_folio()
+
+[ Upstream commit c8a127596edc026e5364a7a609986dcd3999914c ]
+
+This will replace xdr_set_scratch_page() when we switch pages to folios.
+
+Signed-off-by: Anna Schumaker <anna.schumaker@oracle.com>
+Stable-dep-of: c479bde671cb ("sunrpc: defer rq_argp and rq_resp free until after RCU grace period")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ include/linux/sunrpc/xdr.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/include/linux/sunrpc/xdr.h b/include/linux/sunrpc/xdr.h
+index 6bc486214c53..dfc5df1bcc97 100644
+--- a/include/linux/sunrpc/xdr.h
++++ b/include/linux/sunrpc/xdr.h
+@@ -317,6 +317,19 @@ xdr_set_scratch_page(struct xdr_stream *xdr, struct page *page)
+ 	xdr_set_scratch_buffer(xdr, page_address(page), PAGE_SIZE);
+ }
+ 
++/**
++ * xdr_set_scratch_folio - Attach a scratch buffer for decoding data
++ * @xdr: pointer to xdr_stream struct
++ * @page: an anonymous folio
++ *
++ * See xdr_set_scratch_buffer().
++ */
++static inline void
++xdr_set_scratch_folio(struct xdr_stream *xdr, struct folio *folio)
++{
++	xdr_set_scratch_buffer(xdr, folio_address(folio), folio_size(folio));
++}
++
+ /**
+  * xdr_reset_scratch_buffer - Clear scratch buffer information
+  * @xdr: pointer to xdr_stream struct

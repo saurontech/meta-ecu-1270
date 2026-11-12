@@ -1,0 +1,71 @@
+From 7160485c0b8eaf358217879c1d2e4fda069e1cdf Mon Sep 17 00:00:00 2001
+From: Filipe Manana <fdmanana@suse.com>
+Date: Sun, 6 Sep 2026 15:30:43 -0400
+Subject: [PATCH 2795/2868] btrfs: move btrfs_alloc_write_mask() into fs.h
+
+[ Upstream commit 378f25d3fc429ad001fa686f615df5c0f9cd47e1 ]
+
+Currently btrfs_alloc_write_mask() is defined in ctree.h but it's not
+related at all to the btree data structure, so move it into fs.h.
+
+Reviewed-by: Qu Wenruo <wqu@suse.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Signed-off-by: Filipe Manana <fdmanana@suse.com>
+Reviewed-by: David Sterba <dsterba@suse.com>
+Signed-off-by: David Sterba <dsterba@suse.com>
+Stable-dep-of: 15f7c86215e8 ("btrfs: do not overwrite NODATASUM flag when removing NODATACOW flag")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/btrfs/ctree.h | 6 ------
+ fs/btrfs/fs.h    | 6 ++++++
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
+index 6906b4dd82a8..ced5ac090293 100644
+--- a/fs/btrfs/ctree.h
++++ b/fs/btrfs/ctree.h
+@@ -7,7 +7,6 @@
+ #define BTRFS_CTREE_H
+ 
+ #include "linux/cleanup.h"
+-#include <linux/pagemap.h>
+ #include <linux/spinlock.h>
+ #include <linux/rbtree.h>
+ #include <linux/mutex.h>
+@@ -506,11 +505,6 @@ static inline u32 BTRFS_MAX_XATTR_SIZE(const struct btrfs_fs_info *info)
+ 	return BTRFS_MAX_ITEM_SIZE(info) - sizeof(struct btrfs_dir_item);
+ }
+ 
+-static inline gfp_t btrfs_alloc_write_mask(struct address_space *mapping)
+-{
+-	return mapping_gfp_constraint(mapping, ~__GFP_FS);
+-}
+-
+ void btrfs_error_unpin_extent_range(struct btrfs_fs_info *fs_info, u64 start, u64 end);
+ int btrfs_discard_extent(struct btrfs_fs_info *fs_info, u64 bytenr,
+ 			 u64 num_bytes, u64 *actual_bytes);
+diff --git a/fs/btrfs/fs.h b/fs/btrfs/fs.h
+index 3174b45a80b1..90b104dd38c2 100644
+--- a/fs/btrfs/fs.h
++++ b/fs/btrfs/fs.h
+@@ -18,6 +18,7 @@
+ #include <linux/rwsem.h>
+ #include <linux/semaphore.h>
+ #include <linux/list.h>
++#include <linux/pagemap.h>
+ #include <linux/radix-tree.h>
+ #include <linux/workqueue.h>
+ #include <linux/wait.h>
+@@ -893,6 +894,11 @@ struct btrfs_fs_info {
+ #define inode_to_fs_info(_inode) (BTRFS_I(_Generic((_inode),			\
+ 					   struct inode *: (_inode)))->root->fs_info)
+ 
++static inline gfp_t btrfs_alloc_write_mask(struct address_space *mapping)
++{
++	return mapping_gfp_constraint(mapping, ~__GFP_FS);
++}
++
+ static inline u64 btrfs_get_fs_generation(const struct btrfs_fs_info *fs_info)
+ {
+ 	return READ_ONCE(fs_info->generation);

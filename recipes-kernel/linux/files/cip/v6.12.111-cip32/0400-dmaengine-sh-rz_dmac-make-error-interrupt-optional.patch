@@ -1,0 +1,59 @@
+From d200034847604fc5d5932b5adcc8a70621815bad Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 11 Sep 2026 09:11:28 +0100
+Subject: [PATCH 0400/2868] dmaengine: sh: rz_dmac: make error interrupt
+ optional
+
+commit b34f3fcae72a0afdd1a966fd68309b461bf678e6 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs do not have
+an error interrupt for the DMACs, and the current driver implementation
+does not make much use of it.
+
+To prepare for adding support for these SoCs, do not error out if the
+error interrupt is missing.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260105114445.878262-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+[PL: manually applied the changes.]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/dma/sh/rz-dmac.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/dma/sh/rz-dmac.c b/drivers/dma/sh/rz-dmac.c
+index 52cfd3189094..2097c3033a56 100644
+--- a/drivers/dma/sh/rz-dmac.c
++++ b/drivers/dma/sh/rz-dmac.c
+@@ -987,18 +987,15 @@ static int rz_dmac_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	/* Register interrupt handler for error */
+-	irq = platform_get_irq_byname(pdev, irqname);
+-	if (irq < 0) {
+-		ret = irq;
+-		goto err;
+-	}
+-
+-	ret = devm_request_irq(&pdev->dev, irq, rz_dmac_irq_handler, 0,
+-			       irqname, NULL);
+-	if (ret) {
+-		dev_err(&pdev->dev, "failed to request IRQ %u (%d)\n",
+-			irq, ret);
+-		goto err;
++	irq = platform_get_irq_byname_optional(pdev, irqname);
++	if (irq > 0) {
++		ret = devm_request_irq(&pdev->dev, irq, rz_dmac_irq_handler, 0,
++				       irqname, NULL);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request IRQ %u (%d)\n",
++				irq, ret);
++			goto err;
++		}
+ 	}
+ 
+ 	/* Register the DMAC as a DMA provider for DT. */

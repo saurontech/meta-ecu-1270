@@ -1,0 +1,18 @@
+From f721d8d6df5972522a35438cf356d6a41836aff1 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Tue, 29 Sep 2026 06:54:38 +0900
+Subject: [PATCH 2868/2868] CIP: Bump version suffix to -cip32 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 084dccfb1c64..5804e7f4d4ba 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip31
++-cip32

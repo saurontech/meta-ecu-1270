@@ -1,0 +1,37 @@
+From 8f9b5e72cd3eeb70b0b2faa762d6e118a8ccc2b3 Mon Sep 17 00:00:00 2001
+From: Niklas Cassel <cassel@kernel.org>
+Date: Tue, 28 Jul 2026 13:13:11 +0200
+Subject: [PATCH 2222/2868] ata: libata-core: Disable LPM on some WD drives
+
+[ Upstream commit 356d8241cf3c7b07a4a491dbab43b5a41513ca86 ]
+
+According to a user report WDC WD100EFGX-68CPLN0 and WDC WD102KFBX-68M95N0
+have problems with LPM.
+
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220693
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/libata-core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 89cb03a5e888..816f756c5b09 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4317,6 +4317,14 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+ 	{ "WDC WD3000JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+ 	{ "WDC WD3200JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+ 
++	/*
++	 * WD drives with LPM issues (irrespective of supported SATA speeds).
++	 * (Unlike ATA_QUIRK_WD_BROKEN_LPM, which is only applied if the drive
++	 * exposes SATA Gen1 speed support, and SATA Gen1 speed support only.)
++	 */
++	{ "WDC WD100EFGX-68CPLN0",	NULL,	ATA_QUIRK_NOLPM },
++	{ "WDC WD102KFBX-68M95N0",	NULL,	ATA_QUIRK_NOLPM },
++
+ 	/*
+ 	 * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
+ 	 * log page is accessed. Ensure we never ask for this log page with

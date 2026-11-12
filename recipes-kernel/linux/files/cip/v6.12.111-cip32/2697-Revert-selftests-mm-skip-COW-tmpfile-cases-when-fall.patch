@@ -1,0 +1,33 @@
+From 3be0267ba19ce072bb347557157c1248f7e1e485 Mon Sep 17 00:00:00 2001
+From: Sasha Levin <sashal@kernel.org>
+Date: Wed, 16 Sep 2026 12:32:15 -0400
+Subject: [PATCH 2697/2868] Revert "selftests/mm: skip COW tmpfile cases when
+ fallocate() is unsupported"
+
+This reverts commit 7aee6272b385e6efb78f660946f387297d579d71.
+
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ tools/testing/selftests/mm/cow.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/tools/testing/selftests/mm/cow.c b/tools/testing/selftests/mm/cow.c
+index c0ca9483c448..d0e11a40269e 100644
+--- a/tools/testing/selftests/mm/cow.c
++++ b/tools/testing/selftests/mm/cow.c
+@@ -1717,13 +1717,8 @@ static void run_with_tmpfile(non_anon_test_fn fn, const char *desc)
+ 
+ 	/* File consists of a single page filled with zeroes. */
+ 	if (fallocate(fd, 0, 0, pagesize)) {
+-		if (errno == EOPNOTSUPP) {
+-			ksft_print_msg("fallocate() not supported by filesystem\n");
+-			log_test_result(KSFT_SKIP);
+-		} else {
+-			ksft_perror("fallocate() failed");
+-			log_test_result(KSFT_FAIL);
+-		}
++		ksft_perror("fallocate() failed");
++		log_test_result(KSFT_FAIL);
+ 		goto close;
+ 	}
+ 

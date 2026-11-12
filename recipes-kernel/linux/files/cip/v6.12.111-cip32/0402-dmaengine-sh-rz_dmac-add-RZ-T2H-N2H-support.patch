@@ -1,0 +1,57 @@
+From 90cc99723c5d0916b0c8d1e863e75102cf874d04 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 11 Sep 2026 09:11:30 +0100
+Subject: [PATCH 0402/2868] dmaengine: sh: rz_dmac: add RZ/{T2H,N2H} support
+
+commit c03d8b5462bcb0022f9477d09eb37dae66c3a769 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs use a
+completely different ICU unit compared to RZ/V2H, which requires a
+separate implementation.
+
+Add support for them.
+
+RZ/N2H will use RZ/T2H as a fallback.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260105114445.878262-5-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/dma/sh/rz-dmac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/dma/sh/rz-dmac.c b/drivers/dma/sh/rz-dmac.c
+index 6ff4e01245bd..dc744823a35a 100644
+--- a/drivers/dma/sh/rz-dmac.c
++++ b/drivers/dma/sh/rz-dmac.c
+@@ -16,6 +16,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/iopoll.h>
+ #include <linux/irqchip/irq-renesas-rzv2h.h>
++#include <linux/irqchip/irq-renesas-rzt2h.h>
+ #include <linux/list.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+@@ -1059,12 +1060,18 @@ static const struct rz_dmac_info rz_dmac_v2h_info = {
+ 	.default_dma_req_no = RZV2H_ICU_DMAC_REQ_NO_DEFAULT,
+ };
+ 
++static const struct rz_dmac_info rz_dmac_t2h_info = {
++	.icu_register_dma_req = rzt2h_icu_register_dma_req,
++	.default_dma_req_no = RZT2H_ICU_DMAC_REQ_NO_DEFAULT,
++};
++
+ static const struct rz_dmac_info rz_dmac_generic_info = {
+ 	.default_dma_req_no = 0,
+ };
+ 
+ static const struct of_device_id of_rz_dmac_match[] = {
+ 	{ .compatible = "renesas,r9a09g057-dmac", .data = &rz_dmac_v2h_info },
++	{ .compatible = "renesas,r9a09g077-dmac", .data = &rz_dmac_t2h_info },
+ 	{ .compatible = "renesas,rz-dmac", .data = &rz_dmac_generic_info },
+ 	{ /* Sentinel */ }
+ };

@@ -1,0 +1,27 @@
+From e2acc2211022246c77740d5df08265cc27eedcc5 Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Mon, 21 Sep 2026 15:02:51 +0200
+Subject: [PATCH 2857/2868] Linux 6.12.111
+
+Link: https://lore.kernel.org/r/20260917151539.408551884@linuxfoundation.org
+Tested-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Tested-by: Barry K. Nathan <barryn@pobox.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 679576d1fecd..6f7b25c6461c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 110
++SUBLEVEL = 111
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 

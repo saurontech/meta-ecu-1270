@@ -1,0 +1,40 @@
+From 68c3564df4881c8117e2362d858f05c0d9cec40c Mon Sep 17 00:00:00 2001
+From: Lijo Lazar <lijo.lazar@amd.com>
+Date: Wed, 29 Apr 2026 15:34:57 +0530
+Subject: [PATCH 1815/2868] drm/amdgpu: Prefer ROM BAR for default VGA device
+
+[ Upstream commit 9e32d17592950478baffaecdbda8e2e60935fd3d ]
+
+Fetching from platform ROM doesn't work with hybrid ROM images. For
+default VGA devices also prefer ROM BAR.
+
+Signed-off-by: Lijo Lazar <lijo.lazar@amd.com>
+Reviewed-by: Hawking Zhang <Hawking.Zhang@amd.com>
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+index 94e05c6b39d4..e66543089824 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
++#include <linux/vgaarb.h>
+ /*
+  * BIOS.
+  */
+@@ -476,7 +477,8 @@ static bool amdgpu_prefer_rom_resource(struct amdgpu_device *adev)
+ {
+ 	struct resource *res = &adev->pdev->resource[PCI_ROM_RESOURCE];
+ 
+-	return (res->flags & IORESOURCE_ROM_SHADOW);
++	return (res->flags & IORESOURCE_ROM_SHADOW) ||
++	       adev->pdev == vga_default_device();
+ }
+ 
+ static bool amdgpu_get_bios_dgpu(struct amdgpu_device *adev)

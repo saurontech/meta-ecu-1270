@@ -1,0 +1,59 @@
+From f4212e635f6d124c74e36a76556392df117601f9 Mon Sep 17 00:00:00 2001
+From: "suricata.lu" <suricata.lu@gmail.com>
+Date: Fri, 13 Nov 2026 01:47:27 +0800
+Subject: [PATCH] media: chips-media: wave5: update min buffers after unlock in
+ start_streaming
+
+CIP patch 1802 (upstream 7d5d364f8b2d "media: chips-media: wave5: Fix
+Reports from Kernel Lock Validator") moved the
+V4L2_CID_MIN_BUFFERS_FOR_CAPTURE update out of
+handle_dynamic_resolution_change(), which runs under the state spinlock,
+into wave5_update_min_bufs_ctrl(), and made every upstream caller call
+it after dropping the lock.
+
+TI's 3e495a58f26a ("PENDING: media: chips-media: wave5: Parse Stream
+Header During Start Stream on Output") adds one more caller in
+wave5_vpu_dec_start_streaming(), a copy of the error path in
+wave5_vpu_dec_device_run(). It is not upstream, so 1802 did not convert
+it, and after 1802 that path no longer updates the control.
+
+Convert it the same way 1802 converted the device_run() block: remember
+inst->fbc_buf_count under the lock and call wave5_update_min_bufs_ctrl()
+after the unlock.
+---
+ drivers/media/platform/chips-media/wave5/wave5-vpu-dec.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/chips-media/wave5/wave5-vpu-dec.c b/drivers/media/platform/chips-media/wave5/wave5-vpu-dec.c
+index 3c82906b50fb..80ba6450feaf 100644
+--- a/drivers/media/platform/chips-media/wave5/wave5-vpu-dec.c
++++ b/drivers/media/platform/chips-media/wave5/wave5-vpu-dec.c
+@@ -1553,6 +1553,7 @@ static int wave5_vpu_dec_start_streaming(struct vb2_queue *q, unsigned int count
+ 		ret = initialize_sequence(inst);
+ 		if (ret) {
+ 			unsigned long flags;
++			u32 fbc_buf_count = 0;
+ 
+ 			spin_lock_irqsave(&inst->state_spinlock, flags);
+ 			if (wave5_is_draining_or_eos(inst) &&
+@@ -1561,14 +1562,18 @@ static int wave5_vpu_dec_start_streaming(struct vb2_queue *q, unsigned int count
+ 
+ 				switch_state(inst, VPU_INST_STATE_STOP);
+ 
+-				if (vb2_is_streaming(dst_vq))
++				if (vb2_is_streaming(dst_vq)) {
+ 					send_eos_event(inst);
+-				else
++				} else {
+ 					handle_dynamic_resolution_change(inst);
++					fbc_buf_count = inst->fbc_buf_count;
++				}
+ 
+ 				flag_last_buffer_done(inst);
+ 			}
+ 			spin_unlock_irqrestore(&inst->state_spinlock, flags);
++
++			wave5_update_min_bufs_ctrl(inst, fbc_buf_count);
+ 		} else {
+ 			switch_state(inst, VPU_INST_STATE_INIT_SEQ);
+ 		}

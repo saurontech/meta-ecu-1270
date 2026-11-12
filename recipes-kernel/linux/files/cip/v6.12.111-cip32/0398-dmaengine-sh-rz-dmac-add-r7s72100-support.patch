@@ -1,0 +1,36 @@
+From ccf56184adda2c7bc6133a854f647dbe173a08f6 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 11 Sep 2026 09:11:26 +0100
+Subject: [PATCH 0398/2868] dmaengine: sh: rz-dmac: add r7s72100 support
+
+commit 32172b3e3265833a367e41842fa8b7eaa0acae96 upstream.
+
+This SoC needs to make getting resets optional. Descriptions are
+reworded to be more generic.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20241007110200.43166-8-wsa+renesas@sang-engineering.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+[PL: dropped kconfig changes]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/dma/sh/rz-dmac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/dma/sh/rz-dmac.c b/drivers/dma/sh/rz-dmac.c
+index 652b0f51d9e9..cfa6aca26ed2 100644
+--- a/drivers/dma/sh/rz-dmac.c
++++ b/drivers/dma/sh/rz-dmac.c
+@@ -953,7 +953,7 @@ static int rz_dmac_probe(struct platform_device *pdev)
+ 	/* Initialize the channels. */
+ 	INIT_LIST_HEAD(&dmac->engine.channels);
+ 
+-	dmac->rstc = devm_reset_control_array_get_exclusive(&pdev->dev);
++	dmac->rstc = devm_reset_control_array_get_optional_exclusive(&pdev->dev);
+ 	if (IS_ERR(dmac->rstc))
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(dmac->rstc),
+ 				     "failed to get resets\n");

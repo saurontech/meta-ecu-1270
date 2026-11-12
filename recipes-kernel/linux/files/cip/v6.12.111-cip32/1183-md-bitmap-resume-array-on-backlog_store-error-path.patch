@@ -1,0 +1,38 @@
+From 03aad318f0a1f039dddf98739e705fdca3bf0d86 Mon Sep 17 00:00:00 2001
+From: Chen Cheng <chencheng@fnnas.com>
+Date: Sat, 18 Jul 2026 11:42:36 +0800
+Subject: [PATCH 1183/2868] md/bitmap: resume array on backlog_store() error
+ path
+
+[ Upstream commit 2911cd0a0f4366a7e06832bc5f0a7fdcc138e4dc ]
+
+backlog_store() suspends the array before checking whether a write-mostly
+device exists. If no such device exists, the error path only unlocks
+reconfig_mutex and leaves the array suspended, blocking subsequent I/O.
+
+Use mddev_unlock_and_resume() to release both states.
+
+Fixes: 58226942ad3d ("md: use new apis to suspend array before mddev_create/destroy_serial_pool")
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
+Link: https://patch.msgid.link/20260718034236.4119093-1-chencheng@fnnas.com
+Signed-off-by: Yu Kuai <yukuai@fygo.io>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/md-bitmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 33b92b864f70..67f1b716e293 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2816,7 +2816,7 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (!has_write_mostly) {
+ 		pr_warn_ratelimited("%s: can't set backlog, no write mostly device available\n",
+ 				    mdname(mddev));
+-		mddev_unlock(mddev);
++		mddev_unlock_and_resume(mddev);
+ 		return -EINVAL;
+ 	}
+ 
