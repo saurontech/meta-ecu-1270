@@ -1,0 +1,58 @@
+From a0563931c028214c811924f08a7e9d88ea1ea78a Mon Sep 17 00:00:00 2001
+From: Pratyush Yadav <p.yadav@ti.com>
+Date: Tue, 8 Jul 2025 17:16:45 +0800
+Subject: [PATCH] mtd: spi-nor: core: avoid odd length/address reads on
+ 8D-8D-8D mode
+
+commit f156b23df6a84efb2f6686156be94d4988568954 upstream.
+
+On Octal DTR capable flashes like Micron Xcella reads cannot start or
+end at an odd address in Octal DTR mode. Extra bytes need to be read at
+the start or end to make sure both the start address and length remain
+even.
+
+To avoid allocating too much extra memory, thereby putting unnecessary
+memory pressure on the system, the temporary buffer containing the extra
+padding bytes is capped at PAGE_SIZE bytes. The rest of the 2-byte
+aligned part should be read directly in the main buffer.
+
+Signed-off-by: Pratyush Yadav <p.yadav@ti.com>
+Reviewed-by: Michael Walle <michael@walle.cc>
+Signed-off-by: Luke Wang <ziniu.wang_1@nxp.com>
+Signed-off-by: Pratyush Yadav <pratyush@kernel.org>
+Link: https://lore.kernel.org/r/20250708091646.292-1-ziniu.wang_1@nxp.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/mtd/spi-nor/core.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/mtd/spi-nor/core.c b/drivers/mtd/spi-nor/core.c
+index e224f1bba2a4..ab22277c6e7d 100644
+--- a/drivers/mtd/spi-nor/core.c
++++ b/drivers/mtd/spi-nor/core.c
+@@ -2058,10 +2058,9 @@ static const struct flash_info *spi_nor_detect(struct spi_nor *nor)
+ }
+ 
+ /*
+- * On Octal DTR capable flashes like Micron Xcella reads cannot start or
+- * end at an odd address in Octal DTR mode. Extra bytes need to be read
+- * at the start or end to make sure both the start address and length
+- * remain even.
++ * On Octal DTR capable flashes, reads cannot start or end at an odd
++ * address in Octal DTR mode. Extra bytes need to be read at the start
++ * or end to make sure both the start address and length remain even.
+  */
+ static int spi_nor_octal_dtr_read(struct spi_nor *nor, loff_t from, size_t len,
+ 				  u_char *buf)
+@@ -2122,11 +2121,6 @@ static int spi_nor_octal_dtr_read(struct spi_nor *nor, loff_t from, size_t len,
+ 	if (start + bytes_read == end)
+ 		ret -= end - (from + len);
+ 
+-	if (ret < 0) {
+-		ret = -EIO;
+-		goto out;
+-	}
+-
+ 	memcpy(buf, tmp_buf + (from - start), ret);
+ out:
+ 	kfree(tmp_buf);

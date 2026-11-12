@@ -1,0 +1,62 @@
+From e6336286b26adfba13c63b4227efcd4666f70d1e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 12 Mar 2026 15:35:14 +0000
+Subject: [PATCH 347/851] arm64: dts: renesas: r9a09g047: Add USB3 PHY/Host
+ nodes
+
+[ Upstream commit 87c83a27b80062d0ca5dca408b7a7db42027a582 ]
+
+Add USB3 PHY/Host nodes to RZ/G3E ("R9A09G047") SoC DTSI.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250916150255.4231-8-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 30 ++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index addcc9ed8661..0a2fc3480a43 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -1073,6 +1073,36 @@ gic: interrupt-controller@14900000 {
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW>;
+ 		};
+ 
++		xhci: usb@15850000 {
++			compatible = "renesas,r9a09g047-xhci";
++			reg = <0 0x15850000 0 0x10000>;
++			interrupts = <GIC_SPI 759 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 758 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 757 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 756 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 755 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "all", "smi", "hse", "pme", "xhc";
++			clocks = <&cpg CPG_MOD 0xaf>;
++			power-domains = <&cpg>;
++			resets = <&cpg 0xaa>;
++			phys = <&usb3_phy>, <&usb3_phy>;
++			phy-names = "usb2-phy", "usb3-phy";
++			status = "disabled";
++		};
++
++		usb3_phy: usb-phy@15870000 {
++			compatible = "renesas,r9a09g047-usb3-phy";
++			reg = <0 0x15870000 0 0x10000>;
++			clocks = <&cpg CPG_MOD 0xb0>,
++				 <&cpg CPG_CORE R9A09G047_USB3_0_CLKCORE>,
++				 <&cpg CPG_CORE R9A09G047_USB3_0_REF_ALT_CLK_P>;
++			clock-names = "pclk", "core", "ref_alt_clk_p";
++			power-domains = <&cpg>;
++			resets = <&cpg 0xaa>;
++			#phy-cells = <0>;
++			status = "disabled";
++		};
++
+ 		sdhi0: mmc@15c00000  {
+ 			compatible = "renesas,sdhi-r9a09g047", "renesas,sdhi-r9a09g057";
+ 			reg = <0x0 0x15c00000 0 0x10000>;

@@ -1,0 +1,73 @@
+From 25b8f2728ab95bf3f01c96a64fbdbcc534555b7b Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:36 +0000
+Subject: [PATCH 325/851] serial: sh-sci: Add sci_is_rsci_type()
+
+[ Upstream commit 7d8b226bf95cd2b49f15da4f4d40e05932c0d4cc ]
+
+Add sci_is_rsci_type() for RSCI port type. This will simplify the code
+when the support added for RSCI_PORT_SCIF32 private PORT type.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-11-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/sh-sci.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index cc6765463003..0be3d5c45388 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -1182,6 +1182,11 @@ static int sci_handle_errors(struct uart_port *port)
+ 	return copied;
+ }
+ 
++static bool sci_is_rsci_type(u8 type)
++{
++	return (type == SCI_PORT_RSCI);
++}
++
+ static int sci_handle_fifo_overrun(struct uart_port *port)
+ {
+ 	struct tty_port *tport = &port->state->port;
+@@ -1190,7 +1195,7 @@ static int sci_handle_fifo_overrun(struct uart_port *port)
+ 	int copied = 0;
+ 	u32 status;
+ 
+-	if (s->type != SCI_PORT_RSCI) {
++	if (!sci_is_rsci_type(s->type)) {
+ 		reg = sci_getreg(port, s->params->overrun_reg);
+ 		if (!reg->size)
+ 			return 0;
+@@ -1198,7 +1203,7 @@ static int sci_handle_fifo_overrun(struct uart_port *port)
+ 
+ 	status = s->ops->read_reg(port, s->params->overrun_reg);
+ 	if (status & s->params->overrun_mask) {
+-		if (s->type == SCI_PORT_RSCI) {
++		if (sci_is_rsci_type(s->type)) {
+ 			/*
+ 			 * All of the CFCLR_*C clearing bits match the corresponding
+ 			 * CSR_*status bits. So, reuse the overrun mask for clearing.
+@@ -2016,7 +2021,7 @@ static irqreturn_t sci_tx_end_interrupt(int irq, void *ptr)
+ 	unsigned long flags;
+ 	u32 ctrl;
+ 
+-	if (s->type != PORT_SCI && s->type != SCI_PORT_RSCI)
++	if (s->type != PORT_SCI && !sci_is_rsci_type(s->type))
+ 		return sci_tx_interrupt(irq, ptr);
+ 
+ 	uart_port_lock_irqsave(port, &flags);
+@@ -3290,7 +3295,7 @@ static int sci_init_single(struct platform_device *dev,
+ 	 * The fourth interrupt on SCI and RSCI port is transmit end interrupt, so
+ 	 * shuffle the interrupts.
+ 	 */
+-	if (p->type == PORT_SCI || p->type == SCI_PORT_RSCI)
++	if (p->type == PORT_SCI || sci_is_rsci_type(p->type))
+ 		swap(sci_port->irqs[SCIx_BRI_IRQ], sci_port->irqs[SCIx_TEI_IRQ]);
+ 
+ 	/* The SCI generates several interrupts. They can be muxed together or

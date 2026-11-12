@@ -1,0 +1,47 @@
+From 6b7c43635547a6dc3176780b9634c9a5446f6336 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:58:38 +0000
+Subject: [PATCH 815/851] dt-bindings: clock: renesas,r9a09g077/87: Add USB_CLK
+ clock ID
+
+commit 8a5a0294f40a50e5be83e9b7ebbc15b546f64e41 upstream.
+
+Add the USB clock (USB_CLK) definition for the Renesas RZ/T2H
+(R9A09G077) and RZ/N2H (R9A09G087) SoCs.  USB_CLK is used as the
+reference clock for USB PHY layer.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250804202643.3967484-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h | 1 +
+ include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+index 7ecc4f0b235a..0c2ce81a8744 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+@@ -25,5 +25,6 @@
+ #define R9A09G077_CLK_PCLKM		13
+ #define R9A09G077_CLK_PCLKL		14
+ #define R9A09G077_SDHI_CLKHS		15
++#define R9A09G077_USB_CLK		16
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__ */
+diff --git a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+index 925e57703925..70ee883f2386 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+@@ -25,5 +25,6 @@
+ #define R9A09G087_CLK_PCLKM		13
+ #define R9A09G087_CLK_PCLKL		14
+ #define R9A09G087_SDHI_CLKHS		15
++#define R9A09G087_USB_CLK		16
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G087_CPG_H__ */

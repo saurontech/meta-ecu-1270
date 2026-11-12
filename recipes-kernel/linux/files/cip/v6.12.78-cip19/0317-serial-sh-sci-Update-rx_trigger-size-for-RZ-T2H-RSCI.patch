@@ -1,0 +1,34 @@
+From 1d3a41b5d6663199fcf45f9dbe3e16fb86f9e8a6 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:28 +0000
+Subject: [PATCH 317/851] serial: sh-sci: Update rx_trigger size for RZ/T2H
+ RSCI
+
+[ Upstream commit 3a3ab10245b6779e32114bc70052ec7a8a380152 ]
+
+The RZ/T2H RSCI has 16-stage FIFO. Like other SoCs, set the default
+rx_trigger as the fifosize.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/sh-sci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 80b2b9b3542e..4da0251c0b10 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3331,7 +3331,7 @@ static int sci_init_single(struct platform_device *dev,
+ 			sci_port->rx_trigger = 8;
+ 		break;
+ 	case SCI_PORT_RSCI:
+-		sci_port->rx_trigger = 15;
++		sci_port->rx_trigger = 16;
+ 		break;
+ 	default:
+ 		sci_port->rx_trigger = 1;

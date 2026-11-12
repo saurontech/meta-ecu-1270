@@ -1,0 +1,61 @@
+From 06d980f8a6525ea2356185b1d1c3c5196fd261a4 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Wed, 11 Mar 2026 10:04:23 +0000
+Subject: [PATCH 312/851] serial: sh-sci: Convert to DEFINE_SIMPLE_DEV_PM_OPS()
+
+[ Upstream commit 65acd0d86f2fa104fc0a0c9d86aa1ee6b1a4763e ]
+
+Convert the Renesas SuperH SCI(F) serial port driver from
+SIMPLE_DEV_PM_OPS() to DEFINE_SIMPLE_DEV_PM_OPS() and pm_sleep_ptr().
+This lets us drop the __maybe_unused annotations from its suspend and
+resume callbacks, and reduces kernel size in case CONFIG_PM or
+CONFIG_PM_SLEEP is disabled.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/a5628fe028362ae3f8729021a7864dd39f7869bf.1752086885.git.geert+renesas@glider.be
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/sh-sci.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 03d248b2d8da..4e094d8ee882 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3752,7 +3752,7 @@ static int sci_probe(struct platform_device *dev)
+ 	return 0;
+ }
+ 
+-static __maybe_unused int sci_suspend(struct device *dev)
++static int sci_suspend(struct device *dev)
+ {
+ 	struct sci_port *sport = dev_get_drvdata(dev);
+ 
+@@ -3770,7 +3770,7 @@ static __maybe_unused int sci_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
+-static __maybe_unused int sci_resume(struct device *dev)
++static int sci_resume(struct device *dev)
+ {
+ 	struct sci_port *sport = dev_get_drvdata(dev);
+ 
+@@ -3791,14 +3791,14 @@ static __maybe_unused int sci_resume(struct device *dev)
+ 	return 0;
+ }
+ 
+-static SIMPLE_DEV_PM_OPS(sci_dev_pm_ops, sci_suspend, sci_resume);
++static DEFINE_SIMPLE_DEV_PM_OPS(sci_dev_pm_ops, sci_suspend, sci_resume);
+ 
+ static struct platform_driver sci_driver = {
+ 	.probe		= sci_probe,
+ 	.remove_new	= sci_remove,
+ 	.driver		= {
+ 		.name	= "sh-sci",
+-		.pm	= &sci_dev_pm_ops,
++		.pm	= pm_sleep_ptr(&sci_dev_pm_ops),
+ 		.of_match_table = of_match_ptr(of_sci_match),
+ 	},
+ };

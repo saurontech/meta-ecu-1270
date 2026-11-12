@@ -1,0 +1,61 @@
+From ef9b5a82564655280ac01924800ec218fa980baa Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:40 +0000
+Subject: [PATCH 329/851] serial: sh-sci: Make sci_scbrr_calc() public
+
+[ Upstream commit 5632bda5e848c4592eefa4451092beb4ce29ab76 ]
+
+Make the function sci_scbrr_calc() public for code reuse to support RZ/G3E
+RSCI IP.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-15-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+[ Biju: Dropped double quotes around EXPORT_SYMBOL_NS_GPL ]
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/sh-sci-common.h | 3 +++
+ drivers/tty/serial/sh-sci.c        | 6 +++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci-common.h b/drivers/tty/serial/sh-sci-common.h
+index 5d30771278b4..976e394ab968 100644
+--- a/drivers/tty/serial/sh-sci-common.h
++++ b/drivers/tty/serial/sh-sci-common.h
+@@ -169,6 +169,9 @@ void sci_port_enable(struct sci_port *sci_port);
+ int sci_startup(struct uart_port *port);
+ void sci_shutdown(struct uart_port *port);
+ 
++int sci_scbrr_calc(struct sci_port *s, unsigned int bps, unsigned int *brr,
++		   unsigned int *srr, unsigned int *cks);
++
+ #define min_sr(_port)		ffs((_port)->sampling_rate_mask)
+ #define max_sr(_port)		fls((_port)->sampling_rate_mask)
+ 
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 6e9cd8044b89..781fc371a62c 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -2574,9 +2574,8 @@ static int sci_brg_calc(struct sci_port *s, unsigned int bps,
+ }
+ 
+ /* calculate sample rate, BRR, and clock select */
+-static int sci_scbrr_calc(struct sci_port *s, unsigned int bps,
+-		   unsigned int *brr, unsigned int *srr,
+-		   unsigned int *cks)
++int sci_scbrr_calc(struct sci_port *s, unsigned int bps, unsigned int *brr,
++		   unsigned int *srr, unsigned int *cks)
+ {
+ 	unsigned long freq = s->clk_rates[SCI_FCK];
+ 	unsigned int sr, br, prediv, scrate, c;
+@@ -2640,6 +2639,7 @@ static int sci_scbrr_calc(struct sci_port *s, unsigned int bps,
+ 		min_err, *brr, *srr + 1, *cks);
+ 	return min_err;
+ }
++EXPORT_SYMBOL_NS_GPL(sci_scbrr_calc, SH_SCI);
+ 
+ static void sci_reset(struct uart_port *port)
+ {

@@ -1,0 +1,34 @@
+From c1cefc59179cf86ad378a8474021a84e335c9f01 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:34:40 +0000
+Subject: [PATCH 336/851] dt-bindings: dma: rz-dmac: Document RZ/V2N SoC
+ support
+
+commit f94163e950c9568fe2d2d88317d9602ce021e646 upstream.
+
+Document the DMA controller on the Renesas RZ/V2N SoC, which is
+architecturally identical to the DMAC found on the RZ/V2H(P) SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251125212621.267397-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml b/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
+index a43b6f29a688..bc1c7f64d68d 100644
+--- a/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
++++ b/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
+@@ -23,6 +23,7 @@ properties:
+       - items:
+           - enum:
+               - renesas,r9a09g047-dmac # RZ/G3E
++              - renesas,r9a09g056-dmac # RZ/V2N
+           - const: renesas,r9a09g057-dmac
+ 
+       - const: renesas,r9a09g057-dmac # RZ/V2H(P)

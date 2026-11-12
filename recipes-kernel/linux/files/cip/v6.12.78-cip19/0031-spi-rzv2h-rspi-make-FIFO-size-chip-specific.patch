@@ -1,0 +1,79 @@
+From 60dc4fab3402d4458ae353c3a29d6671b62f4c6c Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:08 +0200
+Subject: [PATCH 031/851] spi: rzv2h-rspi: make FIFO size chip-specific
+
+commit 8e89ee6cd2b928a8431bef61e8b851ce5df1ecb0 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs have a
+different FIFO size compared to RZ/V2H. Add a chip-specific structure,
+and set the FIFO size inside it, to prepare for adding support for them.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251119161434.595677-3-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index 09b9362e9b1f..7a7a576c17dd 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -58,7 +58,6 @@
+ /* Register SPDCR2 */
+ #define RSPI_SPDCR2_TTRG	GENMASK(11, 8)
+ #define RSPI_SPDCR2_RTRG	GENMASK(3, 0)
+-#define RSPI_FIFO_SIZE		16
+ 
+ /* Register SPSR */
+ #define RSPI_SPSR_SPRF		BIT(15)
+@@ -69,9 +68,14 @@
+ #define RSPI_RESET_NUM		2
+ #define RSPI_CLK_NUM		3
+ 
++struct rzv2h_rspi_info {
++	unsigned int fifo_size;
++};
++
+ struct rzv2h_rspi_priv {
+ 	struct reset_control_bulk_data resets[RSPI_RESET_NUM];
+ 	struct spi_controller *controller;
++	const struct rzv2h_rspi_info *info;
+ 	void __iomem *base;
+ 	struct clk *tclk;
+ 	wait_queue_head_t wait;
+@@ -305,7 +309,7 @@ static int rzv2h_rspi_prepare_message(struct spi_controller *ctlr,
+ 		writeb(0, rspi->base + RSPI_SSLP);
+ 
+ 	/* Setup FIFO thresholds */
+-	conf16 = FIELD_PREP(RSPI_SPDCR2_TTRG, RSPI_FIFO_SIZE - 1);
++	conf16 = FIELD_PREP(RSPI_SPDCR2_TTRG, rspi->info->fifo_size - 1);
+ 	conf16 |= FIELD_PREP(RSPI_SPDCR2_RTRG, 0);
+ 	writew(conf16, rspi->base + RSPI_SPDCR2);
+ 
+@@ -362,6 +366,8 @@ static int rzv2h_rspi_probe(struct platform_device *pdev)
+ 
+ 	rspi->controller = controller;
+ 
++	rspi->info = device_get_match_data(dev);
++
+ 	rspi->base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(rspi->base))
+ 		return PTR_ERR(rspi->base);
+@@ -445,8 +451,12 @@ static void rzv2h_rspi_remove(struct platform_device *pdev)
+ 	reset_control_bulk_assert(RSPI_RESET_NUM, rspi->resets);
+ }
+ 
++static const struct rzv2h_rspi_info rzv2h_info = {
++	.fifo_size = 16,
++};
++
+ static const struct of_device_id rzv2h_rspi_match[] = {
+-	{ .compatible = "renesas,r9a09g057-rspi" },
++	{ .compatible = "renesas,r9a09g057-rspi", &rzv2h_info },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, rzv2h_rspi_match);

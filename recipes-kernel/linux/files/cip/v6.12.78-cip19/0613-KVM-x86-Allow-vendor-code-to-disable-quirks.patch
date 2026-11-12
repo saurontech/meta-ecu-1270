@@ -1,0 +1,92 @@
+From 541304df9d989a349ceb7ec09cc6432fa20ceb35 Mon Sep 17 00:00:00 2001
+From: Paolo Bonzini <pbonzini@redhat.com>
+Date: Mon, 16 Mar 2026 13:19:59 -0400
+Subject: [PATCH 613/851] KVM: x86: Allow vendor code to disable quirks
+
+[ Upstream commit a4dae7c7a41d803a05192015b2d47aca8aca4abf ]
+
+In some cases, the handling of quirks is split between platform-specific
+code and generic code, or it is done entirely in generic code, but the
+relevant bug does not trigger on some platforms; for example,
+this will be the case for "ignore guest PAT".  Allow unaffected vendor
+modules to disable handling of a quirk for all VMs via a new entry in
+kvm_caps.
+
+Such quirks remain available in KVM_CAP_DISABLE_QUIRKS2, because that API
+tells userspace that KVM *knows* that some of its past behavior was bogus
+or just undesirable.  In other words, it's plausible for userspace to
+refuse to run if a quirk is not listed by KVM_CAP_DISABLE_QUIRKS2, so
+preserve that and make it part of the API.
+
+As an example, mark KVM_X86_QUIRK_CD_NW_CLEARED as auto-disabled on
+Intel systems.
+
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Stable-dep-of: e2ffe85b6d2b ("KVM: x86: Introduce KVM_X86_QUIRK_VMCS12_ALLOW_FREEZE_IN_SMM")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/x86/include/asm/kvm_host.h | 3 +++
+ arch/x86/kvm/svm/svm.c          | 1 +
+ arch/x86/kvm/x86.c              | 2 ++
+ arch/x86/kvm/x86.h              | 1 +
+ 4 files changed, 7 insertions(+)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 6821317eb856..7fdaefb301d9 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -2388,6 +2388,9 @@ int memslot_rmap_alloc(struct kvm_memory_slot *slot, unsigned long npages);
+ 	 KVM_X86_QUIRK_SLOT_ZAP_ALL |		\
+ 	 KVM_X86_QUIRK_STUFF_FEATURE_MSRS)
+ 
++#define KVM_X86_CONDITIONAL_QUIRKS		\
++	 KVM_X86_QUIRK_CD_NW_CLEARED
++
+ /*
+  * KVM previously used a u32 field in kvm_run to indicate the hypercall was
+  * initiated from long mode. KVM now sets bit 0 to indicate long mode, but the
+diff --git a/arch/x86/kvm/svm/svm.c b/arch/x86/kvm/svm/svm.c
+index 8f88964b1be5..fb9e62a167b8 100644
+--- a/arch/x86/kvm/svm/svm.c
++++ b/arch/x86/kvm/svm/svm.c
+@@ -5563,6 +5563,7 @@ static __init int svm_hardware_setup(void)
+ 	 */
+ 	allow_smaller_maxphyaddr = !npt_enabled;
+ 
++	kvm_caps.inapplicable_quirks &= ~KVM_X86_QUIRK_CD_NW_CLEARED;
+ 	return 0;
+ 
+ err:
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 10bbc7c446cd..d5a04ca134d4 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -9782,6 +9782,7 @@ int kvm_x86_vendor_init(struct kvm_x86_init_ops *ops)
+ 		kvm_host.xcr0 = xgetbv(XCR_XFEATURE_ENABLED_MASK);
+ 		kvm_caps.supported_xcr0 = kvm_host.xcr0 & KVM_SUPPORTED_XCR0;
+ 	}
++	kvm_caps.inapplicable_quirks = KVM_X86_CONDITIONAL_QUIRKS;
+ 
+ 	rdmsrl_safe(MSR_EFER, &kvm_host.efer);
+ 
+@@ -12780,6 +12781,7 @@ int kvm_arch_init_vm(struct kvm *kvm, unsigned long type)
+ 	/* Decided by the vendor code for other VM types.  */
+ 	kvm->arch.pre_fault_allowed =
+ 		type == KVM_X86_DEFAULT_VM || type == KVM_X86_SW_PROTECTED_VM;
++	kvm->arch.disabled_quirks = kvm_caps.inapplicable_quirks;
+ 
+ 	ret = kvm_page_track_init(kvm);
+ 	if (ret)
+diff --git a/arch/x86/kvm/x86.h b/arch/x86/kvm/x86.h
+index ec623d23d13d..82566cd8cbef 100644
+--- a/arch/x86/kvm/x86.h
++++ b/arch/x86/kvm/x86.h
+@@ -32,6 +32,7 @@ struct kvm_caps {
+ 	u64 supported_xcr0;
+ 	u64 supported_xss;
+ 	u64 supported_perf_cap;
++	u64 inapplicable_quirks;
+ };
+ 
+ struct kvm_host_values {

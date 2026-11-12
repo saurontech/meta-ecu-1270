@@ -1,0 +1,101 @@
+From 31d4f6a89df1b1c8a08112c4b63cef904b47b511 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Tue, 3 Mar 2026 18:53:48 +0200
+Subject: [PATCH 008/851] arm64: dts: renesas: r9a09g087: Add ADCs support
+
+commit 4ed27b4fdeb166821d84ddd64d40c28f7f13b794 upstream.
+
+Renesas RZ/T2H (R9A09G087) includes three 12-Bit successive
+approximation A/D converters, two 4-channel ADCs, and one 15-channel
+ADC.
+
+Add support for all of them.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251005111323.804638-5-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g087.dtsi | 66 ++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+index 6cbee27a0c5a..9e2ad080215a 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+@@ -229,6 +229,72 @@ gic: interrupt-controller@83000000 {
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW>;
+ 		};
+ 
++		adc0: adc@90014000 {
++			compatible = "renesas,r9a09g087-adc", "renesas,r9a09g077-adc";
++			reg = <0 0x90014000 0 0x400>;
++			interrupts = <GIC_SPI 698 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 699 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 700 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 701 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 702 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 851 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 852 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "adi", "gbadi", "gcadi",
++					  "cmpai", "cmpbi", "wcmpm", "wcmpum";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_PCLKL>,
++				 <&cpg CPG_MOD 206>;
++			clock-names = "adclk", "pclk";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			#io-channel-cells = <1>;
++			status = "disabled";
++		};
++
++		adc1: adc@90014400 {
++			compatible = "renesas,r9a09g087-adc", "renesas,r9a09g077-adc";
++			reg = <0 0x90014400 0 0x400>;
++			interrupts = <GIC_SPI 703 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 704 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 705 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 706 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 707 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 853 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 854 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "adi", "gbadi", "gcadi",
++					  "cmpai", "cmpbi", "wcmpm", "wcmpum";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_PCLKL>,
++				 <&cpg CPG_MOD 207>;
++			clock-names = "adclk", "pclk";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			#io-channel-cells = <1>;
++			status = "disabled";
++		};
++
++		adc2: adc@80008000 {
++			compatible = "renesas,r9a09g087-adc", "renesas,r9a09g077-adc";
++			reg = <0 0x80008000 0 0x400>;
++			interrupts = <GIC_SPI 708 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 709 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 710 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 711 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 712 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 855 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 856 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "adi", "gbadi", "gcadi",
++					  "cmpai", "cmpbi", "wcmpm", "wcmpum";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_PCLKL>,
++				 <&cpg CPG_MOD 225>;
++			clock-names = "adclk", "pclk";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			#io-channel-cells = <1>;
++			status = "disabled";
++		};
++
+ 		sdhi0: mmc@92080000  {
+ 			compatible = "renesas,sdhi-r9a09g087",
+ 				     "renesas,sdhi-r9a09g057";

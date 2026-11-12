@@ -1,0 +1,39 @@
+From ef98bb33c4833cd2b78939253cd7ee09414d1770 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 5 Mar 2026 15:37:21 +0000
+Subject: [PATCH 015/851] dt-bindings: display: renesas,rzg2l-du: Add support
+ for RZ/V2N SoC
+
+commit e96a7dc6de5f6c2cac8cc919584c95ae52cf1f9a upstream.
+
+Document support for the DU IP found on the Renesas RZ/V2N (R9A09G056) SoC.
+The DU IP is functionally identical to that on the RZ/V2H(P) SoC, so no
+driver changes are needed. The existing `renesas,r9a09g057-du` compatible
+will be used as a fallback for the RZ/V2N SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251023213350.681602-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../devicetree/bindings/display/renesas,rzg2l-du.yaml          | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/display/renesas,rzg2l-du.yaml b/Documentation/devicetree/bindings/display/renesas,rzg2l-du.yaml
+index 1e32d14b6edb..2cc66dcef870 100644
+--- a/Documentation/devicetree/bindings/display/renesas,rzg2l-du.yaml
++++ b/Documentation/devicetree/bindings/display/renesas,rzg2l-du.yaml
+@@ -25,6 +25,9 @@ properties:
+           - enum:
+               - renesas,r9a07g054-du    # RZ/V2L
+           - const: renesas,r9a07g044-du # RZ/G2L fallback
++      - items:
++          - const: renesas,r9a09g056-du # RZ/V2N
++          - const: renesas,r9a09g057-du # RZ/V2H(P) fallback
+ 
+   reg:
+     maxItems: 1

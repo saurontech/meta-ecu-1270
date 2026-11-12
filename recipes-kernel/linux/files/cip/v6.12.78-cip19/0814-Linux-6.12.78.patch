@@ -1,0 +1,36 @@
+From 48591125594050ab91c9156bccb3ddd9a869d9f1 Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Wed, 25 Mar 2026 11:08:58 +0100
+Subject: [PATCH 814/851] Linux 6.12.78
+
+Link: https://lore.kernel.org/r/20260323134526.647552166@linuxfoundation.org
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Pavel Machek (CIP) <pavel@nabladev.com>
+Tested-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Tested-by: Salvatore Bonaccorso <carnil@debian.org>
+Tested-by: Shuah Khan <skhan@linuxfoundation.org>
+Tested-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Tested-by: Ron Economos <re@w6rz.net>
+Tested-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+Tested-by: Jon Hunter <jonathanh@nvidia.com>
+Tested-by: Mark Brown <broonie@kernel.org>
+Tested-by: Barry K. Nathan <barryn@pobox.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index beb37385ce0d..80b450e0a7d4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 77
++SUBLEVEL = 78
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 
