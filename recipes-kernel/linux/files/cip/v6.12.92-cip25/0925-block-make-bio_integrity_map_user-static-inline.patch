@@ -1,0 +1,32 @@
+From 716bb3cfd1c805c18cf4628ef0cc1f51b86a1986 Mon Sep 17 00:00:00 2001
+From: Jens Axboe <axboe@kernel.dk>
+Date: Fri, 29 Nov 2024 15:53:58 -0700
+Subject: [PATCH 925/928] block: make bio_integrity_map_user() static inline
+
+[ Upstream commit 546d191427cf5cf3215529744c2ea8558f0279db ]
+
+If CONFIG_BLK_DEV_INTEGRITY isn't set, then the dummy helper must be
+static inline to avoid complaints about the function being unused.
+
+Fixes: fe8f4ca7107e ("block: modify bio_integrity_map_user to accept iov_iter as argument")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202411300229.y7h60mDg-lkp@intel.com/
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ include/linux/bio-integrity.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/bio-integrity.h b/include/linux/bio-integrity.h
+index be91479b2c42..53f6dbd2816e 100644
+--- a/include/linux/bio-integrity.h
++++ b/include/linux/bio-integrity.h
+@@ -98,7 +98,7 @@ static inline void bioset_integrity_free(struct bio_set *bs)
+ {
+ }
+ 
+-static int bio_integrity_map_user(struct bio *bio, struct iov_iter *iter)
++static inline int bio_integrity_map_user(struct bio *bio, struct iov_iter *iter)
+ {
+ 	return -EINVAL;
+ }

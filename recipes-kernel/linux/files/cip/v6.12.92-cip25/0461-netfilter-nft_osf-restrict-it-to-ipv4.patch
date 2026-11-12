@@ -1,0 +1,42 @@
+From 0da760b3f416bb958d8f4fc255d2297fb921a635 Mon Sep 17 00:00:00 2001
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Date: Tue, 14 Apr 2026 13:06:38 +0200
+Subject: [PATCH 461/928] netfilter: nft_osf: restrict it to ipv4
+
+[ Upstream commit b336fdbb7103fb1484e1dcb6741151d4b5a41e35 ]
+
+This expression only supports for ipv4, restrict it.
+
+Fixes: b96af92d6eaf ("netfilter: nf_tables: implement Passive OS fingerprint module in nft_osf")
+Acked-by: Florian Westphal <fw@strlen.de>
+Reviewed-by: Fernando Fernandez Mancera <fmancera@suse.de>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/netfilter/nft_osf.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/net/netfilter/nft_osf.c b/net/netfilter/nft_osf.c
+index 1c0b493ef0a9..bdc2f6c90e2f 100644
+--- a/net/netfilter/nft_osf.c
++++ b/net/netfilter/nft_osf.c
+@@ -28,6 +28,11 @@ static void nft_osf_eval(const struct nft_expr *expr, struct nft_regs *regs,
+ 	struct nf_osf_data data;
+ 	struct tcphdr _tcph;
+ 
++	if (nft_pf(pkt) != NFPROTO_IPV4) {
++		regs->verdict.code = NFT_BREAK;
++		return;
++	}
++
+ 	if (pkt->tprot != IPPROTO_TCP) {
+ 		regs->verdict.code = NFT_BREAK;
+ 		return;
+@@ -114,7 +119,6 @@ static int nft_osf_validate(const struct nft_ctx *ctx,
+ 
+ 	switch (ctx->family) {
+ 	case NFPROTO_IPV4:
+-	case NFPROTO_IPV6:
+ 	case NFPROTO_INET:
+ 		hooks = (1 << NF_INET_LOCAL_IN) |
+ 			(1 << NF_INET_PRE_ROUTING) |

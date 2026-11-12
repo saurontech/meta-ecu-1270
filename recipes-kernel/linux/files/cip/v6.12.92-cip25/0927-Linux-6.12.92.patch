@@ -1,0 +1,33 @@
+From 26deb9f9c427c0382f855546d23dba76c49e680c Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Mon, 1 Jun 2026 17:46:33 +0200
+Subject: [PATCH 927/928] Linux 6.12.92
+
+Link: https://lore.kernel.org/r/20260528194629.379955525@linuxfoundation.org
+Tested-by: Dominique Martinet <dominique.martinet@atmark-techno.com>
+Tested-by: Ron Economos <re@w6rz.net>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Tested-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Salvatore Bonaccorso <carnil@debian.org>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Tested-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 8e8c4c74f6d2..feb1d9b8b910 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 91
++SUBLEVEL = 92
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 

@@ -1,0 +1,68 @@
+From 5c96e7d9c3e8e8e98f6eb1ff9e1b27d414eef4d5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
+Date: Thu, 6 Mar 2025 15:07:21 +0100
+Subject: [PATCH 029/928] sparc/vdso: Always reject undefined references during
+ linking
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit 652262975db421767ada3f05b926854bbb357759 ]
+
+Instead of using a custom script to detect and fail on undefined
+references, use --no-undefined for all VDSO linker invocations.
+
+Drop the now unused checkundef.sh script.
+
+Signed-off-by: Thomas Weißschuh <thomas.weissschuh@linutronix.de>
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Andreas Larsson <andreas@gaisler.com>
+Link: https://lore.kernel.org/r/20250306-vdso-checkundef-v2-2-a26cc315fd73@linutronix.de
+Stable-dep-of: acc4f131d5d5 ("sparc64: vdso: Link with -z noexecstack")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/sparc/vdso/Makefile      |  7 +++----
+ arch/sparc/vdso/checkundef.sh | 10 ----------
+ 2 files changed, 3 insertions(+), 14 deletions(-)
+ delete mode 100644 arch/sparc/vdso/checkundef.sh
+
+diff --git a/arch/sparc/vdso/Makefile b/arch/sparc/vdso/Makefile
+index 243dbfc4609d..c7697884975e 100644
+--- a/arch/sparc/vdso/Makefile
++++ b/arch/sparc/vdso/Makefile
+@@ -22,7 +22,7 @@ targets += $(foreach x, 32 64, vdso-image-$(x).c vdso$(x).so vdso$(x).so.dbg)
+ 
+ CPPFLAGS_vdso.lds += -P -C
+ 
+-VDSO_LDFLAGS_vdso.lds = -m elf64_sparc -soname linux-vdso.so.1 --no-undefined \
++VDSO_LDFLAGS_vdso.lds = -m elf64_sparc -soname linux-vdso.so.1 \
+ 			-z max-page-size=8192
+ 
+ $(obj)/vdso64.so.dbg: $(obj)/vdso.lds $(vobjs) FORCE
+@@ -101,7 +101,6 @@ $(obj)/vdso32.so.dbg: FORCE \
+ quiet_cmd_vdso = VDSO    $@
+       cmd_vdso = $(LD) -nostdlib -o $@ \
+ 		       $(VDSO_LDFLAGS) $(VDSO_LDFLAGS_$(filter %.lds,$(^F))) \
+-		       -T $(filter %.lds,$^) $(filter %.o,$^) && \
+-		sh $(src)/checkundef.sh '$(OBJDUMP)' '$@'
++		       -T $(filter %.lds,$^) $(filter %.o,$^)
+ 
+-VDSO_LDFLAGS = -shared --hash-style=both --build-id=sha1 -Bsymbolic
++VDSO_LDFLAGS = -shared --hash-style=both --build-id=sha1 -Bsymbolic --no-undefined
+diff --git a/arch/sparc/vdso/checkundef.sh b/arch/sparc/vdso/checkundef.sh
+deleted file mode 100644
+index 2d85876ffc32..000000000000
+--- a/arch/sparc/vdso/checkundef.sh
++++ /dev/null
+@@ -1,10 +0,0 @@
+-#!/bin/sh
+-objdump="$1"
+-file="$2"
+-$objdump -t "$file" | grep '*UUND*' | grep -v '#scratch' > /dev/null 2>&1
+-if [ $? -eq 1 ]; then
+-    exit 0
+-else
+-    echo "$file: undefined symbols found" >&2
+-    exit 1
+-fi
