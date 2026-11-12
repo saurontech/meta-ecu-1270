@@ -1,0 +1,17 @@
+From db2b92c375f46e6e98a797debb510aef87742599 Mon Sep 17 00:00:00 2001
+From: Pavel Machek <pavel@ucw.cz>
+Date: Thu, 30 Apr 2026 15:36:52 +0200
+Subject: [PATCH 48/48] Mark this as 6.12.85-cip22 release.
+
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index b7919e72719f..4b19f164aedf 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip21
++-cip22
