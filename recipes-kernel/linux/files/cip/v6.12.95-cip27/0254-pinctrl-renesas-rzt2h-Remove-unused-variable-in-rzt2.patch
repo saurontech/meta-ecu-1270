@@ -1,0 +1,50 @@
+From f5fe34d735c5ac9e49276b31c9fb1b7497e6dcd7 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 2 Jul 2026 11:23:48 +0100
+Subject: [PATCH 254/286] pinctrl: renesas: rzt2h: Remove unused variable in
+ rzt2h_pinctrl_register()
+
+commit ccf707ca74cbb1d7ad0f99877518d2e3fe58611a upstream.
+
+Variable 'j' in rzt2h_pinctrl_register() is incremented during pin
+descriptor initialization but never used afterwards.
+
+Remove the unused variable and the associated dead code.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260513115312.1574367-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pinctrl/renesas/pinctrl-rzt2h.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzt2h.c b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+index b754d4d725e8..5cf67649b855 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzt2h.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+@@ -1156,7 +1156,7 @@ static int rzt2h_pinctrl_register(struct rzt2h_pinctrl *pctrl)
+ 	struct pinctrl_desc *desc = &pctrl->desc;
+ 	struct device *dev = pctrl->dev;
+ 	struct pinctrl_pin_desc *pins;
+-	unsigned int i, j;
++	unsigned int i;
+ 	int ret;
+ 
+ 	desc->name = DRV_NAME;
+@@ -1173,11 +1173,9 @@ static int rzt2h_pinctrl_register(struct rzt2h_pinctrl *pctrl)
+ 	pctrl->pins = pins;
+ 	desc->pins = pins;
+ 
+-	for (i = 0, j = 0; i < pctrl->data->n_port_pins; i++) {
++	for (i = 0; i < pctrl->data->n_port_pins; i++) {
+ 		pins[i].number = i;
+ 		pins[i].name = rzt2h_gpio_names[i];
+-		if (i && !(i % RZT2H_PINS_PER_PORT))
+-			j++;
+ 	}
+ 
+ 	ret = devm_pinctrl_register_and_init(dev, desc, pctrl, &pctrl->pctl);

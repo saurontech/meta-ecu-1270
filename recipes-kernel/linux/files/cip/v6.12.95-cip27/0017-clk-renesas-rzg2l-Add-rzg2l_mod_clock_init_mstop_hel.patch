@@ -1,0 +1,69 @@
+From 739b64bc3c2d6d9d3b21f629e1b83b9f5b6d5f17 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:36 +0100
+Subject: [PATCH 017/286] clk: renesas: rzg2l: Add
+ rzg2l_mod_clock_init_mstop_helper()
+
+[ Upstream commit fa3e973ca2d7a46b9f4ad5611b42d1885d7a77b6 ]
+
+Refactor the mstop initialisation logic in rzg2l_mod_clock_init_mstop()
+into a dedicated helper function rzg2l_mod_clock_init_mstop_helper().
+This decouples the logic for setting module stop state on disabled
+clocks from the iteration loop, allowing it to be reused during resume
+to re-enable critical clocks.
+
+No functional change.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260324114329.268249-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index 840147ca601f..408e76c31424 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1595,6 +1595,20 @@ static struct mstop *rzg2l_mod_clock_get_mstop(struct rzg2l_cpg_priv *priv, u32
+ 	return NULL;
+ }
+ 
++static void rzg2l_mod_clock_init_mstop_helper(struct rzg2l_cpg_priv *priv,
++					      struct mod_clock *clk)
++{
++	/*
++	 * Out of reset all modules are enabled. Set module state in case
++	 * associated clocks are disabled at probe. Otherwise module is in
++	 * invalid HW state.
++	 */
++	scoped_guard(spinlock_irqsave, &priv->rmw_lock) {
++		if (!rzg2l_mod_clock_is_enabled(&clk->hw))
++			rzg2l_mod_clock_module_set_state(clk, true);
++	}
++}
++
+ static void rzg2l_mod_clock_init_mstop(struct rzg2l_cpg_priv *priv)
+ {
+ 	struct mod_clock *clk;
+@@ -1604,15 +1618,7 @@ static void rzg2l_mod_clock_init_mstop(struct rzg2l_cpg_priv *priv)
+ 		if (!clk->mstop)
+ 			continue;
+ 
+-		/*
+-		 * Out of reset all modules are enabled. Set module state
+-		 * in case associated clocks are disabled at probe. Otherwise
+-		 * module is in invalid HW state.
+-		 */
+-		scoped_guard(spinlock_irqsave, &priv->rmw_lock) {
+-			if (!rzg2l_mod_clock_is_enabled(&clk->hw))
+-				rzg2l_mod_clock_module_set_state(clk, true);
+-		}
++		rzg2l_mod_clock_init_mstop_helper(priv, clk);
+ 	}
+ }
+ 

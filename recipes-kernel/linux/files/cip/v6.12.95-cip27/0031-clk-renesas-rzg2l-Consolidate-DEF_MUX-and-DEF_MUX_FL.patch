@@ -1,0 +1,52 @@
+From c9ac6cb79a8a4837ed45119c35e27fe840363336 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 30 Jun 2026 12:47:50 +0100
+Subject: [PATCH 031/286] clk: renesas: rzg2l: Consolidate DEF_MUX() and
+ DEF_MUX_FLAGS()
+
+[ Upstream commit 44c1733331eb691493c29839520ed31edda34d8d ]
+
+Define DEF_MUX() using DEF_MUX_FLAGS(), to reduce duplication.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/46e2713f39cc5efc4b05a65723e0781a9dd8291c.1777562043.git.geert+renesas@glider.be
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.h | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.h b/drivers/clk/renesas/rzg2l-cpg.h
+index 0e63b62e8435..33f54ba0e64e 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.h
++++ b/drivers/clk/renesas/rzg2l-cpg.h
+@@ -178,22 +178,19 @@ enum clk_types {
+ 		 .invalid_rate = _invalid_rate, \
+ 		 .max_rate = _max_rate, .flag = (_clk_flags), \
+ 		 .notifier = _notif)
+-#define DEF_MUX(_name, _id, _conf, _parent_names) \
++#define DEF_MUX_FLAGS(_name, _id, _conf, _parent_names, _flag) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_MUX, .conf = _conf, \
+ 		 .parent_names = _parent_names, \
+ 		 .num_parents = ARRAY_SIZE(_parent_names), \
+-		 .mux_flags = CLK_MUX_HIWORD_MASK)
++		 .mux_flags = CLK_MUX_HIWORD_MASK, \
++		 .flag = _flag)
++#define DEF_MUX(_name, _id, _conf, _parent_names) \
++	DEF_MUX_FLAGS(_name, _id, _conf, _parent_names, 0)
+ #define DEF_MUX_RO(_name, _id, _conf, _parent_names) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_MUX, .conf = _conf, \
+ 		 .parent_names = _parent_names, \
+ 		 .num_parents = ARRAY_SIZE(_parent_names), \
+ 		 .mux_flags = CLK_MUX_READ_ONLY)
+-#define DEF_MUX_FLAGS(_name, _id, _conf, _parent_names, _flag) \
+-	DEF_TYPE(_name, _id, CLK_TYPE_MUX, .conf = _conf, \
+-		 .parent_names = _parent_names, \
+-		 .num_parents = ARRAY_SIZE(_parent_names), \
+-		 .mux_flags = CLK_MUX_HIWORD_MASK, \
+-		 .flag = _flag)
+ #define DEF_SD_MUX(_name, _id, _conf, _sconf, _parent_names, _mtable, _clk_flags, _notifier) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_SD_MUX, .conf = _conf, .sconf = _sconf, \
+ 		 .parent_names = _parent_names, \

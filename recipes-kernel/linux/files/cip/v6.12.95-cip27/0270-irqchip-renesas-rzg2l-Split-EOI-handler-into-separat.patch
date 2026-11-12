@@ -1,0 +1,99 @@
+From c3724661082d74fb271f5d5240227a1f50ca3ba3 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:30 +0100
+Subject: [PATCH 270/286] irqchip/renesas-rzg2l: Split EOI handler into
+ separate IRQ and TINT functions
+
+[ Upstream commit 6e5e0331dea48bbd6955af562aab4972a3950fa2 ]
+
+The common rzg2l_irqc_eoi() handler uses a conditional to determine whether
+to clear an IRQ or an TINT interrupt.
+
+Split this into two dedicated handlers, rzg2l_irqc_irq_eoi() and
+rzg2l_irqc_tint_eoi(), each handling only their respective interrupt type
+without the need for range checks.
+
+While at it, simplify rzg2l_irqc_{irq,tint}_eoi() by replacing
+raw_spin_lock locking/unlocking with scoped_guard().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 26 +++++++++++++++++---------
+ 1 file changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 4a4b6624ecb6..406b6ad45ef5 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -131,17 +131,25 @@ static void rzg2l_clear_tint_int(struct rzg2l_irqc_priv *priv, unsigned int hwir
+ 	}
+ }
+ 
+-static void rzg2l_irqc_eoi(struct irq_data *d)
++static void rzg2l_irqc_irq_eoi(struct irq_data *d)
+ {
+ 	struct rzg2l_irqc_priv *priv = irq_data_to_priv(d);
+ 	unsigned int hw_irq = irqd_to_hwirq(d);
+ 
+-	raw_spin_lock(&priv->lock);
+-	if (hw_irq >= IRQC_IRQ_START && hw_irq <= IRQC_IRQ_COUNT)
++	scoped_guard(raw_spinlock, &priv->lock)
+ 		rzg2l_clear_irq_int(priv, hw_irq);
+-	else if (hw_irq >= IRQC_TINT_START && hw_irq < IRQC_NUM_IRQ)
++
++	irq_chip_eoi_parent(d);
++}
++
++static void rzg2l_irqc_tint_eoi(struct irq_data *d)
++{
++	struct rzg2l_irqc_priv *priv = irq_data_to_priv(d);
++	unsigned int hw_irq = irqd_to_hwirq(d);
++
++	scoped_guard(raw_spinlock, &priv->lock)
+ 		rzg2l_clear_tint_int(priv, hw_irq);
+-	raw_spin_unlock(&priv->lock);
++
+ 	irq_chip_eoi_parent(d);
+ }
+ 
+@@ -435,7 +443,7 @@ static struct syscore_ops rzg2l_irqc_syscore_ops = {
+ 
+ static const struct irq_chip rzg2l_irqc_irq_chip = {
+ 	.name			= "rzg2l-irqc",
+-	.irq_eoi		= rzg2l_irqc_eoi,
++	.irq_eoi		= rzg2l_irqc_irq_eoi,
+ 	.irq_mask		= irq_chip_mask_parent,
+ 	.irq_unmask		= irq_chip_unmask_parent,
+ 	.irq_disable		= rzg2l_irqc_irq_disable,
+@@ -452,7 +460,7 @@ static const struct irq_chip rzg2l_irqc_irq_chip = {
+ 
+ static const struct irq_chip rzg2l_irqc_tint_chip = {
+ 	.name			= "rzg2l-irqc",
+-	.irq_eoi		= rzg2l_irqc_eoi,
++	.irq_eoi		= rzg2l_irqc_tint_eoi,
+ 	.irq_mask		= irq_chip_mask_parent,
+ 	.irq_unmask		= irq_chip_unmask_parent,
+ 	.irq_disable		= rzg2l_irqc_irq_disable,
+@@ -469,7 +477,7 @@ static const struct irq_chip rzg2l_irqc_tint_chip = {
+ 
+ static const struct irq_chip rzfive_irqc_irq_chip = {
+ 	.name			= "rzfive-irqc",
+-	.irq_eoi		= rzg2l_irqc_eoi,
++	.irq_eoi		= rzg2l_irqc_irq_eoi,
+ 	.irq_mask		= rzfive_irqc_mask,
+ 	.irq_unmask		= rzfive_irqc_unmask,
+ 	.irq_disable		= rzfive_irqc_irq_disable,
+@@ -486,7 +494,7 @@ static const struct irq_chip rzfive_irqc_irq_chip = {
+ 
+ static const struct irq_chip rzfive_irqc_tint_chip = {
+ 	.name			= "rzfive-irqc",
+-	.irq_eoi		= rzg2l_irqc_eoi,
++	.irq_eoi		= rzg2l_irqc_tint_eoi,
+ 	.irq_mask		= rzfive_irqc_mask,
+ 	.irq_unmask		= rzfive_irqc_unmask,
+ 	.irq_disable		= rzfive_irqc_irq_disable,

@@ -1,0 +1,90 @@
+From c96b39f5da3b8ba96fab877d38320ca6a31c9764 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Thu, 2 Jul 2026 11:23:40 +0100
+Subject: [PATCH 246/286] pinctrl: renesas: Remove unneeded semicolons
+
+commit bf48f99d95dfd664ddb7c4d69b182606f5ed8605 upstream.
+
+Semicolons after end of function braces are not needed, remove them.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/99db8c1bfb64980b54a4b5c4988c7935609133e1.1758718027.git.geert+renesas@glider.be
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pinctrl/renesas/pinctrl-rzt2h.c |  4 ++--
+ drivers/pinctrl/renesas/pinctrl-rzv2m.c | 10 +++++-----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzt2h.c b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+index d567612b3095..63c49e813fc1 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzt2h.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+@@ -144,7 +144,7 @@ static void rzt2h_pinctrl_set_pfc_mode(struct rzt2h_pinctrl *pctrl,
+ 	/* Switch to Peripheral pin function with PMC register */
+ 	reg16 = rzt2h_pinctrl_readb(pctrl, port, PMC(port));
+ 	rzt2h_pinctrl_writeb(pctrl, port, reg16 | BIT(pin), PMC(port));
+-};
++}
+ 
+ static int rzt2h_pinctrl_set_mux(struct pinctrl_dev *pctldev,
+ 				 unsigned int func_selector,
+@@ -182,7 +182,7 @@ static int rzt2h_pinctrl_set_mux(struct pinctrl_dev *pctldev,
+ 	}
+ 
+ 	return 0;
+-};
++}
+ 
+ static int rzt2h_map_add_config(struct pinctrl_map *map,
+ 				const char *group_or_pin,
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzv2m.c b/drivers/pinctrl/renesas/pinctrl-rzv2m.c
+index 8c7169db4fcc..fec603758687 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzv2m.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzv2m.c
+@@ -155,7 +155,7 @@ static void rzv2m_pinctrl_set_pfc_mode(struct rzv2m_pinctrl *pctrl,
+ 	/* Unmask input/output */
+ 	rzv2m_writel_we(pctrl->base + EN_MSK(port), pin, 0);
+ 	rzv2m_writel_we(pctrl->base + DI_MSK(port), pin, 0);
+-};
++}
+ 
+ static int rzv2m_pinctrl_set_mux(struct pinctrl_dev *pctldev,
+ 				 unsigned int func_selector,
+@@ -186,7 +186,7 @@ static int rzv2m_pinctrl_set_mux(struct pinctrl_dev *pctldev,
+ 	}
+ 
+ 	return 0;
+-};
++}
+ 
+ static int rzv2m_map_add_config(struct pinctrl_map *map,
+ 				const char *group_or_pin,
+@@ -551,7 +551,7 @@ static int rzv2m_pinctrl_pinconf_get(struct pinctrl_dev *pctldev,
+ 	*config = pinconf_to_config_packed(param, arg);
+ 
+ 	return 0;
+-};
++}
+ 
+ static int rzv2m_pinctrl_pinconf_set(struct pinctrl_dev *pctldev,
+ 				     unsigned int _pin,
+@@ -689,7 +689,7 @@ static int rzv2m_pinctrl_pinconf_group_set(struct pinctrl_dev *pctldev,
+ 	}
+ 
+ 	return 0;
+-};
++}
+ 
+ static int rzv2m_pinctrl_pinconf_group_get(struct pinctrl_dev *pctldev,
+ 					   unsigned int group,
+@@ -716,7 +716,7 @@ static int rzv2m_pinctrl_pinconf_group_get(struct pinctrl_dev *pctldev,
+ 	}
+ 
+ 	return 0;
+-};
++}
+ 
+ static const struct pinctrl_ops rzv2m_pinctrl_pctlops = {
+ 	.get_groups_count = pinctrl_generic_get_group_count,

@@ -1,0 +1,89 @@
+From 94b754a99230f3d4aabc8eda3318e186e401d034 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:22 +0100
+Subject: [PATCH 003/286] dt-bindings: net: renesas,rzv2h-gbeth: Document
+ Renesas RZ/G3L RMII{tx,rx} clocks
+
+[ Upstream commit d2adcbdae5f6d4da445f32ea61f21fdd146670d9 ]
+
+As per the RZ/G3L Hardware manual, CPG_CLKON_ETH register bits{12,13} are
+to control the RMII{tx, rx} clocks. Document the rmii{tx.rx} clocks for
+RZ/G3L SoC.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://patch.msgid.link/20260203104541.264759-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+[Biju: Squashed commit 114508a89ddc12b50497c03747aa3c44195ca830 after
+ removing the Sophgo SG2044 documentation as it is not present on 6.12.y]
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/net/renesas,rzv2h-gbeth.yaml      | 8 ++++++--
+ Documentation/devicetree/bindings/net/snps,dwmac.yaml     | 3 +++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+index fb60f745a1ff..2125b5ddf73d 100644
+--- a/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
++++ b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+@@ -58,6 +58,8 @@ properties:
+           - description: TX clock phase-shifted by 180 degrees
+           - description: RX clock phase-shifted by 180 degrees
+           - description: RMII clock
++          - description: RMII TX clock
++          - description: RMII RX clock
+ 
+         minItems: 7
+ 
+@@ -77,6 +79,8 @@ properties:
+           - const: tx-180
+           - const: rx-180
+           - const: rmii
++          - const: rmii_tx
++          - const: rmii_rx
+ 
+         minItems: 7
+ 
+@@ -170,10 +174,10 @@ allOf:
+     then:
+       properties:
+         clocks:
+-          minItems: 8
++          minItems: 10
+ 
+         clock-names:
+-          minItems: 8
++          minItems: 10
+ 
+         interrupts:
+           minItems: 15
+diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+index 4ae68ab70dee..0deb5d43f8cc 100644
+--- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+@@ -31,6 +31,7 @@ select:
+           - snps,dwmac-4.20a
+           - snps,dwmac-5.10a
+           - snps,dwmac-5.20
++          - snps,dwmac-5.30a
+           - snps,dwxgmac
+           - snps,dwxgmac-2.10
+ 
+@@ -98,6 +99,7 @@ properties:
+         - snps,dwmac-4.20a
+         - snps,dwmac-5.10a
+         - snps,dwmac-5.20
++        - snps,dwmac-5.30a
+         - snps,dwxgmac
+         - snps,dwxgmac-2.10
+         - starfive,jh7100-dwmac
+@@ -638,6 +640,7 @@ allOf:
+                 - snps,dwmac-4.20a
+                 - snps,dwmac-5.10a
+                 - snps,dwmac-5.20
++                - snps,dwmac-5.30a
+                 - snps,dwxgmac
+                 - snps,dwxgmac-2.10
+                 - st,spear600-gmac

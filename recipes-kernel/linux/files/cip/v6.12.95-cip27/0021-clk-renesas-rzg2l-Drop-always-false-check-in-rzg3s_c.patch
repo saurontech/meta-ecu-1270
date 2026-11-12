@@ -1,0 +1,37 @@
+From 1bcbb0e2b3b1166fe6deabb5f14d43ef705e0261 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:40 +0100
+Subject: [PATCH 021/286] clk: renesas: rzg2l: Drop always-false check in
+ rzg3s_cpg_pll_clk_recalc_rate()
+
+[ Upstream commit 79b5d6970b4e5b7b7ee4d7fdb18e950086b72bde ]
+
+Drop the unwanted check in rzg3s_cpg_pll_clk_recalc_rate() as the
+function is SoC-specific.
+
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260326110648.29389-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index 5ced73696efa..ac49eb8b4a30 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1108,9 +1108,6 @@ static unsigned long rzg3s_cpg_pll_clk_recalc_rate(struct clk_hw *hw,
+ 	u32 nir, nfr, mr, pr, val, setting;
+ 	u64 rate;
+ 
+-	if (pll_clk->type != CLK_TYPE_G3S_PLL)
+-		return parent_rate;
+-
+ 	setting = GET_REG_SAMPLL_SETTING(pll_clk->conf);
+ 	if (setting) {
+ 		val = readl(priv->base + setting);

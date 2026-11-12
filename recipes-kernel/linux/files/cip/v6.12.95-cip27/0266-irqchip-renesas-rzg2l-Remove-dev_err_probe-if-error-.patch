@@ -1,0 +1,36 @@
+From aeca8935d0d34a75caba254b7ea98ad911315c9a Mon Sep 17 00:00:00 2001
+From: Xichao Zhao <zhao.xichao@vivo.com>
+Date: Fri, 3 Jul 2026 11:07:26 +0100
+Subject: [PATCH 266/286] irqchip/renesas-rzg2l: Remove dev_err_probe() if
+ error is -ENOMEM
+
+[ Upstream commit d36bf356068cdb5499b9bc458db9149c0fd938a2 ]
+
+The dev_err_probe() doesn't do anything when error is '-ENOMEM'.
+
+Therefore, remove the useless call to dev_err_probe(), and just return the
+value instead.
+
+Signed-off-by: Xichao Zhao <zhao.xichao@vivo.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lore.kernel.org/all/20250821093845.564496-1-zhao.xichao@vivo.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 71635c6d9232..82ce5cd71b03 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -579,7 +579,7 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 					      rzg2l_irqc_data);
+ 	if (!irq_domain) {
+ 		pm_runtime_put(dev);
+-		return dev_err_probe(dev, -ENOMEM, "failed to add irq domain\n");
++		return -ENOMEM;
+ 	}
+ 
+ 	register_syscore_ops(&rzg2l_irqc_syscore_ops);
