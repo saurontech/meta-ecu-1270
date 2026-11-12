@@ -1,0 +1,72 @@
+From 3cd18db0ebeb250fd2d1364a44b924c06bf5ae93 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 6 Jul 2026 19:23:26 +0100
+Subject: [PATCH 1212/1853] arm64: dts: renesas: r9a09g077: Add xSPI nodes
+
+commit f0b0d1658a23560efb9e0aef012898c5c59dc447 upstream.
+
+Add device tree nodes for the two xSPI (Expanded SPI) controllers
+integrated into the RZ/T2H (R9A09G077) SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260526204045.3481604-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 40 ++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index 3c6e6969026d..fd0b7e082721 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -877,6 +877,46 @@ mii_conv3: mii-conv@3 {
+ 			};
+ 		};
+ 
++		xspi0: spi@801c0000 {
++			compatible = "renesas,r9a09g077-xspi",
++				     "renesas,r9a09g047-xspi";
++			reg = <0 0x801c0000 0 0x1000>,
++			      <0 0x40000000 0 0x10000000>;
++			reg-names = "regs", "dirmap";
++			interrupts = <GIC_SPI 654 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 655 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "pulse", "err_pulse";
++			clocks = <&cpg CPG_MOD 4>,
++				 <&cpg CPG_CORE R9A09G077_XSPI_CLK0>;
++			clock-names = "ahb", "spi";
++			resets = <&cpg 4>;
++			reset-names = "hresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		xspi1: spi@801c1000 {
++			compatible = "renesas,r9a09g077-xspi",
++				     "renesas,r9a09g047-xspi";
++			reg = <0 0x801c1000 0 0x1000>,
++			      <0 0x50000000 0 0x10000000>;
++			reg-names = "regs", "dirmap";
++			interrupts = <GIC_SPI 656 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 657 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "pulse", "err_pulse";
++			clocks = <&cpg CPG_MOD 5>,
++				 <&cpg CPG_CORE R9A09G077_XSPI_CLK1>;
++			clock-names = "ahb", "spi";
++			resets = <&cpg 5>;
++			reset-names = "hresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		cpg: clock-controller@80280000 {
+ 			compatible = "renesas,r9a09g077-cpg-mssr";
+ 			reg = <0 0x80280000 0 0x1000>,

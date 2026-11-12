@@ -1,0 +1,45 @@
+From 7670b303f6afb2b7bcfeb3e06236694dc8aeaecd Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 6 Jul 2026 19:23:24 +0100
+Subject: [PATCH 1210/1853] memory: renesas-rpc-if: Fix duplicate device name
+ on multi-instance platforms
+
+commit 3fcf9f334d272989b57acc7b94d4eac717206118 upstream.
+
+On platforms with multiple xSPI instances, the driver fails to probe
+additional instances due to duplicate sysfs entries:
+
+  [   86.878242] sysfs: cannot create duplicate filename '/bus/platform/devices/rpc-if-spi'
+
+This occurs because platform_device_alloc() uses pdev->id for the device
+ID, which may be PLATFORM_DEVID_NONE (-1) for multiple instances, causing
+all instances to attempt registration with the same name.
+
+Fix this by using PLATFORM_DEVID_AUTO instead, which automatically assigns
+unique IDs to each device instance, allowing multiple xSPI controllers to
+coexist without naming conflicts.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://patch.msgid.link/20260515115202.1515577-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/memory/renesas-rpc-if.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/memory/renesas-rpc-if.c b/drivers/memory/renesas-rpc-if.c
+index 543e03b8aba8..2fd947ba5cce 100644
+--- a/drivers/memory/renesas-rpc-if.c
++++ b/drivers/memory/renesas-rpc-if.c
+@@ -1038,7 +1038,7 @@ static int rpcif_probe(struct platform_device *pdev)
+ 					     "cannot get enabled spi clk\n");
+ 	}
+ 
+-	vdev = platform_device_alloc(name, pdev->id);
++	vdev = platform_device_alloc(name, PLATFORM_DEVID_AUTO);
+ 	if (!vdev)
+ 		return -ENOMEM;
+ 	vdev->dev.parent = dev;

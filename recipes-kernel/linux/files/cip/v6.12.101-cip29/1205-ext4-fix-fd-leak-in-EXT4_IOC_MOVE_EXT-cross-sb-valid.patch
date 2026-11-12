@@ -1,0 +1,43 @@
+From 913e7b4459d6eef807bb8088b39b890ed6a74ee3 Mon Sep 17 00:00:00 2001
+From: Yun Zhou <yun.zhou@windriver.com>
+Date: Sat, 25 Jul 2026 10:40:29 +0800
+Subject: [PATCH 1205/1853] ext4: fix fd leak in EXT4_IOC_MOVE_EXT cross-sb
+ validation
+
+The backport of upstream commit c143957520c6 ("ext4: validate donor
+file superblock early in EXT4_IOC_MOVE_EXT") uses a bare 'return -EXDEV'
+which is safe upstream because the fd is managed via CLASS(fd) with
+automatic cleanup (commit 8152f8201088 ("fdget(), more trivial
+conversions")).
+
+However, on 6.12.y the ioctl still uses the traditional fdget/fdput
+pattern, so the bare return bypasses fdput(donor) at the mext_out label,
+leaking the file reference.
+
+Fix by setting err and using goto mext_out.
+
+Fixes: 74796e886ca3 ("ext4: validate donor file superblock early in EXT4_IOC_MOVE_EXT")
+Reported-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/ext4/ioctl.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index a8a024bb62b4..e726f9dbc146 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -1372,8 +1372,10 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 			goto mext_out;
+ 		}
+ 
+-		if (file_inode(filp)->i_sb != file_inode(fd_file(donor))->i_sb)
+-			return -EXDEV;
++		if (file_inode(filp)->i_sb != file_inode(fd_file(donor))->i_sb) {
++			err = -EXDEV;
++			goto mext_out;
++		}
+ 
+ 		err = mnt_want_write_file(filp);
+ 		if (err)

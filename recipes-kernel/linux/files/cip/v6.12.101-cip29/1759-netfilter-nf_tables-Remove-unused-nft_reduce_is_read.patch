@@ -1,0 +1,37 @@
+From b1344877fb6d6a6edfb61de56fa079c98a80e5b1 Mon Sep 17 00:00:00 2001
+From: Yue Haibing <yuehaibing@huawei.com>
+Date: Thu, 23 Jul 2026 12:54:17 -0400
+Subject: [PATCH 1759/1853] netfilter: nf_tables: Remove unused
+ nft_reduce_is_readonly()
+
+[ Upstream commit bf6788742b8d6c73de441e088a71de7154f0d4aa ]
+
+Since commit 9e539c5b6d9c ("netfilter: nf_tables: disable expression
+reduction infra") this is unused.
+
+Signed-off-by: Yue Haibing <yuehaibing@huawei.com>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+Stable-dep-of: d07955dd34ec ("netfilter: nft_fib: reject fib expression on the netdev egress hook")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ include/net/netfilter/nf_tables.h | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/include/net/netfilter/nf_tables.h b/include/net/netfilter/nf_tables.h
+index 36964b86d336..92ddecba6d66 100644
+--- a/include/net/netfilter/nf_tables.h
++++ b/include/net/netfilter/nf_tables.h
+@@ -1954,11 +1954,6 @@ static inline u64 nft_net_tstamp(const struct net *net)
+ #define __NFT_REDUCE_READONLY	1UL
+ #define NFT_REDUCE_READONLY	(void *)__NFT_REDUCE_READONLY
+ 
+-static inline bool nft_reduce_is_readonly(const struct nft_expr *expr)
+-{
+-	return expr->ops->reduce == NFT_REDUCE_READONLY;
+-}
+-
+ void nft_reg_track_update(struct nft_regs_track *track,
+ 			  const struct nft_expr *expr, u8 dreg, u8 len);
+ void nft_reg_track_cancel(struct nft_regs_track *track, u8 dreg, u8 len);

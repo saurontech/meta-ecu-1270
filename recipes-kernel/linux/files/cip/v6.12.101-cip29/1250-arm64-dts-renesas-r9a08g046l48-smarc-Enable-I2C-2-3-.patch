@@ -1,0 +1,96 @@
+From 26f25ae34bd6811c5b379c7ddac22021edd00ed0 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:46 +0100
+Subject: [PATCH 1250/1853] arm64: dts: renesas: r9a08g046l48-smarc: Enable
+ I2C{2,3} devices
+
+[ Upstream commit 3f9c7afdfa60eb726c7f8fb8529ab6519a104db8 ]
+
+Enable I2C{2,3} on the RZ/G3L SMARC EVK board.  I2C3 is enabled by
+setting SW SYS.2 to the OFF position.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260528070239.33352-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/r9a08g046l48-smarc.dts   | 29 +++++++++++++++++++
+ .../boot/dts/renesas/rzg3l-smarc-som.dtsi     |  4 +++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+index ef00e316fbde..1512b7df39bd 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+@@ -11,6 +11,7 @@
+ #define RZ_BOOT_MODE3		1
+ #define SW_DPI_EN		0
+ #define SW_GPIO4		1
++#define SW_I3C_EN		0
+ 
+ #define PMOD_GPIO4		0
+ #define PMOD_GPIO6		0
+@@ -33,10 +34,28 @@ / {
+ 		     "renesas,r9a08g046l48", "renesas,r9a08g046";
+ 
+ 	aliases {
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
+ 		serial3 = &scif0;
+ 	};
+ };
+ 
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++#if !SW_I3C_EN
++&i2c3 {
++	pinctrl-0 = <&i2c3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++#endif
++
+ &keys {
+ #if !RZ_BOOT_MODE3 || !SW_GPIO4 || PMOD_GPIO4
+ 	/delete-node/ key-1;
+@@ -52,6 +71,16 @@ &keys {
+ };
+ 
+ &pinctrl {
++	i2c2_pins: i2c2 {
++		pinmux = <RZG3L_PORT_PINMUX(A, 4, 4)>, /* RIIC2_SCL */
++			 <RZG3L_PORT_PINMUX(A, 5, 4)>; /* RIIC2_SDA */
++	};
++
++	i2c3_pins: i2c3 {
++		pinmux = <RZG3L_PORT_PINMUX(2, 0, 4)>, /* RIIC3_SCL */
++			 <RZG3L_PORT_PINMUX(2, 1, 4)>; /* RIIC3_SDA */
++	};
++
+ 	scif0_pins: scif0 {
+ 		pins = "SCIF0_TXD", "SCIF0_RXD";
+ 		power-source = <1800>;
+diff --git a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+index 06c6ccac5ad2..17bf44778398 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+@@ -9,6 +9,10 @@
+  * Please set the below switch position on the SoM and the corresponding macro
+  * on the board DTS:
+  *
++ * Switch position SYS.2, Macro SW_I3C_EN:
++ *      0 - SMARC_I2C_GP is enabled
++ *      1 - I3C is enabled
++ *
+  * Switch position SYS.5, Macro SW_DPI_EN:
+  *      0 - Select multiple SMARC signals active
+  *      1 - Select LCD

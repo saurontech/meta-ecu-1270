@@ -1,0 +1,41 @@
+From afb45d1142b3031f408c0505d1c3e89edc68fb49 Mon Sep 17 00:00:00 2001
+From: Samuel Moelius <samuel.moelius@trailofbits.com>
+Date: Mon, 13 Jul 2026 14:13:28 -0400
+Subject: [PATCH 1070/1853] iio: adc: ad7380: select REGMAP
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit 6697091b386a4e2830bdd38512c87a4befff2b32 ]
+
+The AD7380 driver uses generic regmap types and APIs. However, its
+Kconfig entry does not select REGMAP.
+
+As a result, AD7380 can be enabled from an allnoconfig-derived config
+with SPI_MASTER=y while REGMAP remains unset, causing ad7380.o to fail
+to build.
+
+Fixes: b095217c104b ("iio: adc: ad7380: new driver for AD7380 ADCs")
+Signed-off-by: Samuel Moelius <samuel.moelius@trailofbits.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+Reviewed-by: Nuno Sá <nuno.sa@analog.com>
+Cc: <Stable@vger.kernel.org>
+Signed-off-by: Jonathan Cameron <jic23@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/iio/adc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/iio/adc/Kconfig b/drivers/iio/adc/Kconfig
+index 216f3c9ce183..57fc8f0de7b0 100644
+--- a/drivers/iio/adc/Kconfig
++++ b/drivers/iio/adc/Kconfig
+@@ -188,6 +188,7 @@ config AD7298
+ config AD7380
+ 	tristate "Analog Devices AD7380 ADC driver"
+ 	depends on SPI_MASTER
++	select REGMAP
+ 	select IIO_BUFFER
+ 	select IIO_TRIGGER
+ 	select IIO_TRIGGERED_BUFFER

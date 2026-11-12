@@ -1,0 +1,38 @@
+From 8fe90865b957f5169e4dd5ec6294e43cc846db40 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 14 Jul 2026 18:04:18 -0400
+Subject: [PATCH 1086/1853] PCI: Free saved list without holding pci_bus_sem
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit 1d8a0506f69895b7cfd9d5c4546761c508231a8a ]
+
+Freeing the saved list does not require holding pci_bus_sem, so the
+critical section can be made shorter.
+
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Alex Bennée <alex.bennee@linaro.org> # AVA, AMD GPU
+Link: https://patch.msgid.link/20251113162628.5946-6-ilpo.jarvinen@linux.intel.com
+Stable-dep-of: ee7471fe968d ("PCI: Skip Resizable BAR restore on read error")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/setup-bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 58dddb8b4d1d..fdfac3b49bcc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2400,8 +2400,8 @@ int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
+ 		pci_claim_resource(bridge, i);
+ 		pci_setup_bridge(bridge->subordinate);
+ 	}
+-	free_list(&saved);
+ 	up_read(&pci_bus_sem);
++	free_list(&saved);
+ 
+ 	return ret;
+ }

@@ -1,0 +1,23 @@
+From 720e8bcaa674dfa40b989207d6cdb44b3aaa8db6 Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Wed, 29 Jul 2026 17:49:03 +0200
+Subject: [PATCH 1233/1853] Linux 6.12.99
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 671079b33674..a5fb7f21c310 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 98
++SUBLEVEL = 99
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 

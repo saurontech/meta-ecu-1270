@@ -1,0 +1,3 @@
+# action commit patch reason
+refresh 66adc1e6e3ce 0100-ARM-multi_v7_defconfig-Correct-QCOM_RPMH-and-QCOM_RP.patch Context changed by TI; merged by git 3-way
+refresh 2a4d9e2234c3 1282-dmaengine-sh-rz-dmac-Move-interrupt-request-after-ev.patch Context changed by CIP, not by TI: CIP carries its own drivers/dma/sh/rz-dmac.c backports that stable does not have (e3372baef58d dmaengine: sh: rz-dmac: Allow for multiple DMACs, 03071f9fcb9b dmaengine: sh: rz-dmac: Add RZ/V2H(P) support), so the stable patch does not apply without 3-way on plain CIP either; TI never changed this file; merged by git 3-way

@@ -1,0 +1,49 @@
+From c6bf802eac57931e4e1af238e46b8eef2d269308 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:45 +0100
+Subject: [PATCH 1249/1853] arm64: dts: renesas: r9a08g046: Add audio clock
+ nodes
+
+[ Upstream commit e014a2299806b8724358f7e13579c9384a19435c ]
+
+Add audio_clk1 and audio_clk2 fixed-clock nodes to the RZ/G3L (r9a08g046)
+SoC DTSI. These clocks are external to the SoC and their frequencies are
+board-dependent, so they are defined with clock-frequency = <0> as
+placeholders that must be overridden in board-level DTS files.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260505123708.134069-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g046.dtsi | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+index 70f820f14335..4bb156dc3b23 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+@@ -14,6 +14,20 @@ / {
+ 	#size-cells = <2>;
+ 	interrupt-parent = <&gic>;
+ 
++	audio_clk1: audio1-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by boards that provide it. */
++		clock-frequency = <0>;
++	};
++
++	audio_clk2: audio2-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by boards that provide it. */
++		clock-frequency = <0>;
++	};
++
+ 	cluster0_opp: opp-table-0 {
+ 		compatible = "operating-points-v2";
+ 

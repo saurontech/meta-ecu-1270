@@ -1,0 +1,51 @@
+From 8c81d25db04b7a74be45a281f533b24b052fd2dd Mon Sep 17 00:00:00 2001
+From: AlvinZhou <alvinzhou@mxic.com.tw>
+Date: Mon, 6 Jul 2026 19:23:21 +0100
+Subject: [PATCH 1207/1853] mtd: spi-nor: add support for Macronix Octal flash
+
+commit afe1ea1344bbd3a40be5a2547ff1b13899c5a7fa upstream.
+
+Add manufacturer ID 0xc2 at the end of ID table to allow manufacturer
+fixups to be applied for any Macronix flash. This spares us of adding
+new flash entries for flashes that can be initialized solely based on
+the SFDP data, but still need the manufacturer hooks to set parameters
+that can't be discovered at SFDP parsing time.
+
+The ID is added in order to set the octal DTR methods. SFDP defines a
+"Command Sequences to Change to Octal DDR (8D-8D-8D) Mode" which can
+enable the octal DTR mode. Until that is parsed and used, use the
+local defined method.
+
+Suggested-by: Michael Walle <mwalle@kernel.org>
+Signed-off-by: JaimeLiao <jaimeliao@mxic.com.tw>
+Signed-off-by: AlvinZhou <alvinzhou@mxic.com.tw>
+Link: https://lore.kernel.org/r/20240926141956.2386374-7-alvinzhou.tw@gmail.com
+[ta: update commit message and comment in the code]
+Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/mtd/spi-nor/macronix.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mtd/spi-nor/macronix.c b/drivers/mtd/spi-nor/macronix.c
+index 6127565372c5..b79ed998782b 100644
+--- a/drivers/mtd/spi-nor/macronix.c
++++ b/drivers/mtd/spi-nor/macronix.c
+@@ -213,7 +213,14 @@ static const struct flash_info macronix_nor_parts[] = {
+ 		.name = "mx25l3255e",
+ 		.size = SZ_4M,
+ 		.no_sfdp_flags = SECT_4K,
+-	}
++	},
++	/*
++	 * This spares us of adding new flash entries for flashes that can be
++	 * initialized solely based on the SFDP data, but still need the
++	 * manufacturer hooks to set parameters that can't be discovered at SFDP
++	 * parsing time.
++	 */
++	{ .id = SNOR_ID(0xc2) }
+ };
+ 
+ static void macronix_nor_default_init(struct spi_nor *nor)
