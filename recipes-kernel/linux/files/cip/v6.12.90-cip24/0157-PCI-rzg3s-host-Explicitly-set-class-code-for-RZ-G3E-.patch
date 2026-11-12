@@ -1,0 +1,55 @@
+From 187a7ac2ba9698b68632706d1fdea2b7a508b519 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Thu, 14 May 2026 09:39:30 +0000
+Subject: [PATCH 157/163] PCI: rzg3s-host: Explicitly set class code for RZ/G3E
+ compatibility
+
+[ Upstream commit 1e75d2e9a0e018b53f06dcc2e9345ac10f1aa174 ]
+
+Program the class code register explicitly during PCIe configuration
+initialization. RZ/G3E requires this register to be set, while RZ/G3S
+has these values as hardware defaults.
+
+This configuration is harmless for RZ/G3S where these match the hardware
+defaults, and necessary for RZ/G3E to properly identify the device as a
+PCI bridge.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N EVK
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20260306143423.19562-11-john.madieu.xa@bp.renesas.com
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 1de91ac54069..b3fade8443db 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1103,6 +1103,7 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	u32 mask = GENMASK(31, 8);
+ 	struct resource_entry *ft;
+ 	struct resource *bus;
+ 	u8 subordinate_bus;
+@@ -1126,6 +1127,13 @@ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
+ 	writel_relaxed(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00L);
+ 	writel_relaxed(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00U);
+ 
++	/*
++	 * Explicitly program class code. RZ/G3E requires this configuration.
++	 * Harmless for RZ/G3S where this matches the hardware default.
++	 */
++	rzg3s_pcie_update_bits(host->pcie, PCI_CLASS_REVISION, mask,
++			       field_prep(mask, PCI_CLASS_BRIDGE_PCI_NORMAL));
++
+ 	/* Disable access control to the CFGU */
+ 	writel_relaxed(0, host->axi + RZG3S_PCI_PERM);
+ 
