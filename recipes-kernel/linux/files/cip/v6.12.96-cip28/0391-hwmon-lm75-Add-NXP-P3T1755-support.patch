@@ -1,0 +1,90 @@
+From 2ca5b83b6adbf1da9dd4d80bfac4e574387851df Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 17 Jul 2026 15:14:55 +0200
+Subject: [PATCH 391/399] hwmon: (lm75) Add NXP P3T1755 support
+
+commit d3506653d01c0df1f1c86cd49fe70c98f00f1aef upstream.
+
+Add this LM75 compatible sensor which needs a separate entry because of
+its default sampling time and SMBusAlert handling.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/r/20241218074131.4351-7-wsa+renesas@sang-engineering.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/hwmon/lm75.rst |  6 ++++--
+ drivers/hwmon/lm75.c         | 13 +++++++++++++
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/hwmon/lm75.rst b/Documentation/hwmon/lm75.rst
+index 6adab608dd05..9877ddbbf7c8 100644
+--- a/Documentation/hwmon/lm75.rst
++++ b/Documentation/hwmon/lm75.rst
+@@ -121,9 +121,9 @@ Supported chips:
+ 
+          https://www.ti.com/product/TMP1075
+ 
+-  * NXP LM75B, PCT2075
++  * NXP LM75B, P3T1755, PCT2075
+ 
+-    Prefix: 'lm75b', 'pct2075'
++    Prefix: 'lm75b', 'p3t1755', 'pct2075'
+ 
+     Addresses scanned: none
+ 
+@@ -131,6 +131,8 @@ Supported chips:
+ 
+ 	       https://www.nxp.com/documents/data_sheet/LM75B.pdf
+ 
++               https://www.nxp.com/docs/en/data-sheet/P3T1755.pdf
++
+                https://www.nxp.com/docs/en/data-sheet/PCT2075.pdf
+ 
+   * AMS OSRAM AS6200
+diff --git a/drivers/hwmon/lm75.c b/drivers/hwmon/lm75.c
+index 2c2205aec7d4..a8f95bef68cb 100644
+--- a/drivers/hwmon/lm75.c
++++ b/drivers/hwmon/lm75.c
+@@ -38,6 +38,7 @@ enum lm75_type {		/* keep sorted in alphabetical order */
+ 	max6626,
+ 	max31725,
+ 	mcp980x,
++	p3t1755,
+ 	pct2075,
+ 	stds75,
+ 	stlm75,
+@@ -222,6 +223,13 @@ static const struct lm75_params device_params[] = {
+ 		.default_resolution = 9,
+ 		.default_sample_time = MSEC_PER_SEC / 18,
+ 	},
++	[p3t1755] = {
++		.clr_mask = 1 << 1 | 1 << 7,	/* disable SMBAlert and one-shot */
++		.default_resolution = 12,
++		.default_sample_time = 55,
++		.num_sample_times = 4,
++		.sample_times = (unsigned int []){ 28, 55, 110, 220 },
++	},
+ 	[pct2075] = {
+ 		.default_resolution = 11,
+ 		.default_sample_time = MSEC_PER_SEC / 10,
+@@ -734,6 +742,7 @@ static const struct i2c_device_id lm75_ids[] = {
+ 	{ "max31725", max31725, },
+ 	{ "max31726", max31725, },
+ 	{ "mcp980x", mcp980x, },
++	{ "p3t1755", p3t1755, },
+ 	{ "pct2075", pct2075, },
+ 	{ "stds75", stds75, },
+ 	{ "stlm75", stlm75, },
+@@ -813,6 +822,10 @@ static const struct of_device_id __maybe_unused lm75_of_match[] = {
+ 		.compatible = "maxim,mcp980x",
+ 		.data = (void *)mcp980x
+ 	},
++	{
++		.compatible = "nxp,p3t1755",
++		.data = (void *)p3t1755
++	},
+ 	{
+ 		.compatible = "nxp,pct2075",
+ 		.data = (void *)pct2075

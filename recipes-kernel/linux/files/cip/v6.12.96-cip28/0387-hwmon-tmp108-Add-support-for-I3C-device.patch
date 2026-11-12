@@ -1,0 +1,86 @@
+From 18d46cfb203e70a13f7ae300808e8269d61fad85 Mon Sep 17 00:00:00 2001
+From: Frank Li <Frank.Li@nxp.com>
+Date: Fri, 17 Jul 2026 15:14:51 +0200
+Subject: [PATCH 387/399] hwmon: (tmp108) Add support for I3C device
+
+commit c40655e3310649866c4ebf7a10f0d53802ebdfa9 upstream.
+
+Add support for I3C device in the tmp108 driver to handle the P3T1085
+sensor. Register the I3C device driver to enable I3C functionality for the
+sensor.
+
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+Message-ID: <20241112-p3t1085-v4-2-a1334314b1e6@nxp.com>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/Kconfig  |  1 +
+ drivers/hwmon/tmp108.c | 35 ++++++++++++++++++++++++++++++++++-
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
+index 930fb2cfdc00..c757d0dd546b 100644
+--- a/drivers/hwmon/Kconfig
++++ b/drivers/hwmon/Kconfig
+@@ -2275,6 +2275,7 @@ config SENSORS_TMP108
+ 	tristate "Texas Instruments TMP108"
+ 	depends on I2C
+ 	select REGMAP_I2C
++	select REGMAP_I3C if I3C
+ 	help
+ 	  If you say yes here you get support for Texas Instruments TMP108
+ 	  sensor chips and NXP P3T1085.
+diff --git a/drivers/hwmon/tmp108.c b/drivers/hwmon/tmp108.c
+index bfbea6349a95..1f36af2cd2d9 100644
+--- a/drivers/hwmon/tmp108.c
++++ b/drivers/hwmon/tmp108.c
+@@ -13,6 +13,7 @@
+ #include <linux/mutex.h>
+ #include <linux/of.h>
+ #include <linux/i2c.h>
++#include <linux/i3c/device.h>
+ #include <linux/init.h>
+ #include <linux/jiffies.h>
+ #include <linux/regmap.h>
+@@ -440,7 +441,39 @@ static struct i2c_driver tmp108_driver = {
+ 	.id_table	= tmp108_i2c_ids,
+ };
+ 
+-module_i2c_driver(tmp108_driver);
++static const struct i3c_device_id p3t1085_i3c_ids[] = {
++	I3C_DEVICE(0x011b, 0x1529, NULL),
++	{}
++};
++MODULE_DEVICE_TABLE(i3c, p3t1085_i3c_ids);
++
++static int p3t1085_i3c_probe(struct i3c_device *i3cdev)
++{
++	struct device *dev = i3cdev_to_dev(i3cdev);
++	struct regmap *regmap;
++
++#ifdef CONFIG_REGMAP_I3C
++	regmap = devm_regmap_init_i3c(i3cdev, &tmp108_regmap_config);
++#else
++	regmap = ERR_PTR(-ENODEV);
++#endif
++
++	if (IS_ERR(regmap))
++		return dev_err_probe(dev, PTR_ERR(regmap),
++				     "Failed to register i3c regmap\n");
++
++	return tmp108_common_probe(dev, regmap, "p3t1085_i3c");
++}
++
++static struct i3c_driver p3t1085_driver = {
++	.driver = {
++		.name = "p3t1085_i3c",
++	},
++	.probe = p3t1085_i3c_probe,
++	.id_table = p3t1085_i3c_ids,
++};
++
++module_i3c_i2c_driver(p3t1085_driver, &tmp108_driver)
+ 
+ MODULE_AUTHOR("John Muir <john@jmuir.com>");
+ MODULE_DESCRIPTION("Texas Instruments TMP108 temperature sensor driver");

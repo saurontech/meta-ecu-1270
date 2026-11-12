@@ -1,0 +1,112 @@
+From f3bb8542d4268d3072aa3f767384e61db5219716 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:13 +0100
+Subject: [PATCH 025/399] arm64: dts: renesas: rzg3l-smarc-som: Enable eth1
+ (GBETH1) interface
+
+[ Upstream commit 8a59e4f535a876fe94034f3a1e44b371d1fe363f ]
+
+Enable the Gigabit Ethernet Interface (GBETH1) populated on the RZ/G3L
+SMARC EVK.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430125342.439755-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/rzg3l-smarc-som.dtsi     | 61 +++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+index c7227a865fa4..f53e6332e2f4 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+@@ -10,6 +10,7 @@ / {
+ 
+ 	aliases {
+ 		ethernet0 = &eth0;
++		ethernet1 = &eth1;
+ 	};
+ 
+ 	memory@48000000 {
+@@ -32,6 +33,19 @@ &eth0_rxc_rx_clk {
+ 	clock-frequency = <125000000>;
+ };
+ 
++&eth1 {
++	phy-handle = <&phy1>;
++	phy-mode = "rgmii-id";
++
++	pinctrl-0 = <&eth1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&eth1_rxc_rx_clk {
++	clock-frequency = <125000000>;
++};
++
+ &extal_clk {
+ 	clock-frequency = <24000000>;
+ };
+@@ -56,6 +70,26 @@ phy0: ethernet-phy@7 {
+ 	};
+ };
+ 
++&mdio1 {
++	phy1: ethernet-phy@7 {
++		compatible = "ethernet-phy-id0022.1640";
++		reg = <7>;
++		interrupts-extended = <&icu 16 IRQ_TYPE_LEVEL_LOW>;
++		rxc-skew-psec = <1400>;
++		txc-skew-psec = <1400>;
++		rxdv-skew-psec = <0>;
++		txen-skew-psec = <0>;
++		rxd0-skew-psec = <0>;
++		rxd1-skew-psec = <0>;
++		rxd2-skew-psec = <0>;
++		rxd3-skew-psec = <0>;
++		txd0-skew-psec = <0>;
++		txd1-skew-psec = <0>;
++		txd2-skew-psec = <0>;
++		txd3-skew-psec = <0>;
++	};
++};
++
+ &pinctrl {
+ 	eth0_pins: eth0 {
+ 		txc {
+@@ -83,4 +117,31 @@ ctrl {
+ 				 power-source = <1800>;
+ 		};
+ 	};
++
++	eth1_pins: eth1 {
++		txc {
++			pinmux = <RZG3L_PORT_PINMUX(E, 1, 1)>;  /* ETH1_TXC_REF_CLK */
++			power-source = <1800>;
++			output-enable;
++			drive-strength-microamp = <5200>;
++		};
++
++		ctrl {
++			pinmux = <RZG3L_PORT_PINMUX(D, 0, 1)>, /* MDIO */
++				 <RZG3L_PORT_PINMUX(D, 1, 1)>, /* MDC */
++				 <RZG3L_PORT_PINMUX(D, 2, 1)>, /* RX_CTL */
++				 <RZG3L_PORT_PINMUX(D, 3, 1)>, /* TX_CTL */
++				 <RZG3L_PORT_PINMUX(E, 0, 1)>, /* RXC */
++				 <RZG3L_PORT_PINMUX(E, 2, 1)>, /* TXD0 */
++				 <RZG3L_PORT_PINMUX(E, 3, 1)>, /* TXD1 */
++				 <RZG3L_PORT_PINMUX(E, 4, 1)>, /* TXD2 */
++				 <RZG3L_PORT_PINMUX(E, 5, 1)>, /* TXD3 */
++				 <RZG3L_PORT_PINMUX(E, 6, 1)>, /* RXD0 */
++				 <RZG3L_PORT_PINMUX(E, 7, 1)>, /* RXD1 */
++				 <RZG3L_PORT_PINMUX(F, 0, 1)>, /* RXD2 */
++				 <RZG3L_PORT_PINMUX(F, 1, 1)>, /* RXD3 */
++				 <RZG3L_PORT_PINMUX(F, 2, 15)>; /* PHY_INTR */
++				 power-source = <1800>;
++		};
++	};
+ };

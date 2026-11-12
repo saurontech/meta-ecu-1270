@@ -1,0 +1,32 @@
+From 2cba6bfc9ac3ec4b62c915a0423f92a455d6f837 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 17 Jul 2026 15:14:54 +0200
+Subject: [PATCH 390/399] dt-bindings: hwmon: lm75: Add NXP P3T1755
+
+commit 844029c59d44c590871b93fdc9720245a71f63c4 upstream.
+
+Add this LM75 compatible sensor which needs a separate entry because of
+its default sampling time and SMBusAlert handling.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20241218074131.4351-6-wsa+renesas@sang-engineering.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/hwmon/lm75.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/hwmon/lm75.yaml b/Documentation/devicetree/bindings/hwmon/lm75.yaml
+index 29bd7460cc26..c38255243f57 100644
+--- a/Documentation/devicetree/bindings/hwmon/lm75.yaml
++++ b/Documentation/devicetree/bindings/hwmon/lm75.yaml
+@@ -28,6 +28,7 @@ properties:
+       - maxim,max31725
+       - maxim,max31726
+       - maxim,mcp980x
++      - nxp,p3t1755
+       - nxp,pct2075
+       - st,stds75
+       - st,stlm75

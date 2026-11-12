@@ -1,0 +1,38 @@
+From 34a852ab56183cc4ad125b97a7a1d183451611e8 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:02 +0100
+Subject: [PATCH 014/399] pinctrl: renesas: rzg2l: Update OEN pin validation to
+ use exact match
+
+[ Upstream commit da4a37540b780c386eb2362bfcc638f769918cb1 ]
+
+The RZ/G2L SoC uses pin 0 from a port for OEN while RZ/G3L uses pin 1. The
+existing greater-than comparison against oen_max_pin in
+rzg2l_pin_to_oen_bit() would incorrectly accept any pin below that value
+rather than enforcing the single valid OEN pin for each SoC. Replace the
+range check with an exact equality test so that only the designated OEN
+pin is accepted.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430093422.74812-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index 9136cc352b9c..370ffb829287 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -1126,7 +1126,7 @@ static int rzg2l_pin_to_oen_bit(struct rzg2l_pinctrl *pctrl, unsigned int _pin)
+ 	u64 caps = FIELD_GET(PIN_CFG_MASK, *pin_data);
+ 	u8 pin = RZG2L_PIN_ID_TO_PIN(_pin);
+ 
+-	if (pin > pctrl->data->hwcfg->oen_max_pin)
++	if (pin != pctrl->data->hwcfg->oen_max_pin)
+ 		return -EINVAL;
+ 
+ 	/*

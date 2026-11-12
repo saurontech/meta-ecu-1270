@@ -1,0 +1,73 @@
+From c27012ad074146b76e9cda962f5daeb949257d35 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 17 Jul 2026 15:14:59 +0200
+Subject: [PATCH 395/399] hwmon: (lm75) Remove superfluous 'client' member from
+ private struct
+
+commit 7a5c24da4b3c96949a6d93c3c7fa4133c6f2b88e upstream.
+
+The regmap-only conversion allows us to store the client-pointer as the
+'context' parameter for regmap. This not only makes the private struct
+smaller, but also allows proper separation of I2C and I3C in the future.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/r/20241219225522.3490-10-wsa+renesas@sang-engineering.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/lm75.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/hwmon/lm75.c b/drivers/hwmon/lm75.c
+index 4d0fd1c93c63..0f034110daed 100644
+--- a/drivers/hwmon/lm75.c
++++ b/drivers/hwmon/lm75.c
+@@ -105,9 +105,7 @@ static const unsigned short normal_i2c[] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c,
+ #define LM75_REG_MAX		0x03
+ #define PCT2075_REG_IDLE	0x04
+ 
+-/* Each client has this additional data */
+ struct lm75_data {
+-	struct i2c_client		*client;
+ 	struct regmap			*regmap;
+ 	u16				orig_conf;
+ 	u8				resolution;	/* In bits, 9 to 16 */
+@@ -572,8 +570,8 @@ static bool lm75_is_volatile_reg(struct device *dev, unsigned int reg)
+ 
+ static int lm75_i2c_reg_read(void *context, unsigned int reg, unsigned int *val)
+ {
+-	struct lm75_data *data = context;
+-	struct i2c_client *client = data->client;
++	struct i2c_client *client = context;
++	struct lm75_data *data = i2c_get_clientdata(client);
+ 	int ret;
+ 
+ 	if (reg == LM75_REG_CONF) {
+@@ -592,8 +590,8 @@ static int lm75_i2c_reg_read(void *context, unsigned int reg, unsigned int *val)
+ 
+ static int lm75_i2c_reg_write(void *context, unsigned int reg, unsigned int val)
+ {
+-	struct lm75_data *data = context;
+-	struct i2c_client *client = data->client;
++	struct i2c_client *client = context;
++	struct lm75_data *data = i2c_get_clientdata(client);
+ 
+ 	if (reg == PCT2075_REG_IDLE ||
+ 	    (reg == LM75_REG_CONF && !data->params->config_reg_16bits))
+@@ -645,14 +643,13 @@ static int lm75_probe(struct i2c_client *client)
+ 	/* needed by custom regmap callbacks */
+ 	dev_set_drvdata(dev, data);
+ 
+-	data->client = client;
+ 	data->kind = (uintptr_t)i2c_get_match_data(client);
+ 
+ 	err = devm_regulator_get_enable(dev, "vs");
+ 	if (err)
+ 		return err;
+ 
+-	data->regmap = devm_regmap_init(dev, &lm75_i2c_regmap_bus, data,
++	data->regmap = devm_regmap_init(dev, &lm75_i2c_regmap_bus, client,
+ 					&lm75_regmap_config);
+ 	if (IS_ERR(data->regmap))
+ 		return PTR_ERR(data->regmap);

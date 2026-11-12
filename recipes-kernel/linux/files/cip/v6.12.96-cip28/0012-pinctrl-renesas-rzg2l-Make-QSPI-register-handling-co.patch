@@ -1,0 +1,85 @@
+From 8cf48477c14270af4ed64c45e1e92f0e7890e795 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:00 +0100
+Subject: [PATCH 012/399] pinctrl: renesas: rzg2l: Make QSPI register handling
+ conditional
+
+[ Upstream commit 55793d3ddf774e9bbeed3c940fb19d6c1124b6d3 ]
+
+The QSPI register at offset 0x3008 is not present on all SoCs supported by
+the RZ/G2L pinctrl driver. Unconditionally reading and writing this
+register during suspend/resume on hardware that lacks it can cause
+undefined behaviour.
+
+Add a qspi field to rzg2l_register_offsets to allow per-SoC declaration of
+the QSPI register offset, and guard the suspend/resume accesses with a
+check on that field. Populate the offset only for the RZ/{G2L,G2LC,G2UL,
+Five} hardware configuration, which is where the register is known to
+exist.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430093422.74812-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index f7cb57e26f90..1525dedca76e 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -145,7 +145,7 @@
+ #define SMT(off)		(0x3400 + (off) * 8)
+ #define SD_CH(off, ch)		((off) + (ch) * 4)
+ #define ETH_POC(off, ch)	((off) + (ch) * 4)
+-#define QSPI			(0x3008)
++#define QSPI			(0x3008) /* known on RZ/{G2L,G2LC,G2UL,Five} only */
+ 
+ #define PVDD_2500		2	/* I/O domain voltage 2.5V */
+ #define PVDD_1800		1	/* I/O domain voltage <= 1.8V */
+@@ -220,12 +220,14 @@ static const struct pin_config_item renesas_rzv2h_conf_items[] = {
+  * @sd_ch: SD_CH register offset
+  * @eth_poc: ETH_POC register offset
+  * @oen: OEN register offset
++ * @qspi: QSPI register offset
+  */
+ struct rzg2l_register_offsets {
+ 	u16 pwpr;
+ 	u16 sd_ch;
+ 	u16 eth_poc;
+ 	u16 oen;
++	u16 qspi;
+ };
+ 
+ /**
+@@ -3306,7 +3308,8 @@ static int rzg2l_pinctrl_suspend_noirq(struct device *dev)
+ 			cache->eth_poc[i] = readb(pctrl->base + ETH_POC(regs->eth_poc, i));
+ 	}
+ 
+-	cache->qspi = readb(pctrl->base + QSPI);
++	if (regs->qspi)
++		cache->qspi = readb(pctrl->base + regs->qspi);
+ 	cache->oen = readb(pctrl->base + pctrl->data->hwcfg->regs.oen);
+ 
+ 	if (!atomic_read(&pctrl->wakeup_path))
+@@ -3332,7 +3335,8 @@ static int rzg2l_pinctrl_resume_noirq(struct device *dev)
+ 			return ret;
+ 	}
+ 
+-	writeb(cache->qspi, pctrl->base + QSPI);
++	if (regs->qspi)
++		writeb(cache->qspi, pctrl->base + regs->qspi);
+ 
+ 	raw_spin_lock_irqsave(&pctrl->lock, flags);
+ 	rzg2l_oen_write_with_pwpr(pctrl, cache->oen);
+@@ -3390,6 +3394,7 @@ static const struct rzg2l_hwcfg rzg2l_hwcfg = {
+ 		.sd_ch = 0x3000,
+ 		.eth_poc = 0x300c,
+ 		.oen = 0x3018,
++		.qspi = QSPI,
+ 	},
+ 	.iolh_groupa_ua = {
+ 		/* 3v3 power source */
