@@ -1,0 +1,34 @@
+From f47fd5c259c05141d8d6a6c90ba20d24859ddd4f Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:46 +0200
+Subject: [PATCH 583/600] spi: rzv2h-rspi: fix rzv2h_rspi_transfer_one()
+ indentation
+
+commit fb0140774aff45b8dc326987cc1da89484ecb081 upstream.
+
+Add the missing space to align to open pararenthesis.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index 1db7e4e5d64e..8cffc9cb6b6b 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -225,8 +225,8 @@ static int rzv2h_rspi_receive(struct rzv2h_rspi_priv *rspi, void *rxbuf,
+ }
+ 
+ static int rzv2h_rspi_transfer_one(struct spi_controller *controller,
+-				  struct spi_device *spi,
+-				  struct spi_transfer *transfer)
++				   struct spi_device *spi,
++				   struct spi_transfer *transfer)
+ {
+ 	struct rzv2h_rspi_priv *rspi = spi_controller_get_devdata(controller);
+ 	unsigned int words_to_transfer, i;

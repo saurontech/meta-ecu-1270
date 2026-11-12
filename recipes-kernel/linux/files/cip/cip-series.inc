@@ -19,8 +19,9 @@ CIP_BATCHES = " \
     v6.12.88-cip23 \
     v6.12.90-cip24 \
     v6.12.92-cip25 \
+    v6.12.94-cip26 \
 "
 # Stable version of the last folder
-LINUX_VERSION:j722s-ecu1270 = "6.12.92"
+LINUX_VERSION:j722s-ecu1270 = "6.12.94"
 # meta-ti sets PV, not LINUX_VERSION; keep PV in step with the CIP stable version
 PV:j722s-ecu1270 = "${LINUX_VERSION}+git"

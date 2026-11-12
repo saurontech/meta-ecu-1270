@@ -1,0 +1,38 @@
+From ab52a57914cae7b45d671bad1f62020cf9545435 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:52 +0200
+Subject: [PATCH 589/600] spi: rzv2h-rspi: set TX FIFO threshold to 0
+
+commit a886baaaa6e12a9b7d5a9687d11d3b895f1b87c9 upstream.
+
+In PIO mode we send data word-by-word, and wait for the received data
+to be available after each sent word, making no use of the TX interrupt.
+
+In DMA mode, we need to set the RX and TX FIFO thresholds to 0, as
+described in the User Manual.
+
+In preparation for implementing DMA support, set TX FIFO threshold to 0,
+as RX FIFO threshold is already 0.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-8-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index f0bbbd21c763..83bb0b7400b2 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -501,7 +501,7 @@ static int rzv2h_rspi_prepare_message(struct spi_controller *ctlr,
+ 		writeb(0, rspi->base + RSPI_SSLP);
+ 
+ 	/* Setup FIFO thresholds */
+-	conf16 = FIELD_PREP(RSPI_SPDCR2_TTRG, rspi->info->fifo_size - 1);
++	conf16 = FIELD_PREP(RSPI_SPDCR2_TTRG, 0);
+ 	conf16 |= FIELD_PREP(RSPI_SPDCR2_RTRG, 0);
+ 	writew(conf16, rspi->base + RSPI_SPDCR2);
+ 

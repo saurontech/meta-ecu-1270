@@ -1,0 +1,37 @@
+From 8b6f69eeec7a505c9a864a61c004029dd773e30c Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:48 +0200
+Subject: [PATCH 585/600] spi: rzv2h-rspi: do not set SPI_TRANS_FAIL_IO
+
+commit 218917659df165cff72439480929e68a6e127b55 upstream.
+
+Setting SPI_TRANS_FAIL_IO has no effect if the transfer completes in the
+current context, as it is only handled when .transfer_one() returns > 0,
+when the SPI core must wait for the SPI transfer to complete.
+
+Do not set SPI_TRANS_FAIL_IO as we either return an error or 0, since we
+do our own waiting.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-4-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index beea4fb83d10..02424d4e722a 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -247,9 +247,6 @@ static int rzv2h_rspi_transfer_one(struct spi_controller *controller,
+ 
+ 	rzv2h_rspi_clear_all_irqs(rspi);
+ 
+-	if (ret)
+-		transfer->error = SPI_TRANS_FAIL_IO;
+-
+ 	return ret;
+ }
+ 

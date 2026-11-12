@@ -1,0 +1,18 @@
+From e00178e6fe853ac0059d15909043e0fd5c19ece9 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Mon, 29 Jun 2026 08:06:06 +0900
+Subject: [PATCH 600/600] CIP: Bump version suffix to -cip26 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 9e63432b2e14..027735f7691f 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip25
++-cip26
