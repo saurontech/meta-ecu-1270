@@ -1,0 +1,37 @@
+From 03bbd0f5bd030816310bba87105aa3c3b0e7dfa2 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 4 May 2026 06:49:36 +0000
+Subject: [PATCH 002/432] dt-bindings: clock: renesas,r9a09g057-cpg: Add USB3.0
+ core clocks
+
+commit 280b7cdddc3d96c4887fdb31b6766e4db1b2f2a3 upstream.
+
+Add definitions for USB3.0 core clocks in the R9A09G057 CPG DT bindings
+header file.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251101050034.738807-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ include/dt-bindings/clock/renesas,r9a09g057-cpg.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g057-cpg.h b/include/dt-bindings/clock/renesas,r9a09g057-cpg.h
+index 5346a898ab60..f91d7f72922a 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g057-cpg.h
++++ b/include/dt-bindings/clock/renesas,r9a09g057-cpg.h
+@@ -22,5 +22,9 @@
+ #define R9A09G057_GBETH_0_CLK_PTP_REF_I		11
+ #define R9A09G057_GBETH_1_CLK_PTP_REF_I		12
+ #define R9A09G057_SPI_CLK_SPI			13
++#define R9A09G057_USB3_0_REF_ALT_CLK_P		14
++#define R9A09G057_USB3_0_CLKCORE		15
++#define R9A09G057_USB3_1_REF_ALT_CLK_P		16
++#define R9A09G057_USB3_1_CLKCORE		17
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G057_CPG_H__ */

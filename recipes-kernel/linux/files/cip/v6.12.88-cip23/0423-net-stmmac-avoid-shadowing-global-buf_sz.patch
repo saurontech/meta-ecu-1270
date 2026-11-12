@@ -1,0 +1,48 @@
+From 846f4cedf0b97a11b4849278151547682af919fa Mon Sep 17 00:00:00 2001
+From: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
+Date: Sun, 10 May 2026 10:22:45 -0400
+Subject: [PATCH 423/432] net: stmmac: avoid shadowing global buf_sz
+
+[ Upstream commit 876cfb20e8892143c0c967b3657074f9131f9b5f ]
+
+stmmac_rx() declares a local variable named "buf_sz" but there is also
+a global variable for a module parameter which is called the same. To
+avoid confusion, rename the local variable.
+
+Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Reviewed-by: Furong Xu <0x1207@gmail.com>
+Link: https://patch.msgid.link/E1tpswi-005U6C-Py@rmk-PC.armlinux.org.uk
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Stable-dep-of: 0bb05e6adfa9 ("net: stmmac: Prevent NULL deref when RX memory exhausted")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 5016b8c39b68..8d32d4fc6773 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -5406,10 +5406,10 @@ static int stmmac_rx(struct stmmac_priv *priv, int limit, u32 queue)
+ 	struct sk_buff *skb = NULL;
+ 	struct stmmac_xdp_buff ctx;
+ 	int xdp_status = 0;
+-	int buf_sz;
++	int bufsz;
+ 
+ 	dma_dir = page_pool_get_dma_dir(rx_q->page_pool);
+-	buf_sz = DIV_ROUND_UP(priv->dma_conf.dma_buf_sz, PAGE_SIZE) * PAGE_SIZE;
++	bufsz = DIV_ROUND_UP(priv->dma_conf.dma_buf_sz, PAGE_SIZE) * PAGE_SIZE;
+ 	limit = min(priv->dma_conf.dma_rx_size - 1, (unsigned int)limit);
+ 
+ 	if (netif_msg_rx_status(priv)) {
+@@ -5524,7 +5524,7 @@ static int stmmac_rx(struct stmmac_priv *priv, int limit, u32 queue)
+ 			dma_sync_single_for_cpu(priv->device, buf->addr,
+ 						buf1_len, dma_dir);
+ 
+-			xdp_init_buff(&ctx.xdp, buf_sz, &rx_q->xdp_rxq);
++			xdp_init_buff(&ctx.xdp, bufsz, &rx_q->xdp_rxq);
+ 			xdp_prepare_buff(&ctx.xdp, page_address(buf->page),
+ 					 buf->page_offset, buf1_len, true);
+ 
