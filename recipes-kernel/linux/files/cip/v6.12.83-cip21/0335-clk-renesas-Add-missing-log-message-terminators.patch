@@ -1,0 +1,115 @@
+From c09567be3545bd2e3c17888223af1487b7f5d576 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Mon, 13 Apr 2026 13:17:33 -0400
+Subject: [PATCH 335/497] clk: renesas: Add missing log message terminators
+
+commit 4fef3fd633be4a1a18c490a63f4131284f6ee0f4 upstream.
+
+Complete printed messages should be terminated by newline characters.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Brian Masney <bmasney@redhat.com>
+Link: https://patch.msgid.link/cd0b3624066b80ed0bb00d489c99e2c1a06d755f.1768480559.git.geert+renesas@glider.be
+Signed-off-by: Chris Brandt <chris.brandt@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/clk-vbattb.c       | 4 ++--
+ drivers/clk/renesas/renesas-cpg-mssr.c | 2 +-
+ drivers/clk/renesas/rzg2l-cpg.c        | 6 +++---
+ drivers/clk/renesas/rzv2h-cpg.c        | 6 +++---
+ 4 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/clk/renesas/clk-vbattb.c b/drivers/clk/renesas/clk-vbattb.c
+index ff9d1ead455c..2a961775b1d8 100644
+--- a/drivers/clk/renesas/clk-vbattb.c
++++ b/drivers/clk/renesas/clk-vbattb.c
+@@ -69,11 +69,11 @@ static void vbattb_clk_action(void *data)
+ 
+ 	ret = reset_control_assert(rstc);
+ 	if (ret)
+-		dev_err(dev, "Failed to de-assert reset!");
++		dev_err(dev, "Failed to de-assert reset!\n");
+ 
+ 	ret = pm_runtime_put_sync(dev);
+ 	if (ret < 0)
+-		dev_err(dev, "Failed to runtime suspend!");
++		dev_err(dev, "Failed to runtime suspend!\n");
+ 
+ 	of_clk_del_provider(dev->of_node);
+ }
+diff --git a/drivers/clk/renesas/renesas-cpg-mssr.c b/drivers/clk/renesas/renesas-cpg-mssr.c
+index 92f76b937e83..e4d42e24485d 100644
+--- a/drivers/clk/renesas/renesas-cpg-mssr.c
++++ b/drivers/clk/renesas/renesas-cpg-mssr.c
+@@ -412,7 +412,7 @@ struct clk *cpg_mssr_clk_src_twocell_get(struct of_phandle_args *clkspec,
+ 	}
+ 
+ 	if (IS_ERR(clk))
+-		dev_err(dev, "Cannot get %s clock %u: %ld", type, clkidx,
++		dev_err(dev, "Cannot get %s clock %u: %ld\n", type, clkidx,
+ 		       PTR_ERR(clk));
+ 	else
+ 		dev_dbg(dev, "clock (%u, %u) is %pC at %lu Hz\n",
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index d7be966bf394..7d9d41f4f439 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -980,7 +980,7 @@ static int rzg2l_cpg_sipll5_set_rate(struct clk_hw *hw,
+ 	ret = readl_poll_timeout(priv->base + CPG_SIPLL5_MON, val,
+ 				 !(val & CPG_SIPLL5_MON_PLL5_LOCK), 100, 250000);
+ 	if (ret) {
+-		dev_err(priv->dev, "failed to release pll5 lock");
++		dev_err(priv->dev, "failed to release pll5 lock\n");
+ 		return ret;
+ 	}
+ 
+@@ -1007,7 +1007,7 @@ static int rzg2l_cpg_sipll5_set_rate(struct clk_hw *hw,
+ 	ret = readl_poll_timeout(priv->base + CPG_SIPLL5_MON, val,
+ 				 (val & CPG_SIPLL5_MON_PLL5_LOCK), 100, 250000);
+ 	if (ret) {
+-		dev_err(priv->dev, "failed to lock pll5");
++		dev_err(priv->dev, "failed to lock pll5\n");
+ 		return ret;
+ 	}
+ 
+@@ -1215,7 +1215,7 @@ static struct clk
+ 	}
+ 
+ 	if (IS_ERR(clk))
+-		dev_err(dev, "Cannot get %s clock %u: %ld", type, clkidx,
++		dev_err(dev, "Cannot get %s clock %u: %ld\n", type, clkidx,
+ 			PTR_ERR(clk));
+ 	else
+ 		dev_dbg(dev, "clock (%u, %u) is %pC at %lu Hz\n",
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 2f54458778b8..170dbe452c34 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -602,7 +602,7 @@ static int rzv2h_cpg_pll_set_rate(struct pll_clk *pll_clk,
+ 					val, !(val & CPG_PLL_MON_LOCK),
+ 					100, 2000);
+ 	if (ret) {
+-		dev_err(priv->dev, "Failed to put PLLDSI into standby mode");
++		dev_err(priv->dev, "Failed to put PLLDSI into standby mode\n");
+ 		return ret;
+ 	}
+ 
+@@ -630,7 +630,7 @@ static int rzv2h_cpg_pll_set_rate(struct pll_clk *pll_clk,
+ 					val, (val & CPG_PLL_MON_LOCK),
+ 					100, 2000);
+ 	if (ret) {
+-		dev_err(priv->dev, "Failed to put PLLDSI into normal mode");
++		dev_err(priv->dev, "Failed to put PLLDSI into normal mode\n");
+ 		return ret;
+ 	}
+ 
+@@ -1023,7 +1023,7 @@ static struct clk
+ 	}
+ 
+ 	if (IS_ERR(clk))
+-		dev_err(dev, "Cannot get %s clock %u: %ld", type, clkidx,
++		dev_err(dev, "Cannot get %s clock %u: %ld\n", type, clkidx,
+ 			PTR_ERR(clk));
+ 	else
+ 		dev_dbg(dev, "clock (%u, %u) is %pC at %lu Hz\n",

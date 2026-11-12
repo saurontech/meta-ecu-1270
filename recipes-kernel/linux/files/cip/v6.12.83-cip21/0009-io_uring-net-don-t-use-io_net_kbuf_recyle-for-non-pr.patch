@@ -1,0 +1,51 @@
+From f7a76e3adf03f323feb2cd5c965c91ced3fbd79d Mon Sep 17 00:00:00 2001
+From: Jens Axboe <axboe@kernel.dk>
+Date: Wed, 20 Aug 2025 20:03:31 -0600
+Subject: [PATCH 009/497] io_uring/net: don't use io_net_kbuf_recyle() for
+ non-provided cases
+
+Commit 15ba5e51e689ceb1c2e921c5180a70c88cfdc8e9 upstream.
+
+A previous commit used io_net_kbuf_recyle() for any network helper that
+did IO and needed partial retry. However, that's only needed if the
+opcode does buffer selection, which isnt support for sendzc, sendmsg_zc,
+or sendmsg. Just remove them - they don't do any harm, but it is a bit
+confusing when reading the code.
+
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ io_uring/net.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/io_uring/net.c b/io_uring/net.c
+index a32767725727..e672966de4cb 100644
+--- a/io_uring/net.c
++++ b/io_uring/net.c
+@@ -578,7 +578,7 @@ int io_sendmsg(struct io_kiocb *req, unsigned int issue_flags)
+ 			kmsg->msg.msg_controllen = 0;
+ 			kmsg->msg.msg_control = NULL;
+ 			sr->done_io += ret;
+-			return io_net_kbuf_recyle(req, kmsg, ret);
++			return -EAGAIN;
+ 		}
+ 		if (ret == -ERESTARTSYS)
+ 			ret = -EINTR;
+@@ -1448,7 +1448,7 @@ int io_send_zc(struct io_kiocb *req, unsigned int issue_flags)
+ 			zc->len -= ret;
+ 			zc->buf += ret;
+ 			zc->done_io += ret;
+-			return io_net_kbuf_recyle(req, kmsg, ret);
++			return -EAGAIN;
+ 		}
+ 		if (ret == -ERESTARTSYS)
+ 			ret = -EINTR;
+@@ -1508,7 +1508,7 @@ int io_sendmsg_zc(struct io_kiocb *req, unsigned int issue_flags)
+ 
+ 		if (ret > 0 && io_net_retry(sock, flags)) {
+ 			sr->done_io += ret;
+-			return io_net_kbuf_recyle(req, kmsg, ret);
++			return -EAGAIN;
+ 		}
+ 		if (ret == -ERESTARTSYS)
+ 			ret = -EINTR;

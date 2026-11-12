@@ -1,0 +1,39 @@
+From c4acf3ca122e83297c882a200aad594bdea4e487 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 10 Apr 2026 20:02:05 +0300
+Subject: [PATCH 242/497] clk: renesas: r9a09g077: Add TSU module clock
+
+commit 79276fb06d2f7769613abeeed65d69013137cefb upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs have a TSU
+peripheral which is controlled by a module clock.
+
+The TSU module clock is enabled in register MSTPCRD (0x30c), at bit 7,
+resulting in a (0x30c - 0x300) / 4 * 100 + 7 = 307 index.
+
+Add it to the list of module clocks.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251023081925.2412325-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[cosmin.tanislav: resolve merge conflict]
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index 3d2a67f57022..af54dadb3233 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -220,6 +220,7 @@ static const struct mssr_mod_clk r9a09g077_mod_clks[] __initconst = {
+ 	DEF_MOD("adc0", 206, R9A09G077_CLK_PCLKH),
+ 	DEF_MOD("adc1", 207, R9A09G077_CLK_PCLKH),
+ 	DEF_MOD("adc2", 225, R9A09G077_CLK_PCLKM),
++	DEF_MOD("tsu", 307, R9A09G077_CLK_PCLKL),
+ 	DEF_MOD("canfd", 310, R9A09G077_CLK_PCLKM),
+ 	DEF_MOD("gmac0", 400, R9A09G077_CLK_PCLKM),
+ 	DEF_MOD("ethsw", 401, R9A09G077_CLK_PCLKM),

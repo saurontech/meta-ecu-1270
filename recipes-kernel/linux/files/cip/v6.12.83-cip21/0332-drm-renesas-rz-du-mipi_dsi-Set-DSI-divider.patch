@@ -1,0 +1,64 @@
+From 800c9874f3e92b75b4d5bc218961ca345ee1e277 Mon Sep 17 00:00:00 2001
+From: Chris Brandt <chris.brandt@renesas.com>
+Date: Mon, 13 Apr 2026 13:17:30 -0400
+Subject: [PATCH 332/497] drm: renesas: rz-du: mipi_dsi: Set DSI divider
+
+commit fb797a70108f3fda83fde6dea30bee4be7d5df8b upstream.
+
+Before the MIPI DSI clock source can be configured, the target divide
+ratio needs to be set.
+
+Signed-off-by: Chris Brandt <chris.brandt@renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Biju Das <biju.das.jz@bp.renesas.com>
+Fixes: 5a4326f2e3b1 ("clk: renesas: rzg2l: Remove DSI clock rate restrictions")
+Link: https://patch.msgid.link/20260227015216.2721504-1-chris.brandt@renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Chris Brandt <chris.brandt@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+index 44c47556ae46..a97ff650af97 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+@@ -1122,6 +1122,7 @@ static int rzg2l_mipi_dsi_host_attach(struct mipi_dsi_host *host,
+ 				      struct mipi_dsi_device *device)
+ {
+ 	struct rzg2l_mipi_dsi *dsi = host_to_rzg2l_mipi_dsi(host);
++	int bpp;
+ 	int ret;
+ 
+ 	if (device->lanes > dsi->num_data_lanes) {
+@@ -1131,7 +1132,8 @@ static int rzg2l_mipi_dsi_host_attach(struct mipi_dsi_host *host,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (mipi_dsi_pixel_format_to_bpp(device->format)) {
++	bpp = mipi_dsi_pixel_format_to_bpp(device->format);
++	switch (bpp) {
+ 	case 24:
+ 		break;
+ 	case 18:
+@@ -1162,6 +1164,18 @@ static int rzg2l_mipi_dsi_host_attach(struct mipi_dsi_host *host,
+ 
+ 	drm_bridge_add(&dsi->bridge);
+ 
++	/*
++	 * Report the required division ratio setting for the MIPI clock dividers.
++	 *
++	 * vclk * bpp = hsclk * 8 * num_lanes
++	 *
++	 * vclk * DSI_AB_divider = hsclk * 16
++	 *
++	 *   which simplifies to...
++	 * DSI_AB_divider = bpp * 2 / num_lanes
++	 */
++	rzg2l_cpg_dsi_div_set_divider(bpp * 2 / dsi->lanes, PLL5_TARGET_DSI);
++
+ 	return 0;
+ }
+ 
