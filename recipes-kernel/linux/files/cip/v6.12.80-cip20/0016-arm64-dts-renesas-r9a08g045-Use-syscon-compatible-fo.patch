@@ -1,0 +1,32 @@
+From 9d4dac59bc3dde27c47fcf28e0ef9240f0aa4cb0 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 13:06:29 +0200
+Subject: [PATCH 016/283] arm64: dts: renesas: r9a08g045: Use syscon compatible
+ for the system controller
+
+RZ/G3S PCIe driver needs the system controller syscon to be able to set
+its registers. For this, it uses syscon_node_to_regmap(). But, in v6.12
+CIP, the syscon_node_to_regmap() returns ERR_PTR(-EINVAL) if the node
+for which it is called don't have the syscon compatible.
+
+Add syscon compatible for the system controller.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 3f56fff7d9b0..1a2e6f20e113 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -473,7 +473,7 @@ cpg: clock-controller@11010000 {
+ 		};
+ 
+ 		sysc: system-controller@11020000 {
+-			compatible = "renesas,r9a08g045-sysc";
++			compatible = "renesas,r9a08g045-sysc", "syscon";
+ 			reg = <0 0x11020000 0 0x10000>;
+ 			interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,

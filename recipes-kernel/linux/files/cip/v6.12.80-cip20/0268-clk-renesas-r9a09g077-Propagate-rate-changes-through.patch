@@ -1,0 +1,45 @@
+From 00bd31d1f069c1df1326408849a91a4572bb6b3c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 7 Apr 2026 11:58:01 +0100
+Subject: [PATCH 268/283] clk: renesas: r9a09g077: Propagate rate changes
+ through mux parents
+
+commit e68100006bedc361197e6cb9da1cced87ee3e5b0 upstream.
+
+Enable CLK_SET_RATE_PARENT for mux clocks so that rate changes can properly
+propagate to their parent clocks. Several clocks in the R9A09G077 CPG tree
+depend on upstream PLL or divider outputs being recalculated when a child
+requests a new frequency. Without this flag, rate adjustments stop at the
+mux layer, leaving parent rates unchanged and preventing the clock tree
+from converging on the intended values.
+
+Set the flag in DEF_MUX to ensure that parent clocks participate in rate
+negotiation, which is required for correct operation of the display and
+peripheral related clocks being added for RZ/T2H support.
+
+Fixes: 065fe720eec6e ("clk: renesas: Add support for R9A09G077 SoC")
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251121090853.5220-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[PL: fixed merge conflict]]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index 979888e89eb9..62e548ea1ebb 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -71,7 +71,7 @@ enum rzt2h_clk_types {
+ #define DEF_MUX(_name, _id, _conf, _parent_names, _num_parents, _mux_flags) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_RZT2H_MUX, .conf = _conf, \
+ 		 .parent_names = _parent_names, .num_parents = _num_parents, \
+-		 .flag = 0, .mux_flags = _mux_flags)
++		 .flag = CLK_SET_RATE_PARENT, .mux_flags = _mux_flags)
+ 
+ enum clk_ids {
+ 	/* Core Clock Outputs exported to DT */

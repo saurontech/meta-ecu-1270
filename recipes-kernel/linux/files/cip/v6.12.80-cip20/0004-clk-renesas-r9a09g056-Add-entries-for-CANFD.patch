@@ -1,0 +1,63 @@
+From e2a674adf88715eb37e22b7a1e06ee457c69e48e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 27 Mar 2026 09:42:28 +0000
+Subject: [PATCH 004/283] clk: renesas: r9a09g056: Add entries for CANFD
+
+commit c2922664613277c61922bbe577f25092a85fb27e upstream.
+
+Add clock and reset entries for the CANFD IP.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251224165049.3384870-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[PL: fixed merge conflicts]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g056-cpg.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g056-cpg.c b/drivers/clk/renesas/r9a09g056-cpg.c
+index b1e8ae47e7f9..651f5efc34bc 100644
+--- a/drivers/clk/renesas/r9a09g056-cpg.c
++++ b/drivers/clk/renesas/r9a09g056-cpg.c
+@@ -45,6 +45,7 @@ enum clk_ids {
+ 	CLK_PLLCLN_DIV2,
+ 	CLK_PLLCLN_DIV8,
+ 	CLK_PLLCLN_DIV16,
++	CLK_PLLCLN_DIV20,
+ 	CLK_PLLDTY_ACPU,
+ 	CLK_PLLDTY_ACPU_DIV2,
+ 	CLK_PLLDTY_ACPU_DIV4,
+@@ -169,6 +170,7 @@ static const struct cpg_core_clk r9a09g056_core_clks[] __initconst = {
+ 	DEF_FIXED(".pllcln_div2", CLK_PLLCLN_DIV2, CLK_PLLCLN, 1, 2),
+ 	DEF_FIXED(".pllcln_div8", CLK_PLLCLN_DIV8, CLK_PLLCLN, 1, 8),
+ 	DEF_FIXED(".pllcln_div16", CLK_PLLCLN_DIV16, CLK_PLLCLN, 1, 16),
++	DEF_FIXED(".pllcln_div20", CLK_PLLCLN_DIV20, CLK_PLLCLN, 1, 20),
+ 
+ 	DEF_DDIV(".plldty_acpu", CLK_PLLDTY_ACPU, CLK_PLLDTY, CDDIV0_DIVCTL2, dtable_2_64),
+ 	DEF_FIXED(".plldty_acpu_div2", CLK_PLLDTY_ACPU_DIV2, CLK_PLLDTY_ACPU, 1, 2),
+@@ -284,6 +286,12 @@ static const struct rzv2h_mod_clk r9a09g056_mod_clks[] __initconst = {
+ 						BUS_MSTOP(1, BIT(7))),
+ 	DEF_MOD("riic_7_ckm",			CLK_PLLCLN_DIV16, 9, 11, 4, 27,
+ 						BUS_MSTOP(1, BIT(8))),
++	DEF_MOD("canfd_0_pclk",			CLK_PLLCLN_DIV16, 9, 12, 4, 28,
++						BUS_MSTOP(10, BIT(14))),
++	DEF_MOD("canfd_0_clk_ram",		CLK_PLLCLN_DIV8, 9, 13, 4, 29,
++						BUS_MSTOP(10, BIT(14))),
++	DEF_MOD("canfd_0_clkc",			CLK_PLLCLN_DIV20, 9, 14, 4, 30,
++						BUS_MSTOP(10, BIT(14))),
+ 	DEF_MOD("spi_hclk",			CLK_PLLCM33_GEAR, 9, 15, 4, 31,
+ 						BUS_MSTOP(4, BIT(5))),
+ 	DEF_MOD("spi_aclk",			CLK_PLLCM33_GEAR, 10, 0, 5, 0,
+@@ -400,6 +408,8 @@ static const struct rzv2h_reset r9a09g056_resets[] __initconst = {
+ 	DEF_RST(9, 14, 4, 15),		/* RIIC_6_MRST */
+ 	DEF_RST(9, 15, 4, 16),		/* RIIC_7_MRST */
+ 	DEF_RST(10, 0, 4, 17),		/* RIIC_8_MRST */
++	DEF_RST(10, 1, 4, 18),		/* CANFD_0_RSTP_N */
++	DEF_RST(10, 2, 4, 19),		/* CANFD_0_RSTC_N */
+ 	DEF_RST(10, 3, 4, 20),          /* SPI_HRESETN */
+ 	DEF_RST(10, 4, 4, 21),          /* SPI_ARESETN */
+ 	DEF_RST(10, 7, 4, 24),		/* SDHI_0_IXRST */

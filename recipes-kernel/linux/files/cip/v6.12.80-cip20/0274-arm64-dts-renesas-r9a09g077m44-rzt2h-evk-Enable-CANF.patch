@@ -1,0 +1,61 @@
+From e1f4cbb098a86eda6f73b725bbd310113f8d565b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 7 Apr 2026 11:58:07 +0100
+Subject: [PATCH 274/283] arm64: dts: renesas: r9a09g077m44-rzt2h-evk: Enable
+ CANFD
+
+commit d3112a820ccfe9a39c171fe3bc313794f1325711 upstream.
+
+Enable CANFD channel 0, which is available on the CN55 connector.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251224175204.3400062-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[PL: fixed merge conflict]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../dts/renesas/r9a09g077m44-rzt2h-evk.dts    | 21 +++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+index b99bdf5bfdd6..ebb6ebb9cdcf 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+@@ -165,6 +165,16 @@ channel@5 {
+ 	};
+ };
+ 
++&canfd {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	channel0 {
++		status = "okay";
++	};
++};
++
+ &i2c0 {
+ 	pinctrl-0 = <&i2c0_pins>;
+ 	pinctrl-names = "default";
+@@ -193,6 +203,17 @@ &mdio2_phy {
+ };
+ 
+ &pinctrl {
++	/*
++	 * CAN0 Pin Configuration:
++	 *
++	 * SW7[1] OFF; SW7[2] ON - Use P24_4 as CANTX0.
++	 * SW7[3] OFF; SW7[4] ON - Use P24_3 as CANRX0.
++	 */
++	can0_pins: can0-pins {
++		pinmux = <RZT2H_PORT_PINMUX(24, 3, 0x19)>, /* CANRX0 */
++			 <RZT2H_PORT_PINMUX(24, 4, 0x19)>; /* CANTX0 */
++	};
++
+ 	/*
+ 	 * GMAC2 Pin Configuration:
+ 	 *

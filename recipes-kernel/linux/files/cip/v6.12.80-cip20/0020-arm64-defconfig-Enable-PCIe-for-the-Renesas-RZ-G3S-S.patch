@@ -1,0 +1,33 @@
+From 7c78ffe0f95bff2fabba6eed655e73b2ec2cad9b Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 13:06:33 +0200
+Subject: [PATCH 020/283] arm64: defconfig: Enable PCIe for the Renesas RZ/G3S
+ SoC
+
+commit fc913a1c9df1216db1e33dcea4eb864fd0ca794a upstream.
+
+Enable PCIe for the Renesas RZ/G3S SoC.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Link: https://patch.msgid.link/20251119143523.977085-7-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 4da8c469dd22..bf44dd1f2615 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -223,6 +223,7 @@ CONFIG_PCIE_MEDIATEK_GEN3=m
+ CONFIG_PCI_TEGRA=y
+ CONFIG_PCIE_RCAR_HOST=y
+ CONFIG_PCIE_RCAR_EP=y
++CONFIG_PCIE_RENESAS_RZG3S_HOST=y
+ CONFIG_PCIE_ROCKCHIP_HOST=m
+ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_IMX6_HOST=y

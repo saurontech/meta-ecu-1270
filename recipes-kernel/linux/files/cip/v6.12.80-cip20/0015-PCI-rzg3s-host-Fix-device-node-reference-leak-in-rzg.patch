@@ -1,0 +1,43 @@
+From d45d968240f41d228b2ca1f788e88ff7b51c3c33 Mon Sep 17 00:00:00 2001
+From: Felix Gu <ustc.gu@gmail.com>
+Date: Wed, 11 Mar 2026 13:06:28 +0200
+Subject: [PATCH 015/283] PCI: rzg3s-host: Fix device node reference leak in
+ rzg3s_pcie_host_parse_port()
+
+commit e43e2aa557040bbcc5de0eaa1c59ee3ae9e31793 upstream.
+
+In rzg3s_pcie_host_parse_port(), of_get_next_child() returns a device node
+with an incremented reference count that must be released with
+of_node_put(). The current code fails to call of_node_put() which causes a
+reference leak.
+
+Use the __free(device_node) attribute to ensure automatic cleanup when the
+variable goes out of scope.
+
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Link: https://patch.msgid.link/20260204-rzg3s-v1-1-142bc81c3312@gmail.com
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 5f007569d824..46be4dba46be 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1164,7 +1164,8 @@ static int rzg3s_pcie_resets_prepare_and_get(struct rzg3s_pcie_host *host)
+ 
+ static int rzg3s_pcie_host_parse_port(struct rzg3s_pcie_host *host)
+ {
+-	struct device_node *of_port = of_get_next_child(host->dev->of_node, NULL);
++	struct device_node *of_port __free(device_node) =
++		of_get_next_child(host->dev->of_node, NULL);
+ 	struct rzg3s_pcie_port *port = &host->port;
+ 	int ret;
+ 
