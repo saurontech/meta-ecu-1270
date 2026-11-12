@@ -1,0 +1,74 @@
+From 3e789b385eaccd67c1a8b94884065ad5f2fa31e9 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 21 Aug 2026 16:15:53 +0300
+Subject: [PATCH 242/435] arm64: dts: renesas: r9a09g077m44-rzt2h-evk: Add GPIO
+ keys
+
+commit fcec728e1599f45f7956c1f7694706cf77cdf29e upstream.
+
+The Renesas RZ/T2H Evaluation Kit has three user buttons connected to
+GPIOs that can be used as input keys.
+
+Add support for them.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251205150234.2958140-8-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[ctani: resolve includes conflict]
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g077m44-rzt2h-evk.dts    | 32 +++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+index d5d3112e6dad..89f3258b8bf6 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+@@ -7,6 +7,7 @@
+ 
+ /dts-v1/;
+ 
++#include <dt-bindings/input/input.h>
+ #include <dt-bindings/pinctrl/renesas,r9a09g077-pinctrl.h>
+ 
+ #include "r9a09g077m44.dtsi"
+@@ -59,6 +60,37 @@ / {
+ 	model = "Renesas RZ/T2H EVK Board based on r9a09g077m44";
+ 	compatible = "renesas,rzt2h-evk", "renesas,r9a09g077m44", "renesas,r9a09g077";
+ 
++	keys {
++		compatible = "gpio-keys";
++
++#if (!SD1_MICRO_SD)
++		/* SW2-3: OFF */
++		key-1 {
++			interrupts-extended = <&pinctrl RZT2H_GPIO(8, 6) IRQ_TYPE_EDGE_FALLING>;
++			linux,code = <KEY_1>;
++			label = "SW9";
++			wakeup-source;
++			debounce-interval = <20>;
++		};
++#endif
++
++		key-2 {
++			interrupts-extended = <&pinctrl RZT2H_GPIO(0, 3) IRQ_TYPE_EDGE_FALLING>;
++			linux,code = <KEY_2>;
++			label = "SW10";
++			wakeup-source;
++			debounce-interval = <20>;
++		};
++
++		key-3 {
++			interrupts-extended = <&pinctrl RZT2H_GPIO(8, 7) IRQ_TYPE_EDGE_FALLING>;
++			linux,code = <KEY_3>;
++			label = "SW11";
++			wakeup-source;
++			debounce-interval = <20>;
++		};
++	};
++
+ 	leds {
+ 		compatible = "gpio-leds";
+ 

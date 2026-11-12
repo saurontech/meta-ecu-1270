@@ -1,0 +1,2 @@
+# action commit patch reason
+skip 869eb255e499 0167-can-rcar_canfd-change-the-initializing-flow-for-cloc.patch Not applicable as is: CIP resolved the conflict in drivers/net/can/rcar/rcar_canfd.c by hand in merge 9a1ff4632185 (Merge tag 'v6.12.108' into linux-6.12.y-cip), keeping its own rcar_canfd_global_init() rework; cip-replay.sh stops here on plain CIP too. TI never changed this file. After skipping, the file already equals v6.12.108-cip31. Not built for ECU-1270.

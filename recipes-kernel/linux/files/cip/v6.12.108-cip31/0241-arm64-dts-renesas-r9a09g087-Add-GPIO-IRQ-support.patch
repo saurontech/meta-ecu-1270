@@ -1,0 +1,36 @@
+From 062625584549a3a2d98d4eb8c5873a0cbe3772a7 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 21 Aug 2026 16:15:52 +0300
+Subject: [PATCH 241/435] arm64: dts: renesas: r9a09g087: Add GPIO IRQ support
+
+commit 7c9cf4eb9d600a51e4770e6ab876e123dd6b5165 upstream.
+
+The Renesas RZ/N2H (R9A09G087) SoC includes pins which can be routed via
+the ICU to generate interrupts.
+
+Add support for using the pin controller as an interrupt chip.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251205150234.2958140-7-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g087.dtsi | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+index 48b56a196929..eb405ae6f03e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+@@ -1014,6 +1014,9 @@ pinctrl: pinctrl@802c0000 {
+ 			gpio-controller;
+ 			#gpio-cells = <2>;
+ 			gpio-ranges = <&pinctrl 0 0 280>;
++			#interrupt-cells = <2>;
++			interrupt-controller;
++			interrupt-parent = <&icu>;
+ 			power-domains = <&cpg>;
+ 		};
+ 

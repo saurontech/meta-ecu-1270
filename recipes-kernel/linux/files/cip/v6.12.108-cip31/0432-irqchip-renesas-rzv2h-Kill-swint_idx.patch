@@ -1,0 +1,50 @@
+From 483e7667caf13d52a64fefc3e5e3e8695667a510 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Wed, 2 Sep 2026 09:27:00 +0000
+Subject: [PATCH 432/435] irqchip/renesas-rzv2h: Kill swint_idx[]
+
+commit fc4c926ccd34d4ee75669991693b47a9b8645a6c upstream.
+
+The array swint_idx[] just contains an identity mapping.
+Replace it by using the index directly, to simplify the code.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/0f32ba2a4701311710d02ff4fa2fd472b56745c4.1775205874.git.geert+renesas@glider.be
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 238c8383b387..5a1fedb492ca 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -748,7 +748,7 @@ static irqreturn_t rzv2h_icu_error_irq(int irq, void *data)
+ 
+ static irqreturn_t rzv2h_icu_swint_irq(int irq, void *data)
+ {
+-	u8 cpu = *(u8 *)data;
++	unsigned int cpu = (uintptr_t)data;
+ 
+ 	pr_info("SWINT interrupt for CA55 core %u\n", cpu);
+ 	return IRQ_HANDLED;
+@@ -763,7 +763,6 @@ static int rzv2h_icu_setup_irqs(struct platform_device *pdev, struct irq_domain
+ 		"int-ca55-2", "int-ca55-3",
+ 	};
+ 	static const char *icu_err = "icu-error-ca55";
+-	static const u8 swint_idx[] = { 0, 1, 2, 3 };
+ 	void __iomem *base = rzv2h_icu_data->base;
+ 	struct device *dev = &pdev->dev;
+ 	struct irq_fwspec fwspec;
+@@ -783,7 +782,7 @@ static int rzv2h_icu_setup_irqs(struct platform_device *pdev, struct irq_domain
+ 		}
+ 
+ 		ret = devm_request_irq(dev, virq, rzv2h_icu_swint_irq, 0, dev_name(dev),
+-				       (void *)&swint_idx[i]);
++				       (void *)(uintptr_t)i);
+ 		if (ret) {
+ 			return dev_err_probe(dev, ret, "Failed to request %s IRQ\n",
+ 					     rzv2h_swint_names[i]);

@@ -1,0 +1,131 @@
+From 08069418eebc1560bed39fed4fca5c9aa5648a1b Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 21 Aug 2026 16:15:38 +0300
+Subject: [PATCH 227/435] clk: renesas: cpg-mssr: Handle RZ/T2H register layout
+ in PM callbacks
+
+commit 3132ec8c8c2c28787d0ad80e53db296713155f12 upstream.
+
+The register layout for RZ/T2H is not handled inside
+cpg_mssr_suspend_noirq() and cpg_mssr_resume_noirq(), causing a memory
+abort because the wrong code path is taken, as shown below.
+
+Explicitly handle the RZ/T2H register layout in cpg_mssr_suspend_noirq()
+and cpg_mssr_resume_noirq(), similar to how it is done inside
+cpg_mstp_clock_is_enabled() and cpg_mstp_clock_endisable().
+
+[   90.052296] Mem abort info:
+[   90.055420]   ESR = 0x0000000096000007
+[   90.059553]   EC = 0x25: DABT (current EL), IL = 32 bits
+[   90.065697]   SET = 0, FnV = 0
+[   90.069211]   EA = 0, S1PTW = 0
+[   90.072834]   FSC = 0x07: level 3 translation fault
+[   90.078109] Data abort info:
+[   90.081405]   ISV = 0, ISS = 0x00000007, ISS2 = 0x00000000
+[   90.087427]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+[   90.093169]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+[   90.099008] swapper pgtable: 4k pages, 48-bit VAs, pgdp=00000000c60b4000
+[   90.106756] [ffff800082816318] pgd=0000000000000000, p4d=10000000c69ef003, pud=10000000c69f0003, pmd=100000024002b403, pte=0000000000000000
+[   90.120727] Internal error: Oops: 0000000096000007 [#1]  SMP
+[   90.127058] Modules linked in: sha256 cfg80211 spi_nor at24 renesas_usbhs bluetooth ecdh_generic ecc rfkill rzt2h_adc spi_rzv2h_rspi industrialio_adc gpio_keys fuse drm backlight ipv6
+[   90.145201] CPU: 0 UID: 0 PID: 307 Comm: sh Not tainted 6.18.0-rc1-next-20251016+ #47 PREEMPT
+[   90.155006] Hardware name: Renesas RZ/T2H EVK Board based on r9a09g077m44 (DT)
+[   90.163041] pstate: 20400005 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[   90.170777] pc : cpg_mssr_suspend_noirq+0x4c/0xc0
+[   90.175983] lr : device_suspend_noirq+0x6c/0x22c
+[   90.181309] sp : ffff8000838d3af0
+[   90.185026] x29: ffff8000838d3af0 x28: ffff8000825c016f x27: ffff8000825c01a0
+[   90.192973] x26: ffff8000809feeec x25: ffff8000827bebb8 x24: 0000000000000002
+[   90.200815] x23: ffff8000825c0190 x22: 0000000000000002 x21: 0000000000000000
+[   90.209058] x20: ffff8000827bebb8 x19: ffff000180128010 x18: ffff00033ef92a80
+[   90.217100] x17: ffff000180051700 x16: 0000000000000001 x15: ffff000187afc310
+[   90.224847] x14: 0000000000000254 x13: 0000000000000001 x12: 0000000000000001
+[   90.232793] x11: 00000000000000c0 x10: 0000000000000ab0 x9 : ffff8000838d38b0
+[   90.240540] x8 : ffff000186387410 x7 : 0000000000000001 x6 : 0000000000000000
+[   90.248600] x5 : ffff0001803240d4 x4 : 0000000000000003 x3 : ffff0001803240d0
+[   90.256460] x2 : ffff800082816318 x1 : 000000000000000c x0 : ffff000180324000
+[   90.264208] Call trace:
+[   90.267019]  cpg_mssr_suspend_noirq+0x4c/0xc0 (P)
+[   90.272450]  device_suspend_noirq+0x6c/0x22c
+[   90.277375]  dpm_noirq_suspend_devices+0x1a8/0x2a0
+[   90.282902]  dpm_suspend_noirq+0x24/0xa0
+[   90.287428]  suspend_devices_and_enter+0x310/0x590
+[   90.292790]  pm_suspend+0x1b4/0x200
+[   90.296811]  state_store+0x80/0xf4
+[   90.300676]  kobj_attr_store+0x18/0x34
+[   90.305002]  sysfs_kf_write+0x7c/0x94
+[   90.309232]  kernfs_fop_write_iter+0x12c/0x200
+[   90.314115]  vfs_write+0x240/0x380
+[   90.318041]  ksys_write+0x64/0x100
+[   90.321862]  __arm64_sys_write+0x18/0x24
+[   90.326013]  invoke_syscall.constprop.0+0x40/0xf0
+[   90.331445]  el0_svc_common.constprop.0+0xb8/0xd8
+[   90.336554]  do_el0_svc+0x1c/0x28
+[   90.340375]  el0_svc+0x34/0xe8
+[   90.343900]  el0t_64_sync_handler+0xa0/0xe4
+[   90.348426]  el0t_64_sync+0x198/0x19c
+[   90.352609] Code: 8b040042 b9409004 7100049f 54000240 (b9400042)
+[   90.359639] ---[ end trace 0000000000000000 ]---
+
+Fixes: 065fe720eec6 ("clk: renesas: Add support for R9A09G077 SoC")
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251127145654.3253992-3-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/renesas-cpg-mssr.c | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/clk/renesas/renesas-cpg-mssr.c b/drivers/clk/renesas/renesas-cpg-mssr.c
+index fee13c0bc095..1b505de9dcd3 100644
+--- a/drivers/clk/renesas/renesas-cpg-mssr.c
++++ b/drivers/clk/renesas/renesas-cpg-mssr.c
+@@ -1086,11 +1086,19 @@ static int cpg_mssr_suspend_noirq(struct device *dev)
+ 
+ 	/* Save module registers with bits under our control */
+ 	for (reg = 0; reg < ARRAY_SIZE(priv->smstpcr_saved); reg++) {
+-		if (priv->smstpcr_saved[reg].mask)
+-			priv->smstpcr_saved[reg].val =
+-				priv->reg_layout == CLK_REG_LAYOUT_RZ_A ?
+-				readb(priv->pub.base0 + priv->control_regs[reg]) :
+-				readl(priv->pub.base0 + priv->control_regs[reg]);
++		u32 val;
++
++		if (!priv->smstpcr_saved[reg].mask)
++			continue;
++
++		if (priv->reg_layout == CLK_REG_LAYOUT_RZ_A)
++			val = readb(priv->pub.base0 + priv->control_regs[reg]);
++		else if (priv->reg_layout == CLK_REG_LAYOUT_RZ_T2H)
++			val = cpg_rzt2h_mstp_read(priv, priv->control_regs[reg]);
++		else
++			val = readl(priv->pub.base0 + priv->control_regs[reg]);
++
++		priv->smstpcr_saved[reg].val = val;
+ 	}
+ 
+ 	/* Save core clocks */
+@@ -1121,6 +1129,8 @@ static int cpg_mssr_resume_noirq(struct device *dev)
+ 
+ 		if (priv->reg_layout == CLK_REG_LAYOUT_RZ_A)
+ 			oldval = readb(priv->pub.base0 + priv->control_regs[reg]);
++		else if (priv->reg_layout == CLK_REG_LAYOUT_RZ_T2H)
++			oldval = cpg_rzt2h_mstp_read(priv, priv->control_regs[reg]);
+ 		else
+ 			oldval = readl(priv->pub.base0 + priv->control_regs[reg]);
+ 		newval = oldval & ~mask;
+@@ -1134,6 +1144,12 @@ static int cpg_mssr_resume_noirq(struct device *dev)
+ 			readb(priv->pub.base0 + priv->control_regs[reg]);
+ 			barrier_data(priv->pub.base0 + priv->control_regs[reg]);
+ 			continue;
++		} else if (priv->reg_layout == CLK_REG_LAYOUT_RZ_T2H) {
++			cpg_rzt2h_mstp_write(priv, priv->control_regs[reg], newval);
++			/* See cpg_mstp_clock_endisable() on why this is necessary. */
++			cpg_rzt2h_mstp_read(priv, priv->control_regs[reg]);
++			udelay(10);
++			continue;
+ 		} else
+ 			writel(newval, priv->pub.base0 + priv->control_regs[reg]);
+ 

@@ -1,0 +1,78 @@
+From f549ad6569fcaf8c56659c3e34d4079e69c74ed0 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 2 Sep 2026 09:26:55 +0000
+Subject: [PATCH 427/435] irqchip/renesas-rzv2h: Switch to using
+ dev_err_probe()
+
+commit c34368b0404b8fd610b4f589481a1339bab76e0f upstream.
+
+Make use of dev_err_probe() to simplify rzv2h_icu_probe_common().
+
+Keep dev_err() for -ENOMEM paths, as dev_err_probe() does not print for
+allocation failures, ensuring they remain visible in logs.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260304113317.129339-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+[OP: Fixed minor context difference]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 31 ++++++++++-------------------
+ 1 file changed, 10 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index e9784900db97..7468eaec6bad 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -573,10 +573,8 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 		return ret;
+ 
+ 	parent_domain = irq_find_host(parent);
+-	if (!parent_domain) {
+-		dev_err(dev, "cannot find parent domain\n");
+-		return -ENODEV;
+-	}
++	if (!parent_domain)
++		return dev_err_probe(dev, -ENODEV, "cannot find parent domain\n");
+ 
+ 	rzv2h_icu_data = devm_kzalloc(dev, sizeof(*rzv2h_icu_data), GFP_KERNEL);
+ 	if (!rzv2h_icu_data)
+@@ -589,29 +587,20 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 		return PTR_ERR(rzv2h_icu_data->base);
+ 
+ 	ret = rzv2h_icu_parse_interrupts(rzv2h_icu_data, node);
+-	if (ret) {
+-		dev_err(dev, "cannot parse interrupts: %d\n", ret);
+-		return ret;
+-	}
++	if (ret)
++		return dev_err_probe(dev, ret, "cannot parse interrupts\n");
+ 
+ 	resetn = devm_reset_control_get_exclusive_deasserted(dev, NULL);
+-	if (IS_ERR(resetn)) {
+-		ret = PTR_ERR(resetn);
+-		dev_err(dev, "failed to acquire deasserted reset: %d\n", ret);
+-		return ret;
+-	}
++	if (IS_ERR(resetn))
++		return dev_err_probe(dev, PTR_ERR(resetn), "failed to acquire deasserted reset\n");
+ 
+ 	ret = devm_pm_runtime_enable(dev);
+-	if (ret < 0) {
+-		dev_err(dev, "devm_pm_runtime_enable failed, %d\n", ret);
+-		return ret;
+-	}
++	if (ret < 0)
++		return dev_err_probe(dev, ret, "devm_pm_runtime_enable failed\n");
+ 
+ 	ret = pm_runtime_resume_and_get(dev);
+-	if (ret < 0) {
+-		dev_err(dev, "pm_runtime_resume_and_get failed: %d\n", ret);
+-		return ret;
+-	}
++	if (ret < 0)
++		return dev_err_probe(dev, ret, "pm_runtime_resume_and_get failed\n");
+ 
+ 	raw_spin_lock_init(&rzv2h_icu_data->lock);
+ 

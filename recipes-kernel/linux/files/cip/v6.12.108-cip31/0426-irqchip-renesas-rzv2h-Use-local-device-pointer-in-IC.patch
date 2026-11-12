@@ -1,0 +1,124 @@
+From 3fe445ce32d8a488230dad10aef06d74a844870e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 2 Sep 2026 09:26:54 +0000
+Subject: [PATCH 426/435] irqchip/renesas-rzv2h: Use local device pointer in
+ ICU probe
+
+commit bbe78cb1399b4ba6b6d14943fb9dadefe9c17b5b upstream.
+
+Use a local struct device pointer in rzv2h_icu_probe_common() to avoid
+repeated dereferencing of pdev->dev.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260304113317.129339-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+[OP:
+- applied changes in rzv2h_icu_init_common(), as upstream commit
+1e3e330c0707 ("irqchip: Pass platform device to platform drivers") is
+not present in 6.12 CIP
+- dropped the dev_fwnode() hunk, as commit affdc0d1bdfa ("irqchip: Switch
+to irq_domain_create_*()") is not present either]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 32 +++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index ba40cb51afb5..e9784900db97 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -559,55 +559,57 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 	struct irq_domain *irq_domain, *parent_domain;
+ 	struct platform_device *pdev;
+ 	struct reset_control *resetn;
++	struct device *dev;
+ 	int ret;
+ 
+ 	pdev = of_find_device_by_node(node);
+ 	if (!pdev)
+ 		return -ENODEV;
+ 
+-	ret = devm_add_action_or_reset(&pdev->dev, rzv2h_icu_put_device,
+-				       &pdev->dev);
++	dev = &pdev->dev;
++
++	ret = devm_add_action_or_reset(dev, rzv2h_icu_put_device, dev);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	parent_domain = irq_find_host(parent);
+ 	if (!parent_domain) {
+-		dev_err(&pdev->dev, "cannot find parent domain\n");
++		dev_err(dev, "cannot find parent domain\n");
+ 		return -ENODEV;
+ 	}
+ 
+-	rzv2h_icu_data = devm_kzalloc(&pdev->dev, sizeof(*rzv2h_icu_data), GFP_KERNEL);
++	rzv2h_icu_data = devm_kzalloc(dev, sizeof(*rzv2h_icu_data), GFP_KERNEL);
+ 	if (!rzv2h_icu_data)
+ 		return -ENOMEM;
+ 
+ 	platform_set_drvdata(pdev, rzv2h_icu_data);
+ 
+-	rzv2h_icu_data->base = devm_of_iomap(&pdev->dev, node, 0, NULL);
++	rzv2h_icu_data->base = devm_of_iomap(dev, node, 0, NULL);
+ 	if (IS_ERR(rzv2h_icu_data->base))
+ 		return PTR_ERR(rzv2h_icu_data->base);
+ 
+ 	ret = rzv2h_icu_parse_interrupts(rzv2h_icu_data, node);
+ 	if (ret) {
+-		dev_err(&pdev->dev, "cannot parse interrupts: %d\n", ret);
++		dev_err(dev, "cannot parse interrupts: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	resetn = devm_reset_control_get_exclusive_deasserted(&pdev->dev, NULL);
++	resetn = devm_reset_control_get_exclusive_deasserted(dev, NULL);
+ 	if (IS_ERR(resetn)) {
+ 		ret = PTR_ERR(resetn);
+-		dev_err(&pdev->dev, "failed to acquire deasserted reset: %d\n", ret);
++		dev_err(dev, "failed to acquire deasserted reset: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = devm_pm_runtime_enable(&pdev->dev);
++	ret = devm_pm_runtime_enable(dev);
+ 	if (ret < 0) {
+-		dev_err(&pdev->dev, "devm_pm_runtime_enable failed, %d\n", ret);
++		dev_err(dev, "devm_pm_runtime_enable failed, %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = pm_runtime_resume_and_get(&pdev->dev);
++	ret = pm_runtime_resume_and_get(dev);
+ 	if (ret < 0) {
+-		dev_err(&pdev->dev, "pm_runtime_resume_and_get failed: %d\n", ret);
++		dev_err(dev, "pm_runtime_resume_and_get failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -616,7 +618,7 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 	irq_domain = irq_domain_add_hierarchy(parent_domain, 0, ICU_NUM_IRQ, node,
+ 					      &rzv2h_icu_domain_ops, rzv2h_icu_data);
+ 	if (!irq_domain) {
+-		dev_err(&pdev->dev, "failed to add irq domain\n");
++		dev_err(dev, "failed to add irq domain\n");
+ 		ret = -ENOMEM;
+ 		goto pm_put;
+ 	}
+@@ -627,12 +629,12 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 
+ 	/*
+ 	 * coccicheck complains about a missing put_device call before returning, but it's a false
+-	 * positive. We still need &pdev->dev after successfully returning from this function.
++	 * positive. We still need dev after successfully returning from this function.
+ 	 */
+ 	return 0;
+ 
+ pm_put:
+-	pm_runtime_put_sync(&pdev->dev);
++	pm_runtime_put_sync(dev);
+ 
+ 	return ret;
+ }

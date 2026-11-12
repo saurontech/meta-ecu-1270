@@ -1,0 +1,59 @@
+From c21d3d7ed2902bcde220b0ea5b3a3c5c0a8a79e5 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 21 Aug 2026 16:15:43 +0300
+Subject: [PATCH 232/435] dt-bindings: pinctrl: renesas,r9a09g077-pinctrl:
+ Document GPIO IRQ
+
+commit 8b12070746854a70bd43d5763562561efc1840de upstream.
+
+The Renesas RZ/T2H (R9A09G077) and Renesas RZ/N2H (R9A09G087) SoCs have
+IRQ-capable pins handled by the ICU, which forwards them to the GIC.
+
+The ICU supports 16 IRQ lines, the pins map to these lines arbitrarily,
+and the mapping is not configurable.
+
+Document the required properties to handle GPIO IRQ.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Linus Walleij <linusw@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251205150234.2958140-4-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml
+index d622cd94340a..63993b20524f 100644
+--- a/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml
+@@ -49,6 +49,17 @@ properties:
+   gpio-ranges:
+     maxItems: 1
+ 
++  interrupt-controller: true
++
++  '#interrupt-cells':
++    const: 2
++    description:
++      The first cell contains the global GPIO port index, constructed using the
++      RZT2H_GPIO() helper macro from <dt-bindings/pinctrl/renesas,r9a09g077-pinctrl.h>
++      and the second cell is used to specify the flag.
++      E.g. "interrupts = <RZT2H_GPIO(8, 6) IRQ_TYPE_EDGE_FALLING>;" if P08_6 is
++      being used as an interrupt.
++
+   clocks:
+     maxItems: 1
+ 
+@@ -156,6 +167,8 @@ examples:
+         gpio-controller;
+         #gpio-cells = <2>;
+         gpio-ranges = <&pinctrl 0 0 288>;
++        interrupt-controller;
++        #interrupt-cells = <2>;
+         power-domains = <&cpg>;
+ 
+         serial0-pins {

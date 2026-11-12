@@ -1,0 +1,23 @@
+From f717995cb7dcd8998ab15516b8006aea09cfde0d Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Fri, 28 Aug 2026 08:22:18 +0200
+Subject: [PATCH 323/435] Linux 6.12.107
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 957003198a2b..18d3abab7dcb 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 106
++SUBLEVEL = 107
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 
