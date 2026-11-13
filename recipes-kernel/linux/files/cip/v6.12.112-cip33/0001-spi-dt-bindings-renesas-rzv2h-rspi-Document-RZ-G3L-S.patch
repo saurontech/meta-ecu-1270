@@ -1,0 +1,69 @@
+From 901432aca2855b7aaee3bc4a86df72166303b1cd Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 24 Sep 2026 10:31:51 +0100
+Subject: [PATCH 001/854] spi: dt-bindings: renesas,rzv2h-rspi: Document RZ/G3L
+ SoC
+
+commit 5277c291968d87c6a093f50ef489df9d52cb3ca9 upstream.
+
+Document RSPI IP found on the RZ/G3L SoC. The RSPI IP is compatible with
+the RZ/V2H RSPI IP, but has 2 clocks compared to 3 on RZ/V2H.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260408085418.18770-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/spi/renesas,rzv2h-rspi.yaml      | 29 +++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+index 2c9045fd51dec..f40f316943baa 100644
+--- a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
++++ b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+@@ -13,6 +13,7 @@ properties:
+   compatible:
+     oneOf:
+       - enum:
++          - renesas,r9a08g046-rspi # RZ/G3L
+           - renesas,r9a09g057-rspi # RZ/V2H(P)
+           - renesas,r9a09g077-rspi # RZ/T2H
+       - items:
+@@ -90,6 +91,34 @@ required:
+ 
+ allOf:
+   - $ref: spi-controller.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,r9a08g046-rspi
++    then:
++      properties:
++        clocks:
++          maxItems: 2
++
++        clock-names:
++          items:
++            - const: pclk
++            - const: tclk
++
++        dmas:
++          maxItems: 2
++
++        dma-names:
++          items:
++            - const: rx
++            - const: tx
++
++      required:
++        - resets
++        - reset-names
++
+   - if:
+       properties:
+         compatible:

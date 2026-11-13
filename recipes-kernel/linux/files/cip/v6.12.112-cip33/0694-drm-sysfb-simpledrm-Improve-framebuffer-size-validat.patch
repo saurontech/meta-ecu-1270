@@ -1,0 +1,43 @@
+From b57562c528de8ae4cae6e4570b48fddbaeaa6d37 Mon Sep 17 00:00:00 2001
+From: Thomas Zimmermann <tzimmermann@suse.de>
+Date: Sat, 12 Sep 2026 11:33:39 -0400
+Subject: [PATCH 694/854] drm/sysfb: simpledrm: Improve framebuffer-size
+ validation
+
+[ Upstream commit 03f1a3545b721fa7fdadd00080e237519a286a97 ]
+
+Validate the framebuffer size from the firmware against the
+limitations of struct drm_display_mode. The type only stores sizes
+in 16-bit fields. Fail probing on errors.
+
+v2:
+- remove unused function simplefb_get_validated_int0() (Sashiko)
+
+Signed-off-by: Thomas Zimmermann <tzimmermann@suse.de>
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Reviewed-by: Maxime Ripard <mripard@kernel.org>
+Reviewed-by: Javier Martinez Canillas <javierm@redhat.com>
+Fixes: 11e8f5fd223b ("drm: Add simpledrm driver")
+Cc: <stable@vger.kernel.org> # v5.14+
+Fixes: 11e8f5fd223b ("drm: Add simpledrm driver")
+Link: https://patch.msgid.link/20260625094509.157581-2-tzimmermann@suse.de
+[ adapted shared-validator changes to the existing simplefb_get_validated_int0() helper in drm/tiny/simpledrm.c. ]
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/gpu/drm/tiny/simpledrm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/tiny/simpledrm.c b/drivers/gpu/drm/tiny/simpledrm.c
+index 1c9b657b67097..cb38ed2ae31dd 100644
+--- a/drivers/gpu/drm/tiny/simpledrm.c
++++ b/drivers/gpu/drm/tiny/simpledrm.c
+@@ -54,7 +54,7 @@ static int
+ simplefb_get_validated_int0(struct drm_device *dev, const char *name,
+ 			    uint32_t value)
+ {
+-	if (!value) {
++	if (!value || value > U16_MAX) {
+ 		drm_err(dev, "simplefb: invalid framebuffer %s of %u\n",
+ 			name, value);
+ 		return -EINVAL;

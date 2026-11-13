@@ -1,0 +1,18 @@
+From 3be432a1964261021750e13704e407022ff319c8 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Fri, 16 Oct 2026 06:48:05 +0900
+Subject: [PATCH 854/854] CIP: Bump version suffix to -cip33 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 5804e7f4d4bae..47b0d4ea3183b 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip32
++-cip33
