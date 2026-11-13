@@ -1,0 +1,33 @@
+From ebd8fcaaacb66c15ae7e19d14619abe3762e0701 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan@kernel.org>
+Date: Fri, 21 Aug 2026 17:45:44 +0200
+Subject: [PATCH 0217/1368] USB: serial: fix dynamic id driver deregistration
+ race
+
+commit 63594e8ffe097bc0b7639936f33799a7653dded2 upstream.
+
+Only free the dynamic ids after having deregistered the driver and
+removed the "new_id" attribute to avoid leaking any id added by a racing
+write to the attribute.
+
+Fixes: 93bacefc4cc0 ("USB serial: add dynamic id support to usb-serial core")
+Cc: stable@vger.kernel.org	# 2.6.21
+Signed-off-by: Johan Hovold <johan@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/usb/serial/bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/serial/bus.c b/drivers/usb/serial/bus.c
+index 2fea1b1db4a26..1989987cd6238 100644
+--- a/drivers/usb/serial/bus.c
++++ b/drivers/usb/serial/bus.c
+@@ -165,7 +165,7 @@ int usb_serial_bus_register(struct usb_serial_driver *driver)
+ 
+ void usb_serial_bus_deregister(struct usb_serial_driver *driver)
+ {
+-	free_dynids(driver);
+ 	driver_unregister(&driver->driver);
++	free_dynids(driver);
+ }
+ 

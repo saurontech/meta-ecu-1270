@@ -1,0 +1,37 @@
+From ba733d7f2e3d49e2aefd1dbb71a3633de7a75738 Mon Sep 17 00:00:00 2001
+From: Garpur Hnefill Emiliuson <garpurhnefill.emiliuson.d47@mail.toshiba>
+Date: Tue, 27 Oct 2026 16:19:36 +0900
+Subject: [PATCH 1366/1368] PM: domains: Mark
+ dev_pm_domain_allow_detach_on_unbind_cleanup() as inline
+
+Building with CONFIG_PM=n and CONFIG_PREEMPT_RT=y triggers a
+-Wunused-function warning for the stub implementation of
+dev_pm_domain_allow_detach_on_unbind_cleanup() in pm_domain.h.
+
+This issue only affects the -cip tree. Unlike the surrounding stub
+helpers, this function was not declared inline. Mark the stub
+implementation as inline so unused configurations do not trigger
+compiler warnings.
+
+Fixes: f7c0934b4cc9 ("PM: domains: Add helper to check for PM domain detach on unbind cleanup")
+Signed-off-by: Garpur Hnefill Emiliuson <garpurhnefill.emiliuson.d47@mail.toshiba>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ include/linux/pm_domain.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/pm_domain.h b/include/linux/pm_domain.h
+index 4dd882877ee84..719e501ed2826 100644
+--- a/include/linux/pm_domain.h
++++ b/include/linux/pm_domain.h
+@@ -546,7 +546,7 @@ static inline int dev_pm_domain_set_performance_state(struct device *dev,
+ {
+ 	return 0;
+ }
+-static bool dev_pm_domain_allow_detach_on_unbind_cleanup(void)
++static inline bool dev_pm_domain_allow_detach_on_unbind_cleanup(void)
+ {
+ 	return false;
+ }

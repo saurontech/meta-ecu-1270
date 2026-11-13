@@ -1,0 +1,69 @@
+From a9e1c1796bab58da3a688f51e73d6cf228843f05 Mon Sep 17 00:00:00 2001
+From: Devarsh Thakkar <devarsht@ti.com>
+Date: Wed, 17 Sep 2025 20:56:18 +0530
+Subject: [PATCH] TI: drm/bridge: cdns-dsi: Remove duplicate code for phy
+ cleanup
+
+This removes duplicate phy related cleanup code which was causing
+duplicate calls to phy_power_off and phy_exit functions thus
+causing the phy->power_count to -1 and hence breaking the resume
+cycle after system suspend as shown in below logs :
+
+Debug Logs:
+"79.515845: phy_power_off: Entered : phy_power_off at 394 power_count = 1
+79.515848: cdns_dphy_power_off: Entered : cdns_dphy_power_off at 433
+79.515971: phy_power_off: Entered : phy_power_off at 411 power_count = 0
+79.515974: phy_power_off: Entered : phy_power_off at 394 power_count = 0
+79.515976: phy_power_off: Entered : phy_power_off at 411 power_count = -1"
+
+Failure logs:
+[   79.653630] ti-sci 44043000.system-controller: ti_sci: wakeup
+               source:0x10, pin:0xff, mode:0x0
+[   79.671285] am65-cpsw-nuss 8000000.ethernet: set new flow-id-base 19
+[   79.688310] am65-cpsw-nuss 8000000.ethernet eth0: PHY
+[8000f00.mdio:00] driver [TI DP83867] (irq=POLL)
+[   79.688344] am65-cpsw-nuss 8000000.ethernet eth0: configuring for
+phy/rgmii-rxid link mode
+[   79.701966] am65-cpsw-nuss 8000000.ethernet eth1: PHY
+[8000f00.mdio:01] driver [TI DP83867] (irq=POLL)
+[   79.701983] am65-cpsw-nuss 8000000.ethernet eth1: configuring for
+phy/rgmii-rxid link mode
+[   80.320814] cdns-dsi 30500000.dsi: Timed Out: DSI-DPhy Clock and Data
+Lanes not ready.
+[   80.820932] cdns-dsi 30500000.dsi: Timed Out: DSI-DPhy Clock and Data
+Lanes not ready.
+[   82.172670] tc358762 30500000.dsi.0: error initializing bridge (-110)
+
+Fixes: 750442b99e0a ("drm/bridge: cdns-dsi: Fix phy de-init and flag it so")
+Signed-off-by: Devarsh Thakkar <devarsht@ti.com>
+(cherry picked from commit 28fe7134779cecd2660ffc80c9fcbd863994ae34)
+
+[ECU-1270: from ti-linux-6.12.y, newer than the TI base af3896fca24b.
+ With the duplicated block the D-PHY power_on op is skipped after the
+ first display disable. Since cip11 0672 (upstream cdns-dphy change,
+ PLL programmed in power_on) the D-PHY PLL then stays at the first
+ mode's rate when the display mode changes; seen on the ECU-1270 board
+ 2026-11-16 (WIZ_PLL_CTRL stays 0x811E0202, the 1080p rate, for
+ 1280x720 and 640x480). Same patch-id as TI's commit.]
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ drivers/gpu/drm/bridge/cadence/cdns-dsi-core.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/bridge/cadence/cdns-dsi-core.c b/drivers/gpu/drm/bridge/cadence/cdns-dsi-core.c
+index c657b5da41662..8683e206637fc 100644
+--- a/drivers/gpu/drm/bridge/cadence/cdns-dsi-core.c
++++ b/drivers/gpu/drm/bridge/cadence/cdns-dsi-core.c
+@@ -627,11 +627,6 @@ static void cdns_dsi_bridge_atomic_post_disable(struct drm_bridge *bridge,
+ 	phy_power_off(dsi->dphy);
+ 	phy_exit(dsi->dphy);
+ 
+-	dsi->phy_initialized = false;
+-	dsi->link_initialized = false;
+-	phy_power_off(dsi->dphy);
+-	phy_exit(dsi->dphy);
+-
+ 	pm_runtime_put(dsi->base.dev);
+ }
+ 

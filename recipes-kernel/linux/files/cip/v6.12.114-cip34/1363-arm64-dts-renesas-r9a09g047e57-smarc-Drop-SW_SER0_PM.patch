@@ -1,0 +1,39 @@
+From ce8f66ef9609ef238d026c58b84359fe9f858c97 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 22 Oct 2026 14:40:14 +0100
+Subject: [PATCH 1363/1368] arm64: dts: renesas: r9a09g047e57-smarc: Drop
+ SW_SER0_PMOD condition for rsci4
+
+[ Upstream commit 31fd71751e699117d71ed998c58fc7fe9ec471fa ]
+
+Rsci4 is routed to either the PMOD connector or the M.2 connector,
+depending on the SW_SER0_PMOD switch state.  In both cases, rsci4 is
+available for use, so there is no need to guard it with SW_SER0_PMOD.
+
+Drop the SW_SER0_PMOD condition and retain only the SW_LCD_EN check,
+as rsci4 is unavailable only when the LCD is enabled.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260603143340.162457-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 6372f582a7c41..07db9e4345217 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -237,7 +237,7 @@ &rsci2 {
+ };
+ #endif
+ 
+-#if (!SW_LCD_EN) && (SW_SER0_PMOD)
++#if !SW_LCD_EN
+ &rsci4 {
+ 	pinctrl-0 = <&rsci4_pins>;
+ 	pinctrl-names = "default";

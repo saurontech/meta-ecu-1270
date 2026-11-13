@@ -1,0 +1,43 @@
+From 85d82e0d7c2dfd3e75d34f35b7ebbf41f45c9c4e Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Wed, 21 Oct 2026 10:31:09 +0200
+Subject: [PATCH 1358/1368] Linux 6.12.114
+
+Link: https://lore.kernel.org/r/20261017160036.979869304@linuxfoundation.org
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Richard Narron <richard@aaazen.com>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Salvatore Bonaccorso <carnil@debian.org>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Tested-by: SJ Park <sj@kernel.org>
+Tested-by: Monty Wei <monty@westexplore.com>
+Tested-by: Sean Lyon <sean@seanlyon.dev>
+Tested-by: Ron Economos <re@w6rz.net>
+Tested-by: Pavel Machek (CIP) <pavel@nabladev.com>
+Tested-by: Shuah Khan <skhan@linuxfoundation.org>
+Link: https://lore.kernel.org/r/20261020075246.861837975@linuxfoundation.org
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Pavel Machek (CIP) <pavel@nabladev.com>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Tested-by: SJ Park <sj@kernel.org>
+Tested-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Dominique Martinet <dominique.martinet@atmark-techno.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 9b4b99f66a012..fe02bbac2151c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 113
++SUBLEVEL = 114
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 

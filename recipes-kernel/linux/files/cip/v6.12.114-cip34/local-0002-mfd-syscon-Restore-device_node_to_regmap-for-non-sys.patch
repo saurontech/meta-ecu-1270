@@ -1,0 +1,104 @@
+From 340b95471e583816c200b8e4d96507879c8ae536 Mon Sep 17 00:00:00 2001
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Date: Fri, 24 Jan 2025 13:16:44 -0600
+Subject: [PATCH] mfd: syscon: Restore device_node_to_regmap() for non-syscon
+ nodes
+
+[ Upstream commit 5728c92ae112301936006c5e305677beb1a7f578 ]
+
+Commit ba5095ebbc7a ("mfd: syscon: Allow syscon nodes without a
+"syscon" compatible") broke drivers which call device_node_to_regmap()
+on nodes without a "syscon" compatible. Restore the prior behavior for
+device_node_to_regmap().
+
+This also makes using device_node_to_regmap() incompatible with
+of_syscon_register_regmap() again, so add kerneldoc for
+device_node_to_regmap() and syscon_node_to_regmap() to make it clear
+how and when each one should be used.
+
+Fixes: ba5095ebbc7a ("mfd: syscon: Allow syscon nodes without a "syscon" compatible")
+Reported-by: Vaishnav Achath <vaishnav.a@ti.com>
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Daniel Golle <daniel@makrotopia.org>
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Tested-by: Chen-Yu Tsai <wenst@chromium.org>
+Tested-by: Nishanth Menon <nm@ti.com>
+Tested-by: Daniel Golle <daniel@makrotopia.org>
+Tested-by: Frank Wunderlich <frank-w@public-files.de>
+Tested-by: Dhruva Gole <d-gole@ti.com>
+Tested-by: Nicolas F. R. A. Prado <nfraprado@collabora.com>
+Tested-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Link: https://lore.kernel.org/r/20250124191644.2309790-1-robh@kernel.org
+Signed-off-by: Lee Jones <lee@kernel.org>
+[ECU-1270: CIP 7b9ef3b9d4cfb (cip28 0017) backported ba5095ebbc7a
+ without this fix. On J722S, ti-syscon-gate-clk (epwm_tbclk,
+ audio_refclk1) and the reg-mux serdes_ln_ctrl then fail to probe with
+ "failed to get regmap". Applies with a 7 line offset; same patch-id as
+ upstream. A Tested-by name is written in ASCII for the layer.]
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ drivers/mfd/syscon.c | 29 ++++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/mfd/syscon.c b/drivers/mfd/syscon.c
+index b49c4019abc5f..65514cf12c9b7 100644
+--- a/drivers/mfd/syscon.c
++++ b/drivers/mfd/syscon.c
+@@ -166,6 +166,7 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
+ }
+ 
+ static struct regmap *device_node_get_regmap(struct device_node *np,
++					     bool create_regmap,
+ 					     bool check_res)
+ {
+ 	struct syscon *entry, *syscon = NULL;
+@@ -179,7 +180,7 @@ static struct regmap *device_node_get_regmap(struct device_node *np,
+ 		}
+ 
+ 	if (!syscon) {
+-		if (of_device_is_compatible(np, "syscon"))
++		if (create_regmap)
+ 			syscon = of_syscon_register(np, check_res);
+ 		else
+ 			syscon = ERR_PTR(-EINVAL);
+@@ -240,15 +241,37 @@ int of_syscon_register_regmap(struct device_node *np, struct regmap *regmap)
+ }
+ EXPORT_SYMBOL_GPL(of_syscon_register_regmap);
+ 
++/**
++ * device_node_to_regmap() - Get or create a regmap for specified device node
++ * @np: Device tree node
++ *
++ * Get a regmap for the specified device node. If there's not an existing
++ * regmap, then one is instantiated. This function should not be used if the
++ * device node has a custom regmap driver or has resources (clocks, resets) to
++ * be managed. Use syscon_node_to_regmap() instead for those cases.
++ *
++ * Return: regmap ptr on success, negative error code on failure.
++ */
+ struct regmap *device_node_to_regmap(struct device_node *np)
+ {
+-	return device_node_get_regmap(np, false);
++	return device_node_get_regmap(np, true, false);
+ }
+ EXPORT_SYMBOL_GPL(device_node_to_regmap);
+ 
++/**
++ * syscon_node_to_regmap() - Get or create a regmap for specified syscon device node
++ * @np: Device tree node
++ *
++ * Get a regmap for the specified device node. If there's not an existing
++ * regmap, then one is instantiated if the node is a generic "syscon". This
++ * function is safe to use for a syscon registered with
++ * of_syscon_register_regmap().
++ *
++ * Return: regmap ptr on success, negative error code on failure.
++ */
+ struct regmap *syscon_node_to_regmap(struct device_node *np)
+ {
+-	return device_node_get_regmap(np, true);
++	return device_node_get_regmap(np, of_device_is_compatible(np, "syscon"), true);
+ }
+ EXPORT_SYMBOL_GPL(syscon_node_to_regmap);
+ 
