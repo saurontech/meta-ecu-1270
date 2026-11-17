@@ -1,0 +1,53 @@
+From 149feafb78890362df807e28b77dd8035db561c8 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 25 Mar 2025 15:56:04 +0100
+Subject: [PATCH 036/246] clk: renesas: r9a09g047: Add CA55 core clocks
+
+commit 3baf0273c0627b7e6029304166df17e07c6796fb upstream.
+
+Add CA55 core clocks which are derived from PLLCA55.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/20241213123550.289193-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/r9a09g047-cpg.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g047-cpg.c b/drivers/clk/renesas/r9a09g047-cpg.c
+index 1178335dbed3..f5966c08de41 100644
+--- a/drivers/clk/renesas/r9a09g047-cpg.c
++++ b/drivers/clk/renesas/r9a09g047-cpg.c
+@@ -37,6 +37,14 @@ enum clk_ids {
+ 	MOD_CLK_BASE,
+ };
+ 
++static const struct clk_div_table dtable_1_8[] = {
++	{0, 1},
++	{1, 2},
++	{2, 4},
++	{3, 8},
++	{0, 0},
++};
++
+ static const struct clk_div_table dtable_2_64[] = {
+ 	{0, 2},
+ 	{1, 4},
+@@ -65,6 +73,14 @@ static const struct cpg_core_clk r9a09g047_core_clks[] __initconst = {
+ 
+ 	/* Core Clocks */
+ 	DEF_FIXED("sys_0_pclk", R9A09G047_SYS_0_PCLK, CLK_QEXTAL, 1, 1),
++	DEF_DDIV("ca55_0_coreclk0", R9A09G047_CA55_0_CORECLK0, CLK_PLLCA55,
++		 CDDIV1_DIVCTL0, dtable_1_8),
++	DEF_DDIV("ca55_0_coreclk1", R9A09G047_CA55_0_CORECLK1, CLK_PLLCA55,
++		 CDDIV1_DIVCTL1, dtable_1_8),
++	DEF_DDIV("ca55_0_coreclk2", R9A09G047_CA55_0_CORECLK2, CLK_PLLCA55,
++		 CDDIV1_DIVCTL2, dtable_1_8),
++	DEF_DDIV("ca55_0_coreclk3", R9A09G047_CA55_0_CORECLK3, CLK_PLLCA55,
++		 CDDIV1_DIVCTL3, dtable_1_8),
+ 	DEF_FIXED("iotop_0_shclk", R9A09G047_IOTOP_0_SHCLK, CLK_PLLCM33_DIV16, 1, 1),
+ };
+ 

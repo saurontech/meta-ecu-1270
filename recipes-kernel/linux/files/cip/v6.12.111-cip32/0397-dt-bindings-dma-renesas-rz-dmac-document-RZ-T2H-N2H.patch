@@ -1,0 +1,163 @@
+From 8663fa4efc319aee9a8446173cde0645d402c1e6 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 11 Sep 2026 09:11:25 +0100
+Subject: [PATCH 0397/2868] dt-bindings: dma: renesas,rz-dmac: document
+ RZ/{T2H,N2H}
+
+commit 40dd470a95c0674515ca606757ffe174bd7d3f90 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs have three
+DMAC instances. Compared to the previously supported RZ/V2H, these SoCs
+are missing the error interrupt line and the reset lines, and they use
+a different ICU IP.
+
+Document them, and use RZ/T2H as a fallback for RZ/N2H as the DMACs are
+entirely compatible.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260105114445.878262-4-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/dma/renesas,rz-dmac.yaml         | 100 ++++++++++++++----
+ 1 file changed, 82 insertions(+), 18 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml b/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
+index bc1c7f64d68d..70bc4fa0acde 100644
+--- a/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
++++ b/Documentation/devicetree/bindings/dma/renesas,rz-dmac.yaml
+@@ -28,6 +28,13 @@ properties:
+ 
+       - const: renesas,r9a09g057-dmac # RZ/V2H(P)
+ 
++      - const: renesas,r9a09g077-dmac # RZ/T2H
++
++      - items:
++          - enum:
++              - renesas,r9a09g087-dmac # RZ/N2H
++          - const: renesas,r9a09g077-dmac
++
+   reg:
+     items:
+       - description: Control and channel register block
+@@ -35,27 +42,12 @@ properties:
+     minItems: 1
+ 
+   interrupts:
++    minItems: 16
+     maxItems: 17
+ 
+   interrupt-names:
+-    items:
+-      - const: error
+-      - const: ch0
+-      - const: ch1
+-      - const: ch2
+-      - const: ch3
+-      - const: ch4
+-      - const: ch5
+-      - const: ch6
+-      - const: ch7
+-      - const: ch8
+-      - const: ch9
+-      - const: ch10
+-      - const: ch11
+-      - const: ch12
+-      - const: ch13
+-      - const: ch14
+-      - const: ch15
++    minItems: 16
++    maxItems: 17
+ 
+   clocks:
+     items:
+@@ -121,6 +113,35 @@ required:
+ allOf:
+   - $ref: dma-controller.yaml#
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,rz-dmac
++              - renesas,r9a09g057-dmac
++    then:
++      properties:
++        interrupt-names:
++          items:
++            - const: error
++            - const: ch0
++            - const: ch1
++            - const: ch2
++            - const: ch3
++            - const: ch4
++            - const: ch5
++            - const: ch6
++            - const: ch7
++            - const: ch8
++            - const: ch9
++            - const: ch10
++            - const: ch11
++            - const: ch12
++            - const: ch13
++            - const: ch14
++            - const: ch15
++
+   - if:
+       properties:
+         compatible:
+@@ -171,6 +192,49 @@ allOf:
+         - renesas,icu
+         - resets
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g077-dmac
++    then:
++      properties:
++        reg:
++          maxItems: 1
++        clocks:
++          maxItems: 1
++
++        clock-names: false
++        resets: false
++        reset-names: false
++
++        interrupts:
++          maxItems: 16
++
++        interrupt-names:
++          items:
++            - const: ch0
++            - const: ch1
++            - const: ch2
++            - const: ch3
++            - const: ch4
++            - const: ch5
++            - const: ch6
++            - const: ch7
++            - const: ch8
++            - const: ch9
++            - const: ch10
++            - const: ch11
++            - const: ch12
++            - const: ch13
++            - const: ch14
++            - const: ch15
++
++      required:
++        - clocks
++        - power-domains
++        - renesas,icu
++
+ additionalProperties: false
+ 
+ examples:

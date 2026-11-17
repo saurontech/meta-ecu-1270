@@ -1,0 +1,52 @@
+From f26c25bfd95d1c0f54111dab583bd043c6789ab6 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:31:56 +0300
+Subject: [PATCH 098/246] ASoC: dt-bindings: renesas,rz-ssi: Remove DMA
+ description
+
+commit c28dac5d3a6e87615d4c8e50f574c320172a3d55 upstream.
+
+Remove the DMA description, as it duplicates content from
+../dma/renesas,rz-dma.yaml. Additionally, remove the MID/RID examples
+mentioned in the dropped description (this information is already
+documented in the hardware manual).
+
+Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20241210170953.2936724-19-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/sound/renesas,rz-ssi.yaml         | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml b/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml
+index f4610eaed1e1..5b42eec864f8 100644
+--- a/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml
++++ b/Documentation/devicetree/bindings/sound/renesas,rz-ssi.yaml
+@@ -57,24 +57,6 @@ properties:
+   dmas:
+     minItems: 1
+     maxItems: 2
+-    description:
+-      The first cell represents a phandle to dmac.
+-      The second cell specifies the encoded MID/RID values of the SSI port
+-      connected to the DMA client and the slave channel configuration
+-      parameters.
+-      bits[0:9]   - Specifies MID/RID value of a SSI channel as below
+-                    MID/RID value of SSI rx0 = 0x256
+-                    MID/RID value of SSI tx0 = 0x255
+-                    MID/RID value of SSI rx1 = 0x25a
+-                    MID/RID value of SSI tx1 = 0x259
+-                    MID/RID value of SSI rt2 = 0x25f
+-                    MID/RID value of SSI rx3 = 0x262
+-                    MID/RID value of SSI tx3 = 0x261
+-      bit[10]     - HIEN = 1, Detects a request in response to the rising edge
+-                    of the signal
+-      bit[11]     - LVL = 0, Detects based on the edge
+-      bits[12:14] - AM = 2, Bus cycle mode
+-      bit[15]     - TM = 0, Single transfer mode
+ 
+   dma-names:
+     oneOf:

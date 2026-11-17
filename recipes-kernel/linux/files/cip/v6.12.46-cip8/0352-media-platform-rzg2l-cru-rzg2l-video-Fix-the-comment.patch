@@ -1,0 +1,35 @@
+From bc7924e7985734abfb9d4c52a9c819956286e3d5 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:30 +0200
+Subject: [PATCH 352/643] media: platform: rzg2l-cru: rzg2l-video: Fix the
+ comment in rzg2l_cru_start_streaming_vq()
+
+commit 94794b5ce4d90ab134b0b101a02fddf6e74c437d upstream.
+
+Replace "buffer." -> "buffer", for consistency with rest of the
+comment blocks in rzg2l_cru_start_streaming_vq().
+
+Reported-by: Pavel Machek <pavel@denx.de>
+Closes: https://lore.kernel.org/all/ZtWNFuw70nkB37EK@duo.ucw.cz/
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20240905112508.160560-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index e980afc32504..9f699f95cf8e 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -558,7 +558,7 @@ static int rzg2l_cru_start_streaming_vq(struct vb2_queue *vq, unsigned int count
+ 		goto assert_aresetn;
+ 	}
+ 
+-	/* Allocate scratch buffer. */
++	/* Allocate scratch buffer */
+ 	cru->scratch = dma_alloc_coherent(cru->dev, cru->format.sizeimage,
+ 					  &cru->scratch_phys, GFP_KERNEL);
+ 	if (!cru->scratch) {

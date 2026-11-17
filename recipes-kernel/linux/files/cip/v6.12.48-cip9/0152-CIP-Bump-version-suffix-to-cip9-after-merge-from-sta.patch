@@ -1,0 +1,18 @@
+From 69fc69bc8e4642fb2acd38482bf6ab1739a3d1bb Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Wed, 24 Sep 2025 21:24:08 +0900
+Subject: [PATCH 152/152] CIP: Bump version suffix to -cip9 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 7adc9cb17fbd..d9d4b933640b 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip8
++-cip9

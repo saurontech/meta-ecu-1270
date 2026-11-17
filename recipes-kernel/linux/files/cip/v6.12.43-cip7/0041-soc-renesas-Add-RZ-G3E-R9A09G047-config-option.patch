@@ -1,0 +1,35 @@
+From 6d7f132eeeee8ae57b72bcce68811e7edd276989 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 25 Mar 2025 15:56:09 +0100
+Subject: [PATCH 041/246] soc: renesas: Add RZ/G3E (R9A09G047) config option
+
+commit 12e0bd600e3c2f33f9db0e3b91f6b8d8d95b7dbe upstream.
+
+Add a configuration option for the RZ/G3E SoC.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241203105005.103927-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/soc/renesas/Kconfig | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index 5d94c3f31494..e5c760657ec5 100644
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -345,6 +345,11 @@ config ARCH_R9A09G011
+ 	help
+ 	  This enables support for the Renesas RZ/V2M SoC.
+ 
++config ARCH_R9A09G047
++	bool "ARM64 Platform support for RZ/G3E"
++	help
++	  This enables support for the Renesas RZ/G3E SoC variants.
++
+ config ARCH_R9A09G057
+ 	bool "ARM64 Platform support for RZ/V2H(P)"
+ 	help

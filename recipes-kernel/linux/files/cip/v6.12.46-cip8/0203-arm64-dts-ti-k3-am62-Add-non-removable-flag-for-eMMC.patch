@@ -1,0 +1,86 @@
+From b926a5860696391ac8e5ca465c87c6f6ff0fbb79 Mon Sep 17 00:00:00 2001
+From: Judith Mendez <jm@ti.com>
+Date: Fri, 22 Aug 2025 10:16:13 -0400
+Subject: [PATCH] arm64: dts: ti: k3-am62*: Add non-removable flag for eMMC
+
+[ Upstream commit d16e7d34352c4107a81888e9aab4ea4748076e70 ]
+
+EMMC device is non-removable so add 'non-removable' DT
+property to avoid having to redetect the eMMC after
+suspend/resume.
+
+Signed-off-by: Judith Mendez <jm@ti.com>
+Reviewed-by: Udit Kumar <u-kumar1@ti.com>
+Link: https://lore.kernel.org/r/20250429151454.4160506-3-jm@ti.com
+Signed-off-by: Nishanth Menon <nm@ti.com>
+Stable-dep-of: a0b8da04153e ("arm64: dts: ti: k3-am62*: Move eMMC pinmux to top level board file")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts       | 1 +
+ arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts | 1 +
+ arch/arm64/boot/dts/ti/k3-am625-sk.dts         | 1 +
+ arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts     | 1 +
+ arch/arm64/boot/dts/ti/k3-am62p5-sk.dts        | 1 +
+ 5 files changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts b/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts
+index 32b00f4a0aa7..5a14dc2ba665 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts
+@@ -127,6 +127,7 @@ exp2: gpio@23 {
+ &sdhci0 {
+ 	bootph-all;
+ 	status = "okay";
++	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+ 	disable-wp;
+diff --git a/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts b/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts
+index f93487660ede..268a164f9601 100644
+--- a/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts
++++ b/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts
+@@ -846,6 +846,7 @@ &main_spi2 {
+ 
+ &sdhci0 {
+ 	bootph-all;
++	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&emmc_pins_default>;
+ 	disable-wp;
+diff --git a/arch/arm64/boot/dts/ti/k3-am625-sk.dts b/arch/arm64/boot/dts/ti/k3-am625-sk.dts
+index 6cd746602920..6aafa8addc67 100644
+--- a/arch/arm64/boot/dts/ti/k3-am625-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am625-sk.dts
+@@ -169,6 +169,7 @@ exp1: gpio@22 {
+ &sdhci0 {
+ 	bootph-all;
+ 	status = "okay";
++	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+ 	disable-wp;
+diff --git a/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts b/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts
+index d2c9f226b73d..6f9f932ca7c3 100644
+--- a/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts
+@@ -166,6 +166,7 @@ exp1: gpio@22 {
+ &sdhci0 {
+ 	bootph-all;
+ 	status = "okay";
++	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+ 	disable-wp;
+diff --git a/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts b/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts
+index bce81b37b0e6..b5f1499bac13 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts
+@@ -606,6 +606,7 @@ &main_i2c2 {
+ 
+ &sdhci0 {
+ 	status = "okay";
++	non-removable;
+ 	ti,driver-strength-ohm = <50>;
+ 	disable-wp;
+ 	bootph-all;

@@ -1,0 +1,34 @@
+From 34732e3a8713f3b7acd1a0ea37e3a6bee4c78550 Mon Sep 17 00:00:00 2001
+From: Chao Yu <chao@kernel.org>
+Date: Fri, 11 Sep 2026 21:32:07 -0400
+Subject: [PATCH 683/854] f2fs: fix to clear dirty flag on folio in error path
+
+[ Upstream commit 5b86eab84ac8e9289b5afc52ef88ab18ba5bacab ]
+
+If node block is corrupted due to chksum mismatch or inconsistent
+footer info, it needs to drop clear flag of node folio, in order
+to persist inconsistent node data to storage.
+
+Cc: stable@kernel.org
+Fixes: b42b179bda9f ("f2fs: fix to do checksum even if inode page is uptodate")
+Signed-off-by: Chao Yu <chao@kernel.org>
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/f2fs/node.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/f2fs/node.c b/fs/f2fs/node.c
+index fba4e5d085235..0898ce801f281 100644
+--- a/fs/f2fs/node.c
++++ b/fs/f2fs/node.c
+@@ -1528,7 +1528,7 @@ static struct page *__get_node_page(struct f2fs_sb_info *sbi, pgoff_t nid,
+ 	f2fs_handle_error(sbi, ERROR_INCONSISTENT_FOOTER);
+ 	err = -EFSCORRUPTED;
+ out_err:
+-	folio_clear_uptodate(folio);
++	clear_node_folio_dirty(folio);
+ out_put_err:
+ 	/* ENOENT comes from read_node_page which is not an error. */
+ 	if (err != -ENOENT)

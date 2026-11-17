@@ -1,0 +1,49 @@
+From 5d77c36cd4b698649f5c30c5f6c084f4f61d1880 Mon Sep 17 00:00:00 2001
+From: Jori Koolstra <jkoolstra@xs4all.nl>
+Date: Tue, 28 Oct 2025 13:22:12 +0100
+Subject: [PATCH 0797/1190] jfs: nlink overflow in jfs_rename
+
+[ Upstream commit 9218dc26fd922b09858ecd3666ed57dfd8098da8 ]
+
+If nlink is maximal for a directory (-1) and inside that directory you
+perform a rename for some child directory (not moving from the parent),
+then the nlink of the first directory is first incremented and later
+decremented. Normally this is fine, but when nlink = -1 this causes a
+wrap around to 0, and then drop_nlink issues a warning.
+
+After applying the patch syzbot no longer issues any warnings. I also
+ran some basic fs tests to look for any regressions.
+
+Signed-off-by: Jori Koolstra <jkoolstra@xs4all.nl>
+Reported-by: syzbot+9131ddfd7870623b719f@syzkaller.appspotmail.com
+Closes: https://syzbot.org/bug?extid=9131ddfd7870623b719f
+Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/jfs/namei.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/fs/jfs/namei.c b/fs/jfs/namei.c
+index d68a4e6ac345..e9bd7d3e61e9 100644
+--- a/fs/jfs/namei.c
++++ b/fs/jfs/namei.c
+@@ -1228,7 +1228,7 @@ static int jfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 				jfs_err("jfs_rename: dtInsert returned -EIO");
+ 			goto out_tx;
+ 		}
+-		if (S_ISDIR(old_ip->i_mode))
++		if (S_ISDIR(old_ip->i_mode) && old_dir != new_dir)
+ 			inc_nlink(new_dir);
+ 	}
+ 	/*
+@@ -1244,7 +1244,9 @@ static int jfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 		goto out_tx;
+ 	}
+ 	if (S_ISDIR(old_ip->i_mode)) {
+-		drop_nlink(old_dir);
++		if (new_ip || old_dir != new_dir)
++			drop_nlink(old_dir);
++
+ 		if (old_dir != new_dir) {
+ 			/*
+ 			 * Change inode number of parent for moved directory

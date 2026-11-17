@@ -1,0 +1,50 @@
+From dda9d3997a75bf7b68769344622a3da9945c6f43 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:24 +0000
+Subject: [PATCH 054/838] can: rcar_canfd: Consistently use ndev for net_device
+ pointers
+
+[ Upstream commit df6b192e25df2c2460d27f04d4a43fce87c8bf14 ]
+
+Most net_device pointers are named "ndev", but some are called "dev".
+Increase uniformity by always using "ndev".
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/7593bdd484a35999030865f90e4c9063b22d2a54.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 99d0cbe86321..423343671bb4 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1444,9 +1444,9 @@ static irqreturn_t rcar_canfd_channel_interrupt(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void rcar_canfd_set_bittiming(struct net_device *dev)
++static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ {
+-	struct rcar_canfd_channel *priv = netdev_priv(dev);
++	struct rcar_canfd_channel *priv = netdev_priv(ndev);
+ 	struct rcar_canfd_global *gpriv = priv->gpriv;
+ 	const struct can_bittiming *bt = &priv->can.bittiming;
+ 	const struct can_bittiming *dbt = &priv->can.data_bittiming;
+@@ -1826,10 +1826,10 @@ static int rcar_canfd_do_set_mode(struct net_device *ndev, enum can_mode mode)
+ 	}
+ }
+ 
+-static int rcar_canfd_get_berr_counter(const struct net_device *dev,
++static int rcar_canfd_get_berr_counter(const struct net_device *ndev,
+ 				       struct can_berr_counter *bec)
+ {
+-	struct rcar_canfd_channel *priv = netdev_priv(dev);
++	struct rcar_canfd_channel *priv = netdev_priv(ndev);
+ 	u32 val, ch = priv->channel;
+ 
+ 	/* Peripheral clock is already enabled in probe */

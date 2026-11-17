@@ -1,0 +1,35 @@
+From 3f4b2c34f6761f5b8d4c744626592d2a3dcce17f Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 08:42:37 +0000
+Subject: [PATCH 005/838] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Fix
+ pinctrl node name for GBETH1
+
+commit ed62c3807d3310f555ff02c1cd9b071d69faa38e upstream.
+
+Rename the GBETH1 pinctrl node from "eth0" to "eth1" to avoid duplicate
+node names in the DT and correctly reflect the label "eth1_pins".
+
+Fixes: f111192baa80 ("arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable GBETH")
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250703235544.715433-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index d6c392f79f33..b3e68e1a9f03 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -157,7 +157,7 @@ eth0_pins: eth0 {
+ 		output-enable;
+ 	};
+ 
+-	eth1_pins: eth0 {
++	eth1_pins: eth1 {
+ 		pins = "ET1_TXC_TXCLK";
+ 		output-enable;
+ 	};

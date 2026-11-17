@@ -1,0 +1,143 @@
+From e6d9d9249e958b2e4b98ee61e137e48d2b410e0a Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:37 +0100
+Subject: [PATCH 1241/1853] clk: renesas: rzg3s/rzg3l: Simplify PLL
+ configuration macro
+
+[ Upstream commit 2e3974747e83de21559d1f937746414e7f881253 ]
+
+Replace the per-SoC G3S_PLL146_CONF() and G3L_PLL1467_CONF() macros with
+a unified CPG_PLL_CONF(stby, setting) macro defined in rzg2l-cpg.h.
+
+Drop the now-redundant GET_REG_SAMPLL_{CLK1, SETTING}() macros, replacing
+the latter with CPG_PLL1_SETTING_OFFSET() using FIELD_GET() to extract the
+offset value. Update RZG3L_PLL_{STBY,MON}_OFFSET() macros to derive
+offsets directly from CPG_PLL_STBY_OFFSET().
+
+No functional changes.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260519141518.389670-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a08g045-cpg.c |  5 +----
+ drivers/clk/renesas/r9a08g046-cpg.c |  7 ++-----
+ drivers/clk/renesas/rzg2l-cpg.c     | 11 +++++------
+ drivers/clk/renesas/rzg2l-cpg.h     |  1 +
+ 4 files changed, 9 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/clk/renesas/r9a08g045-cpg.c b/drivers/clk/renesas/r9a08g045-cpg.c
+index 937a044cd5d3..2b71a2ff6292 100644
+--- a/drivers/clk/renesas/r9a08g045-cpg.c
++++ b/drivers/clk/renesas/r9a08g045-cpg.c
+@@ -49,9 +49,6 @@
+ #define G3S_SEL_SDHI1		SEL_PLL_PACK(G3S_CPG_SDHI_DSEL, 4, 2)
+ #define G3S_SEL_SDHI2		SEL_PLL_PACK(G3S_CPG_SDHI_DSEL, 8, 2)
+ 
+-/* PLL 1/4/6 configuration registers macro. */
+-#define G3S_PLL146_CONF(clk1, clk2, setting)	((clk1) << 22 | (clk2) << 12 | (setting))
+-
+ #define DEF_G3S_MUX(_name, _id, _conf, _parent_names, _mux_flags, _clk_flags) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_MUX, .conf = (_conf), \
+ 		 .parent_names = (_parent_names), \
+@@ -133,7 +130,7 @@ static const struct cpg_core_clk r9a08g045_core_clks[] __initconst = {
+ 
+ 	/* Internal Core Clocks */
+ 	DEF_FIXED(".osc_div1000", CLK_OSC_DIV1000, CLK_EXTAL, 1, 1000),
+-	DEF_G3S_PLL(".pll1", CLK_PLL1, CLK_EXTAL, G3S_PLL146_CONF(0x4, 0x8, 0x100),
++	DEF_G3S_PLL(".pll1", CLK_PLL1, CLK_EXTAL, CPG_PLL_CONF(0, 0x100),
+ 		    1100000000UL),
+ 	DEF_FIXED(".pll2", CLK_PLL2, CLK_EXTAL, 200, 3),
+ 	DEF_FIXED(".pll3", CLK_PLL3, CLK_EXTAL, 200, 3),
+diff --git a/drivers/clk/renesas/r9a08g046-cpg.c b/drivers/clk/renesas/r9a08g046-cpg.c
+index fc9db5a2f0ac..a57638734ce7 100644
+--- a/drivers/clk/renesas/r9a08g046-cpg.c
++++ b/drivers/clk/renesas/r9a08g046-cpg.c
+@@ -81,9 +81,6 @@
+ #define G3L_SEL_RSPI1		SEL_PLL_PACK(G3L_CPG_RSPI_SSEL, 2, 2)
+ #define G3L_SEL_RSPI2		SEL_PLL_PACK(G3L_CPG_RSPI_SSEL, 4, 2)
+ 
+-/* PLL 1/4/6/7 configuration registers macro. */
+-#define G3L_PLL1467_CONF(clk1, clk2, setting)	((clk1) << 22 | (clk2) << 12 | (setting))
+-
+ enum clk_ids {
+ 	/* Core Clock Outputs exported to DT */
+ 	LAST_DT_CORE_CLK = R9A08G046_USB_SCLK,
+@@ -207,11 +204,11 @@ static const struct cpg_core_clk r9a08g046_core_clks[] __initconst = {
+ 	DEF_INPUT("eth1_rxc_rx_clk", CLK_ETH1_RXC_RX_CLK_IN),
+ 
+ 	/* Internal Core Clocks */
+-	DEF_G3L_PLL(".pll1", CLK_PLL1, CLK_EXTAL, G3L_PLL1467_CONF(0x4, 0x8, 0x100),
++	DEF_G3L_PLL(".pll1", CLK_PLL1, CLK_EXTAL, CPG_PLL_CONF(0, 0x100),
+ 		    1200000000UL),
+ 	DEF_FIXED(".pll2", CLK_PLL2, CLK_EXTAL, 200, 3),
+ 	DEF_FIXED(".pll3", CLK_PLL3, CLK_EXTAL, 200, 3),
+-	DEF_G3L_PLL(".pll6", CLK_PLL6, CLK_EXTAL, G3L_PLL1467_CONF(0x54, 0x58, 0),
++	DEF_G3L_PLL(".pll6", CLK_PLL6, CLK_EXTAL, CPG_PLL_CONF(0x50, 0),
+ 		    500000000UL),
+ 	DEF_FIXED(".pll2_div2", CLK_PLL2_DIV2, CLK_PLL2, 1, 2),
+ 	DEF_FIXED(".pll2_div2_4", CLK_PLL2_DIV2_4, CLK_PLL2_DIV2, 1, 4),
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index dadd8653c854..bb63404922e5 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -58,14 +58,15 @@
+ #define RZG3S_DIV_NF		GENMASK(12, 1)
+ #define RZG3S_SEL_PLL		BIT(0)
+ 
++#define CPG_PLL1_SETTING_OFFSET(conf)	FIELD_GET(GENMASK(11, 0), (conf))
+ #define CPG_PLL_STBY_OFFSET(conf)	FIELD_GET(GENMASK(23, 12), (conf))
+ #define CPG_PLL_CLK1_OFFSET(x)		(CPG_PLL_STBY_OFFSET(x) + 0x4)
+ #define CPG_PLL_CLK2_OFFSET(x)		(CPG_PLL_STBY_OFFSET(x) + 0x8)
+ 
+-#define RZG3L_PLL_STBY_OFFSET(x)	(GET_REG_SAMPLL_CLK1(x) - 0x4)
++#define RZG3L_PLL_STBY_OFFSET(x)	(CPG_PLL_STBY_OFFSET(x))
+ #define RZG3L_PLL_STBY_RESETB		BIT(0)
+ #define RZG3L_PLL_STBY_RESETB_WEN	BIT(16)
+-#define RZG3L_PLL_MON_OFFSET(x)		(GET_REG_SAMPLL_CLK1(x) + 0x8)
++#define RZG3L_PLL_MON_OFFSET(x)		(CPG_PLL_STBY_OFFSET(x) + 0xc)
+ #define RZG3L_PLL_MON_RESETB		BIT(0)
+ #define RZG3L_PLL_MON_LOCK		BIT(4)
+ 
+@@ -75,8 +76,6 @@
+ #define CLK_MRST_R(reg)		(0x180 + (reg))
+ 
+ #define GET_REG_OFFSET(val)		((val >> 20) & 0xfff)
+-#define GET_REG_SAMPLL_CLK1(val)	((val >> 22) & 0xfff)
+-#define GET_REG_SAMPLL_SETTING(val)	((val) & 0xfff)
+ 
+ #define CPG_WEN_BIT		BIT(16)
+ 
+@@ -1118,14 +1117,14 @@ static unsigned long rzg3s_cpg_pll_clk_recalc_rate(struct clk_hw *hw,
+ 	u32 nir, nfr, mr, pr, val, setting;
+ 	u64 rate;
+ 
+-	setting = GET_REG_SAMPLL_SETTING(pll_clk->conf);
++	setting = CPG_PLL1_SETTING_OFFSET(pll_clk->conf);
+ 	if (setting) {
+ 		val = readl(priv->base + setting);
+ 		if (val & RZG3S_SEL_PLL)
+ 			return pll_clk->default_rate;
+ 	}
+ 
+-	val = readl(priv->base + GET_REG_SAMPLL_CLK1(pll_clk->conf));
++	val = readl(priv->base + CPG_PLL_CLK1_OFFSET(pll_clk->conf));
+ 
+ 	pr = 1 << FIELD_GET(RZG3S_DIV_P, val);
+ 	/* Hardware interprets values higher than 8 as p = 16. */
+diff --git a/drivers/clk/renesas/rzg2l-cpg.h b/drivers/clk/renesas/rzg2l-cpg.h
+index 17ec6f285c21..bd6169f62538 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.h
++++ b/drivers/clk/renesas/rzg2l-cpg.h
+@@ -59,6 +59,7 @@
+ #define CPG_CLKSTATUS_SELSDHI1_STS	BIT(29)
+ 
+ #define CPG_SAM_PLL_CONF(stby)		((stby) << 12)
++#define CPG_PLL_CONF(stby, setting)	((stby) << 12 | (setting))
+ 
+ #define DDIV_PACK(offset, bitpos, size) \
+ 		(((offset) << 20) | ((bitpos) << 12) | ((size) << 8))

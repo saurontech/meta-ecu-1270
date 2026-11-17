@@ -1,0 +1,71 @@
+From 42938b2d642b051759624bd9751d50b64705800e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:00 +0000
+Subject: [PATCH 011/838] dt-bindings: i2c: renesas,riic: Move ref for
+ i2c-controller.yaml to the end
+
+commit be221173ee918dff2adaf0e23b03aeea44902d5e upstream.
+
+In preparation for adding more validation checks, move the `$ref` for
+'i2c-controller.yaml' to the end of the file. Also, relocate the
+conditional check for 'resets' into the 'allOf' block.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Andi Shyti <andi.shyti@kernel.org>
+Link: https://lore.kernel.org/r/20250625104526.101004-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../devicetree/bindings/i2c/renesas,riic.yaml | 30 +++++++++----------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+index 1b7fed232642..4038c6d4acfc 100644
+--- a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
++++ b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+@@ -10,9 +10,6 @@ maintainers:
+   - Chris Brandt <chris.brandt@renesas.com>
+   - Wolfram Sang <wsa+renesas@sang-engineering.com>
+ 
+-allOf:
+-  - $ref: /schemas/i2c/i2c-controller.yaml#
+-
+ properties:
+   compatible:
+     oneOf:
+@@ -83,18 +80,21 @@ required:
+   - '#address-cells'
+   - '#size-cells'
+ 
+-if:
+-  properties:
+-    compatible:
+-      contains:
+-        enum:
+-          - renesas,riic-r9a07g043
+-          - renesas,riic-r9a07g044
+-          - renesas,riic-r9a07g054
+-          - renesas,riic-r9a09g057
+-then:
+-  required:
+-    - resets
++allOf:
++  - $ref: /schemas/i2c/i2c-controller.yaml#
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,riic-r9a07g043
++              - renesas,riic-r9a07g044
++              - renesas,riic-r9a07g054
++              - renesas,riic-r9a09g057
++    then:
++      required:
++        - resets
+ 
+ unevaluatedProperties: false
+ 

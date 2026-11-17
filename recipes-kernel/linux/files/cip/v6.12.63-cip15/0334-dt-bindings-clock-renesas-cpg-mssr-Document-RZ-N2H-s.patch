@@ -1,0 +1,84 @@
+From ad2c755dd4dd4f91a62c6e7e36e94e0210303ffb Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:38 +0000
+Subject: [PATCH 334/724] dt-bindings: clock: renesas,cpg-mssr: Document RZ/N2H
+ support
+
+commit 292bf6c5b8100ba4e16cd194bdc89785f6fb6f7a  upstream.
+
+Document support for Module Standby and Software Reset found on the
+Renesas RZ/N2H (R9A09G087) SoC.  The Module Standby and Software Reset
+IP is similar to that found on the RZ/T2H SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250609203656.333138-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-19-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/clock/renesas,cpg-mssr.yaml      |  5 +++-
+ .../clock/renesas,r9a09g087-cpg-mssr.h        | 28 +++++++++++++++++++
+ 2 files changed, 32 insertions(+), 1 deletion(-)
+ create mode 100644 include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+
+diff --git a/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml b/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml
+index 708ab6bd7d44..bc2fd3761328 100644
+--- a/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml
++++ b/Documentation/devicetree/bindings/clock/renesas,cpg-mssr.yaml
+@@ -53,6 +53,7 @@ properties:
+       - renesas,r8a779g0-cpg-mssr # R-Car V4H
+       - renesas,r8a779h0-cpg-mssr # R-Car V4M
+       - renesas,r9a09g077-cpg-mssr # RZ/T2H
++      - renesas,r9a09g087-cpg-mssr # RZ/N2H
+ 
+   reg:
+     minItems: 1
+@@ -112,7 +113,9 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            const: renesas,r9a09g077-cpg-mssr
++            enum:
++              - renesas,r9a09g077-cpg-mssr
++              - renesas,r9a09g087-cpg-mssr
+     then:
+       properties:
+         reg:
+diff --git a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+new file mode 100644
+index 000000000000..f28166d6015f
+--- /dev/null
++++ b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+@@ -0,0 +1,28 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * Copyright (C) 2025 Renesas Electronics Corp.
++ */
++
++#ifndef __DT_BINDINGS_CLOCK_RENESAS_R9A09G087_CPG_H__
++#define __DT_BINDINGS_CLOCK_RENESAS_R9A09G087_CPG_H__
++
++#include <dt-bindings/clock/renesas-cpg-mssr.h>
++
++/* R9A09G087 CPG Core Clocks */
++#define R9A09G087_CLK_CA55C0		0
++#define R9A09G087_CLK_CA55C1		1
++#define R9A09G087_CLK_CA55C2		2
++#define R9A09G087_CLK_CA55C3		3
++#define R9A09G087_CLK_CA55S		4
++#define R9A09G087_CLK_CR52_CPU0		5
++#define R9A09G087_CLK_CR52_CPU1		6
++#define R9A09G087_CLK_CKIO		7
++#define R9A09G087_CLK_PCLKAH		8
++#define R9A09G087_CLK_PCLKAM		9
++#define R9A09G087_CLK_PCLKAL		10
++#define R9A09G087_CLK_PCLKGPTL		11
++#define R9A09G087_CLK_PCLKH		12
++#define R9A09G087_CLK_PCLKM		13
++#define R9A09G087_CLK_PCLKL		14
++
++#endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G087_CPG_H__ */

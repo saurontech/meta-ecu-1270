@@ -1,0 +1,47 @@
+From 4d076110b8a1f4a3833a200349e874a43c730bc8 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 23 Apr 2025 22:04:55 +0100
+Subject: [PATCH 073/246] i2c: riic: Use GENMASK() macro for bitmask
+ definitions
+
+commit 72252162258c8a0b19d5bd0bb49fe20495898d6d upstream.
+
+Replace raw bitmask values with the `GENMASK()` macro in the `i2c-riic`
+driver to improve readability and maintain consistency.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Andy Shevchenko <andy@kernel.org>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/i2c/busses/i2c-riic.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index fb7067a6953b..0fc935722354 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -56,7 +56,7 @@
+ #define ICCR2_RS	BIT(2)
+ #define ICCR2_ST	BIT(1)
+ 
+-#define ICMR1_CKS_MASK	0x70
++#define ICMR1_CKS_MASK	GENMASK(6, 4)
+ #define ICMR1_BCWP	BIT(3)
+ #define ICMR1_CKS(_x)	((((_x) << 4) & ICMR1_CKS_MASK) | ICMR1_BCWP)
+ 
+@@ -74,7 +74,7 @@
+ 
+ #define ICSR2_NACKF	BIT(4)
+ 
+-#define ICBR_RESERVED	0xe0 /* Should be 1 on writes */
++#define ICBR_RESERVED	GENMASK(7, 5) /* Should be 1 on writes */
+ 
+ #define RIIC_INIT_MSG	-1
+ 

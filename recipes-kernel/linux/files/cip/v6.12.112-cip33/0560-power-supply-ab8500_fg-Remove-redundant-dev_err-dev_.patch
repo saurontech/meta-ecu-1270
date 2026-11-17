@@ -1,0 +1,37 @@
+From 76352169d867bdcaf2ea598e6bb485d1d39b05dd Mon Sep 17 00:00:00 2001
+From: Pan Chuang <panchuang@vivo.com>
+Date: Wed, 9 Sep 2026 07:40:39 -0400
+Subject: [PATCH 560/854] power: supply: ab8500_fg: Remove redundant
+ dev_err()/dev_err_probe()
+
+[ Upstream commit aa5f4decedfb4fc5cd0fe49ab256ad4304d192e4 ]
+
+The devm_request_threaded_irq() and devm_request_irq() now automatically
+log detailed error messages on failure. This eliminates the need for
+driver-specific dev_err() and dev_err_probe() calls that previously
+printed generic messages.
+
+Signed-off-by: Pan Chuang <panchuang@vivo.com>
+Reviewed-by: Linus Walleij <linusw@kernel.org>
+Link: https://patch.msgid.link/20260709033428.362970-7-panchuang@vivo.com
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+Stable-dep-of: 75b1e88d3425 ("power: supply: ab8500_fg: fix use-after-free on remove")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/power/supply/ab8500_fg.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/power/supply/ab8500_fg.c b/drivers/power/supply/ab8500_fg.c
+index a71903b1bf781..c2fbba1b7085a 100644
+--- a/drivers/power/supply/ab8500_fg.c
++++ b/drivers/power/supply/ab8500_fg.c
+@@ -3179,8 +3179,6 @@ static int ab8500_fg_probe(struct platform_device *pdev)
+ 				  ab8500_fg_irq[i].name, di);
+ 
+ 		if (ret != 0) {
+-			dev_err(dev, "failed to request %s IRQ %d: %d\n",
+-				ab8500_fg_irq[i].name, irq, ret);
+ 			destroy_workqueue(di->fg_wq);
+ 			return ret;
+ 		}

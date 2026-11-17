@@ -1,0 +1,40 @@
+From f701eab9a79a9e213c6792613b0d4598a90201bd Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:30 +0000
+Subject: [PATCH 326/724] serial: sh-sci: Replace direct stop_rx/stop_tx calls
+ with port ops in sci_shutdown()
+
+commit 13af95c7f602cf3644f3145530ec2e80a88659eb upstream.
+
+Replace direct calls to sci_stop_rx() and sci_stop_tx() with port ops
+callbacks in sci_shutdown(). This enables the RSCI driver, which reuses
+the SCI core but implements its own stop_rx and stop_tx logic, to reuse
+sci_shutdown() without duplicating code.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250630202323.279809-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-11-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/tty/serial/sh-sci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 81ddc7e420a6..857f5a6534a5 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -2306,8 +2306,8 @@ void sci_shutdown(struct uart_port *port)
+ 	mctrl_gpio_disable_ms_sync(to_sci_port(port)->gpios);
+ 
+ 	uart_port_lock_irqsave(port, &flags);
+-	sci_stop_rx(port);
+-	sci_stop_tx(port);
++	s->port.ops->stop_rx(port);
++	s->port.ops->stop_tx(port);
+ 	s->ops->shutdown_complete(port);
+ 	uart_port_unlock_irqrestore(port, flags);
+ 

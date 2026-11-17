@@ -1,0 +1,80 @@
+From fa51171b12e1894ddb15d140260a09b269369c52 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:58:59 +0100
+Subject: [PATCH 011/399] pinctrl: renesas: rzg2l: Handle PUPD for RZ/V2H(P)
+ dedicated pins in PM
+
+[ Upstream commit eea549769cb7cae28cc3158befa2de1b7e92bf58 ]
+
+On RZ/V2H(P), dedicated pins support pull-up/pull-down configuration
+via PIN_CFG_PUPD. Add PUPD handling for dedicated pins in the PM
+save/restore path.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260413182456.811543-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index c6af14ffe319..f7cb57e26f90 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -2807,6 +2807,12 @@ static int rzg2l_pinctrl_reg_cache_alloc(struct rzg2l_pinctrl *pctrl)
+ 						       GFP_KERNEL);
+ 		if (!dedicated_cache->nod[i])
+ 			return -ENOMEM;
++
++		dedicated_cache->pupd[i] = devm_kcalloc(pctrl->dev, n_dedicated_pins,
++							sizeof(*dedicated_cache->pupd[i]),
++							GFP_KERNEL);
++		if (!dedicated_cache->pupd[i])
++			return -ENOMEM;
+ 	}
+ 
+ 	pctrl->cache = cache;
+@@ -3144,7 +3150,7 @@ static void rzg2l_pinctrl_pm_setup_dedicated_regs(struct rzg2l_pinctrl *pctrl, b
+ 	 * port offset are close together.
+ 	 */
+ 	for (i = 0, caps = 0; i < pctrl->data->n_dedicated_pins; i++) {
+-		bool has_iolh, has_ien, has_sr, has_nod;
++		bool has_iolh, has_ien, has_sr, has_nod, has_pupd;
+ 		u32 off, next_off = 0;
+ 		u64 cfg, next_cfg;
+ 		u8 pincnt;
+@@ -3168,6 +3174,7 @@ static void rzg2l_pinctrl_pm_setup_dedicated_regs(struct rzg2l_pinctrl *pctrl, b
+ 		has_ien = !!(caps & PIN_CFG_IEN);
+ 		has_sr = !!(caps & PIN_CFG_SR);
+ 		has_nod = !!(caps & PIN_CFG_NOD);
++		has_pupd = !!(caps & PIN_CFG_PUPD);
+ 		pincnt = hweight8(FIELD_GET(RZG2L_SINGLE_PIN_BITS_MASK, cfg));
+ 
+ 		if (has_iolh) {
+@@ -3186,6 +3193,11 @@ static void rzg2l_pinctrl_pm_setup_dedicated_regs(struct rzg2l_pinctrl *pctrl, b
+ 			RZG2L_PCTRL_REG_ACCESS32(suspend, pctrl->base + NOD(off),
+ 						 cache->nod[0][i]);
+ 		}
++		if (has_pupd) {
++			RZG2L_PCTRL_REG_ACCESS32(suspend, pctrl->base + PUPD(off),
++						 cache->pupd[0][i]);
++		}
++
+ 		if (pincnt >= 4) {
+ 			if (has_iolh) {
+ 				RZG2L_PCTRL_REG_ACCESS32(suspend,
+@@ -3207,6 +3219,11 @@ static void rzg2l_pinctrl_pm_setup_dedicated_regs(struct rzg2l_pinctrl *pctrl, b
+ 							 pctrl->base + NOD(off) + 4,
+ 							 cache->nod[1][i]);
+ 			}
++			if (has_pupd) {
++				RZG2L_PCTRL_REG_ACCESS32(suspend,
++							 pctrl->base + PUPD(off) + 4,
++							 cache->pupd[1][i]);
++			}
+ 		}
+ 		caps = 0;
+ 	}

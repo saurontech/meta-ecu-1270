@@ -1,0 +1,79 @@
+From bdf4de20dbb85178322c4c2cd57f3c0fa8101ca0 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Oct 2024 18:32:32 +0100
+Subject: [PATCH 002/246] arm64: dts: renesas: rz{g2l,g2lc}-smarc-som: Update
+ partition table for spi-nor flash
+
+Commit 91dcdfbc5b770d4501b1a30d087affc9ed4fa6e5 upstream.
+
+Update partition table for spi-nor flash, so that we can flash bootloaders
+in Linux by executing the below commands:
+flash_erase /dev/mtd0  0 0
+flash_erase /dev/mtd1  0 0
+mtd_debug write /dev/mtd0 0 ${BL2_FILE_SIZE} ${BL2_IMAGE}
+mtd_debug write /dev/mtd1 512 ${FIP_FILE_SIZE} ${FIP_IMAGE}
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241004173235.74307-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi  | 15 +++++++++++----
+ arch/arm64/boot/dts/renesas/rzg2lc-smarc-som.dtsi | 15 +++++++++++----
+ 2 files changed, 22 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
+index 502d9f17bf16..21cf198b3c17 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
+@@ -339,11 +339,18 @@ partitions {
+ 			#address-cells = <1>;
+ 			#size-cells = <1>;
+ 
+-			boot@0 {
+-				reg = <0x00000000 0x2000000>;
+-				read-only;
++			partition@0 {
++				label = "bl2";
++				reg = <0x00000000 0x0001d000>;
+ 			};
+-			user@2000000 {
++
++			partition@1d000 { /* fip is at offset 0x200 */
++				label = "fip";
++				reg = <0x0001d000 0x1fe3000>;
++			};
++
++			partition@2000000 {
++				label = "user";
+ 				reg = <0x2000000 0x2000000>;
+ 			};
+ 		};
+diff --git a/arch/arm64/boot/dts/renesas/rzg2lc-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg2lc-smarc-som.dtsi
+index de39311a77dc..9aa729fbdce0 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2lc-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2lc-smarc-som.dtsi
+@@ -258,11 +258,18 @@ partitions {
+ 			#address-cells = <1>;
+ 			#size-cells = <1>;
+ 
+-			boot@0 {
+-				reg = <0x00000000 0x2000000>;
+-				read-only;
++			partition@0 {
++				label = "bl2";
++				reg = <0x00000000 0x0001d000>;
+ 			};
+-			user@2000000 {
++
++			partition@1d000 { /* fip is at offset 0x200 */
++				label = "fip";
++				reg = <0x0001d000 0x1fe3000>;
++			};
++
++			partition@2000000 {
++				label = "user";
+ 				reg = <0x2000000 0x2000000>;
+ 			};
+ 		};

@@ -1,0 +1,46 @@
+From bf127b53966111369211113acc004463a6410023 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Feb 2026 12:12:12 +0000
+Subject: [PATCH 1169/1190] media: dt-bindings: media: renesas,fcp: Document
+ RZ/V2H(P) SoC
+
+commit 079afc0b7241e383cf61e5ede906104d85f7a6cb upstream.
+
+The FCPVD block on the RZ/V2H(P) SoC is identical to the one found on the
+RZ/G2L SoC.
+
+No driver changes are required, as `renesas,fcpv` will be used as a
+fallback compatible string on the RZ/V2H(P) SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20250408193158.80936-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/media/renesas,fcp.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/media/renesas,fcp.yaml b/Documentation/devicetree/bindings/media/renesas,fcp.yaml
+index f94dacd96278..5ed9427fb757 100644
+--- a/Documentation/devicetree/bindings/media/renesas,fcp.yaml
++++ b/Documentation/devicetree/bindings/media/renesas,fcp.yaml
+@@ -30,6 +30,7 @@ properties:
+               - renesas,r9a07g043u-fcpvd # RZ/G2UL
+               - renesas,r9a07g044-fcpvd # RZ/G2{L,LC}
+               - renesas,r9a07g054-fcpvd # RZ/V2L
++              - renesas,r9a09g057-fcpvd # RZ/V2H(P)
+           - const: renesas,fcpv         # Generic FCP for VSP fallback
+ 
+   reg:
+@@ -66,6 +67,7 @@ allOf:
+               - renesas,r9a07g043u-fcpvd
+               - renesas,r9a07g044-fcpvd
+               - renesas,r9a07g054-fcpvd
++              - renesas,r9a09g057-fcpvd
+     then:
+       properties:
+         clocks:

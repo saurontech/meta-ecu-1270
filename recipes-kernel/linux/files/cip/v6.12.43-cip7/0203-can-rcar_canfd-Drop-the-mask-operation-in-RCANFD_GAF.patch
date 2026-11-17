@@ -1,0 +1,36 @@
+From 76847440e6562289174d8fad1553cf5d38515793 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:20 +0100
+Subject: [PATCH 203/246] can: rcar_canfd: Drop the mask operation in
+ RCANFD_GAFLCFG_SETRNC macro
+
+commit c9e17c91f1656f90b06e5cd2f39dfaab08de9611 upstream.
+
+Drop the mask operation in RCANFD_GAFLCFG_SETRNC macro as the num_rules
+can never be larger than number of supported rules.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index d53aa71f11c4..45d0c34f64f6 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -92,8 +92,7 @@
+ 
+ /* RSCFDnCFDGAFLCFG0 / RSCFDnGAFLCFG0 */
+ #define RCANFD_GAFLCFG_SETRNC(gpriv, n, x) \
+-	(((x) & reg_gen4(gpriv, 0x1ff, 0xff)) << \
+-	 (reg_gen4(gpriv, 16, 24) - ((n) & 1) * reg_gen4(gpriv, 16, 8)))
++	((x) << (reg_gen4(gpriv, 16, 24) - ((n) & 1) * reg_gen4(gpriv, 16, 8)))
+ 
+ /* RSCFDnCFDGAFLECTR / RSCFDnGAFLECTR */
+ #define RCANFD_GAFLECTR_AFLDAE		BIT(8)

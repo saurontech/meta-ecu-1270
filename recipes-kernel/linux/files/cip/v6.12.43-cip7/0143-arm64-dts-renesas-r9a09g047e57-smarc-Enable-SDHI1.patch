@@ -1,0 +1,136 @@
+From c00909e684ba07de4d9207e7ec3083efc85d2e2f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:17 +0200
+Subject: [PATCH 143/246] arm64: dts: renesas: r9a09g047e57-smarc: Enable SDHI1
+
+commit ae9edcbc712249832beb3f5457cb03cc809f72c4 upstream.
+
+Enable SDHI1 on the RZ/G3E SMARC EVK platform using gpio regulator for
+voltage switching.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250206134047.67866-9-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts   | 46 +++++++++++++++++++
+ .../boot/dts/renesas/renesas-smarc2.dtsi      | 18 ++++++++
+ 2 files changed, 64 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 152a00aa354b..5d7983812c70 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -9,7 +9,9 @@
+ 
+ /* Switch selection settings */
+ #define SW_SD0_DEV_SEL		0
++#define SW_SDIO_M2E		0
+ 
++#include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/pinctrl/renesas,r9a09g047-pinctrl.h>
+ #include "r9a09g047e57.dtsi"
+ #include "rzg3e-smarc-som.dtsi"
+@@ -19,6 +21,16 @@ / {
+ 	model = "Renesas SMARC EVK version 2 based on r9a09g047e57";
+ 	compatible = "renesas,smarc2-evk", "renesas,rzg3e-smarcm",
+ 		     "renesas,r9a09g047e57", "renesas,r9a09g047";
++
++	vqmmc_sd1_pvdd: regulator-vqmmc-sd1-pvdd {
++		compatible = "regulator-gpio";
++		regulator-name = "SD1_PVDD";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		gpios = <&pinctrl RZG3E_GPIO(1, 5) GPIO_ACTIVE_HIGH>;
++		gpios-states = <0>;
++		states = <3300000 0>, <1800000 1>;
++	};
+ };
+ 
+ &pinctrl {
+@@ -26,9 +38,43 @@ scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";
+ 		renesas,output-impedance = <1>;
+ 	};
++
++	sd1-pwr-en-hog {
++		gpio-hog;
++		gpios = <RZG3E_GPIO(1, 6) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "sd1_pwr_en";
++	};
++
++	sdhi1_pins: sd1 {
++		sd1-cd {
++			pinmux = <RZG3E_PORT_PINMUX(1, 4, 8)>; /* SD1CD */
++		};
++
++		sd1-ctrl {
++			pinmux = <RZG3E_PORT_PINMUX(G, 0, 1)>, /* SD1CLK */
++				 <RZG3E_PORT_PINMUX(G, 1, 1)>; /* SD1CMD */
++		};
++
++		sd1-data {
++			pinmux = <RZG3E_PORT_PINMUX(G, 2, 1)>, /* SD1DAT0 */
++				 <RZG3E_PORT_PINMUX(G, 3, 1)>, /* SD1DAT1 */
++				 <RZG3E_PORT_PINMUX(G, 4, 1)>, /* SD1DAT2 */
++				 <RZG3E_PORT_PINMUX(G, 5, 1)>; /* SD1DAT3 */
++		};
++	};
+ };
+ 
+ &scif0 {
+ 	pinctrl-0 = <&scif_pins>;
+ 	pinctrl-names = "default";
+ };
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-1 = <&sdhi1_pins>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vqmmc_sd1_pvdd>;
++};
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index e378d55e6e9b..fd82df8adc1e 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -5,6 +5,15 @@
+  * Copyright (C) 2024 Renesas Electronics Corp.
+  */
+ 
++/*
++ * Please set the switch position SW_OPT_MUX.1 on the carrier board and the
++ * corresponding macro SW_SDIO_M2E on the board DTS:
++ *
++ * SW_SDIO_M2E:
++ *     0 - SMARC SDIO signal is connected to uSD1
++ *     1 - SMARC SDIO signal is connected to M.2 Key E connector
++ */
++
+ / {
+ 	model = "Renesas RZ SMARC Carrier-II Board";
+ 	compatible = "renesas,smarc2-evk";
+@@ -16,9 +25,18 @@ chosen {
+ 
+ 	aliases {
+ 		serial3 = &scif0;
++		mmc1 = &sdhi1;
+ 	};
+ };
+ 
+ &scif0 {
+ 	status = "okay";
+ };
++
++&sdhi1 {
++	bus-width = <4>;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++
++	status = "okay";
++};

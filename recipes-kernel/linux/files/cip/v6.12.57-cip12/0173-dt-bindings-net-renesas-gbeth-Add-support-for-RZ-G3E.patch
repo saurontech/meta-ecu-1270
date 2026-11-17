@@ -1,0 +1,44 @@
+From d97d4bc6cb4870a037b3d33fd7187250552f689c Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Mon, 3 Nov 2025 12:37:57 +0100
+Subject: [PATCH 173/192] dt-bindings: net: renesas-gbeth: Add support for
+ RZ/G3E (R9A09G047) SoC
+
+[ Upstream commit 31b928210df1097eaa5e8cb51e2ff79989ebe57e ]
+
+Document support for the GBETH IP found on the Renesas RZ/G3E (R9A09G047) SoC.
+The GBETH block on RZ/G3E is equivalent in functionality to the GBETH found on
+RZ/V2H(P) (R9A09G057).
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://patch.msgid.link/20250611061204.15393-1-john.madieu.xa@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml        | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml b/Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml
+index 02a6793c26f5..91f637b048ab 100644
+--- a/Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml
++++ b/Documentation/devicetree/bindings/net/renesas,r9a09g057-gbeth.yaml
+@@ -14,6 +14,7 @@ select:
+     compatible:
+       contains:
+         enum:
++          - renesas,r9a09g047-gbeth
+           - renesas,r9a09g057-gbeth
+           - renesas,rzv2h-gbeth
+   required:
+@@ -23,6 +24,7 @@ properties:
+   compatible:
+     items:
+       - enum:
++          - renesas,r9a09g047-gbeth # RZ/G3E
+           - renesas,r9a09g057-gbeth # RZ/V2H(P)
+       - const: renesas,rzv2h-gbeth
+       - const: snps,dwmac-5.20

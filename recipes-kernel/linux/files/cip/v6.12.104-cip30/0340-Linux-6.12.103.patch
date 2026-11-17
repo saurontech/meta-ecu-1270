@@ -1,0 +1,32 @@
+From 25c09b42358e73e1476e517b296edb6344f2e4bd Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Sun, 9 Aug 2026 20:23:28 +0200
+Subject: [PATCH 340/521] Linux 6.12.103
+
+Link: https://lore.kernel.org/r/20260807143418.516897842@linuxfoundation.org
+Tested-by: Pavel Machek (CIP) <pavel@nabladev.com>
+Tested-by: Shuah Khan <skhan@linuxfoundation.org>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Tested-by: Ron Economos <re@w6rz.net>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Tested-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 115a476fefe8..f3bacdc021a4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 102
++SUBLEVEL = 103
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 

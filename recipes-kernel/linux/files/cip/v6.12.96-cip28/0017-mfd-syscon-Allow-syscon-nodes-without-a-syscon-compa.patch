@@ -1,0 +1,73 @@
+From 56d08ffae1e1ec5a2fa0c9fb56ebc07bb60b3447 Mon Sep 17 00:00:00 2001
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Date: Fri, 3 Jul 2026 11:59:05 +0100
+Subject: [PATCH 017/399] mfd: syscon: Allow syscon nodes without a "syscon"
+ compatible
+
+[ Upstream commit ba5095ebbc7a83965ac049a50fa493d7c751f19b ]
+
+of_syscon_register_regmap() was added for nodes which need a custom
+regmap setup. It's not really correct for those nodes to claim they are
+compatible with "syscon" as the default handling likely doesn't work in
+those cases. If device_node_get_regmap() happens to be called first,
+then of_syscon_register() will be called and an incorrect regmap will be
+created (barring some other error). That may lead to unknown results in
+the worst case. In the best case, of_syscon_register_regmap() will fail
+with -EEXIST. This problem remains unless these cases drop "syscon" (an
+ABI issue) or we exclude them using their specific compatible. ATM,
+there is only one user: "google,gs101-pmu"
+
+There are also cases of adding "syscon" compatible to existing nodes
+after the fact in order to register the syscon. That presents a
+potential DT ABI problem. Instead, if there's a kernel change needing a
+syscon for a node, then it should be possible to allow the kernel to
+register a syscon without a DT change. That's only possible by using
+of_syscon_register_regmap() currently, but in the future we may want to
+support a match list for cases which don't need a custom regmap.
+
+With this change, the lookup functions will succeed for any node
+registered by of_syscon_register_regmap() regardless of whether the node
+compatible contains "syscon".
+
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+Tested-by: Will McVicker <willmcvicker@google.com>
+Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20241217-syscon-fixes-v2-3-4f56d750541d@kernel.org
+Signed-off-by: Lee Jones <lee@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/mfd/syscon.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/mfd/syscon.c b/drivers/mfd/syscon.c
+index 729e79e1be49..4346eeab4053 100644
+--- a/drivers/mfd/syscon.c
++++ b/drivers/mfd/syscon.c
+@@ -176,9 +176,12 @@ static struct regmap *device_node_get_regmap(struct device_node *np,
+ 			break;
+ 		}
+ 
+-	if (!syscon)
+-		syscon = of_syscon_register(np, check_res);
+-
++	if (!syscon) {
++		if (of_device_is_compatible(np, "syscon"))
++			syscon = of_syscon_register(np, check_res);
++		else
++			syscon = ERR_PTR(-EINVAL);
++	}
+ 	mutex_unlock(&syscon_list_lock);
+ 
+ 	if (IS_ERR(syscon))
+@@ -243,9 +246,6 @@ EXPORT_SYMBOL_GPL(device_node_to_regmap);
+ 
+ struct regmap *syscon_node_to_regmap(struct device_node *np)
+ {
+-	if (!of_device_is_compatible(np, "syscon"))
+-		return ERR_PTR(-EINVAL);
+-
+ 	return device_node_get_regmap(np, true);
+ }
+ EXPORT_SYMBOL_GPL(syscon_node_to_regmap);

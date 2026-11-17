@@ -1,0 +1,37 @@
+From 617088dd4509e79f648b26185fc70971ad8b0bed Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 21 Aug 2026 16:15:46 +0300
+Subject: [PATCH 235/435] irqchip/renesas-rzt2h: Use pm_runtime_put_sync() in
+ probe error path
+
+commit c9b7598eb013c6dbf2526dc050364bd8dc24f0d3 upstream.
+
+pm_runtime_put() may trigger the idle check after pm_runtime_disable()
+is run as part of devm_pm_runtime_enable()'s cleanup action, leaving
+runtime PM active.
+
+Use pm_runtime_put_sync() to ensure the idle check runs synchronously.
+
+Fixes: 13e7b3305b64 ("irqchip: Add RZ/{T2H,N2H} Interrupt Controller (ICU) driver")
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260520203117.1516442-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzt2h.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzt2h.c b/drivers/irqchip/irq-renesas-rzt2h.c
+index 4b0cd5f66c34..e03eb9f86ef4 100644
+--- a/drivers/irqchip/irq-renesas-rzt2h.c
++++ b/drivers/irqchip/irq-renesas-rzt2h.c
+@@ -269,7 +269,7 @@ static int rzt2h_icu_init(struct device_node *node, struct device_node *parent)
+ 	irq_domain = irq_domain_create_hierarchy(parent_domain, 0, RZT2H_ICU_NUM_IRQ,
+ 						 dev_fwnode(dev), &rzt2h_icu_domain_ops, priv);
+ 	if (!irq_domain) {
+-		pm_runtime_put(dev);
++		pm_runtime_put_sync(dev);
+ 		return -ENOMEM;
+ 	}
+ 

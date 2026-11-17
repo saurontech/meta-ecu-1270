@@ -1,0 +1,98 @@
+From 438e9528e6d7565f5dec72365601efb97236b777 Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Fri, 3 Jul 2026 11:07:20 +0100
+Subject: [PATCH 260/286] irqchip/renesas-rzg2l: Use local dev pointer in
+ rzg2l_irqc_common_init()
+
+[ Upstream commit dd4e17c309445eeecb8e0252ef9a519505035c27 ]
+
+Replace direct references to `&pdev->dev` with the local `dev` pointer
+in rzg2l_irqc_common_init() to avoid redundant dereferencing.
+
+Suggested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/all/20250212182034.366167-2-fabrizio.castro.jz@renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index d83dfc10ff49..53272237d9cb 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -542,40 +542,40 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 
+ 	parent_domain = irq_find_host(parent);
+ 	if (!parent_domain) {
+-		dev_err(&pdev->dev, "cannot find parent domain\n");
++		dev_err(dev, "cannot find parent domain\n");
+ 		return -ENODEV;
+ 	}
+ 
+-	rzg2l_irqc_data = devm_kzalloc(&pdev->dev, sizeof(*rzg2l_irqc_data), GFP_KERNEL);
++	rzg2l_irqc_data = devm_kzalloc(dev, sizeof(*rzg2l_irqc_data), GFP_KERNEL);
+ 	if (!rzg2l_irqc_data)
+ 		return -ENOMEM;
+ 
+ 	rzg2l_irqc_data->irqchip = irq_chip;
+ 
+-	rzg2l_irqc_data->base = devm_of_iomap(&pdev->dev, pdev->dev.of_node, 0, NULL);
++	rzg2l_irqc_data->base = devm_of_iomap(dev, dev->of_node, 0, NULL);
+ 	if (IS_ERR(rzg2l_irqc_data->base))
+ 		return PTR_ERR(rzg2l_irqc_data->base);
+ 
+ 	ret = rzg2l_irqc_parse_interrupts(rzg2l_irqc_data, node);
+ 	if (ret) {
+-		dev_err(&pdev->dev, "cannot parse interrupts: %d\n", ret);
++		dev_err(dev, "cannot parse interrupts: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	resetn = devm_reset_control_get_exclusive(&pdev->dev, NULL);
++	resetn = devm_reset_control_get_exclusive(dev, NULL);
+ 	if (IS_ERR(resetn))
+ 		return PTR_ERR(resetn);
+ 
+ 	ret = reset_control_deassert(resetn);
+ 	if (ret) {
+-		dev_err(&pdev->dev, "failed to deassert resetn pin, %d\n", ret);
++		dev_err(dev, "failed to deassert resetn pin, %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	pm_runtime_enable(&pdev->dev);
+-	ret = pm_runtime_resume_and_get(&pdev->dev);
++	pm_runtime_enable(dev);
++	ret = pm_runtime_resume_and_get(dev);
+ 	if (ret < 0) {
+-		dev_err(&pdev->dev, "pm_runtime_resume_and_get failed: %d\n", ret);
++		dev_err(dev, "pm_runtime_resume_and_get failed: %d\n", ret);
+ 		goto pm_disable;
+ 	}
+ 
+@@ -585,7 +585,7 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 					      node, &rzg2l_irqc_domain_ops,
+ 					      rzg2l_irqc_data);
+ 	if (!irq_domain) {
+-		dev_err(&pdev->dev, "failed to add irq domain\n");
++		dev_err(dev, "failed to add irq domain\n");
+ 		ret = -ENOMEM;
+ 		goto pm_put;
+ 	}
+@@ -606,9 +606,9 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 	return 0;
+ 
+ pm_put:
+-	pm_runtime_put(&pdev->dev);
++	pm_runtime_put(dev);
+ pm_disable:
+-	pm_runtime_disable(&pdev->dev);
++	pm_runtime_disable(dev);
+ 	reset_control_assert(resetn);
+ 	return ret;
+ }

@@ -1,0 +1,82 @@
+From a3a1239b4b87cf230b2889e702f2f6826cbf7695 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:43 +0200
+Subject: [PATCH 580/600] spi: dt-bindings: renesas,rzv2h-rspi: allow multiple
+ DMAs
+
+commit 4d28f38f64ef69ab27839069ef3346c3c878d137 upstream.
+
+All supported SoCs have multiple DMA controllers that can be used with
+the RSPI peripheral. The current bindings only allow a single pair of RX
+and TX DMAs.
+
+The DMA core allows specifying multiple DMAs with the same name, and it
+will pick the first available one.
+
+There is an exception in the base dt-schema rules specifically for
+allowing this behavior (dtschema/schemas/dma/dma.yaml).
+
+dma-names:
+  anyOf:
+    - uniqueItems: true
+    - items:
+        # Hack around Renesas bindings which repeat entries to support
+        # multiple possible DMA providers
+        enum: [rx, tx]
+
+Allow multiple DMAs to have the same name and only restrict the possible
+names of the DMA channels, not their count.
+
+For RZ/T2H and RZ/N2H SoCs, limit the number of DMA channels to 6, as
+they have 3 DMA controllers.
+
+For RZ/V2H and RZ/V2N SoCs, limit the number of DMA channels to 10, as
+they have 5 DMA controllers.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://patch.msgid.link/20260128215132.1353381-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/spi/renesas,rzv2h-rspi.yaml         | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+index a588b112e11e..cf8b733b766d 100644
+--- a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
++++ b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+@@ -58,12 +58,16 @@ properties:
+       - const: tresetn
+ 
+   dmas:
+-    maxItems: 2
++    minItems: 2
++    maxItems: 10
+ 
+   dma-names:
++    minItems: 2
++    maxItems: 10
+     items:
+-      - const: rx
+-      - const: tx
++      enum:
++        - rx
++        - tx
+ 
+   power-domains:
+     maxItems: 1
+@@ -121,6 +125,12 @@ allOf:
+         resets: false
+         reset-names: false
+ 
++        dmas:
++          maxItems: 6
++
++        dma-names:
++          maxItems: 6
++
+ unevaluatedProperties: false
+ 
+ examples:

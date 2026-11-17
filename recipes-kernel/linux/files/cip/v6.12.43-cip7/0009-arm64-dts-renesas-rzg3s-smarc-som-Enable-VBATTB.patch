@@ -1,0 +1,48 @@
+From 0b826fc1ac23b061ed17b98baac3f57858ff862d Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 1 Nov 2024 11:57:18 +0200
+Subject: [PATCH 009/246] arm64: dts: renesas: rzg3s-smarc-som: Enable VBATTB
+
+Commit ac948eb8ead1265ff034955bdbbb081744f1e7ed upstream.
+
+Enable the VBATTB controller. It provides the clock for RTC.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20241101095720.2247815-8-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index d2d367c09abd..3d25f3c4ab6c 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -5,6 +5,7 @@
+  * Copyright (C) 2023 Renesas Electronics Corp.
+  */
+ 
++#include <dt-bindings/clock/renesas,r9a08g045-vbattb.h>
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+ 
+@@ -339,6 +340,17 @@ mux {
+ 	};
+ };
+ 
++&vbattb {
++	assigned-clocks = <&vbattb VBATTB_MUX>;
++	assigned-clock-parents = <&vbattb VBATTB_XC>;
++	quartz-load-femtofarads = <12500>;
++	status = "okay";
++};
++
++&vbattb_xtal {
++	clock-frequency = <32768>;
++};
++
+ &wdt0 {
+ 	timeout-sec = <60>;
+ 	status = "okay";

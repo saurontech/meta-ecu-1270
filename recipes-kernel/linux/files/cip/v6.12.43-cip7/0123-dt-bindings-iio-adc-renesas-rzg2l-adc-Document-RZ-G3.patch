@@ -1,0 +1,114 @@
+From d1fe2fbd1a246b3a71e4e2ca9453f9f2d1ecf115 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:10 +0300
+Subject: [PATCH 123/246] dt-bindings: iio: adc: renesas,rzg2l-adc: Document
+ RZ/G3S SoC
+
+commit 4af77feab3a2d489e2c7390e8d31b2f88d0b3db6 upstream.
+
+Document the ADC IP available on the RZ/G3S SoC. The ADC IP on the RZ/G3S
+differs slightly from the one found on the RZ/G2L. The identified
+differences are as follows:
+- different number of channels (one being used for temperature conversion);
+  consequently, various registers differ; the temperature channel
+  support was not available for the RZ/G2L variant; the #io-channel-cells
+  property was added to be able to request the temperature channel from
+  the thermal driver
+- different default sampling periods
+- the RZ/G3S variant lacks the ADVIC register.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20241206111337.726244-13-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/iio/adc/renesas,rzg2l-adc.yaml   | 37 +++++++++++++------
+ 1 file changed, 26 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/iio/adc/renesas,rzg2l-adc.yaml b/Documentation/devicetree/bindings/iio/adc/renesas,rzg2l-adc.yaml
+index ba86c7b7d622..40341d541726 100644
+--- a/Documentation/devicetree/bindings/iio/adc/renesas,rzg2l-adc.yaml
++++ b/Documentation/devicetree/bindings/iio/adc/renesas,rzg2l-adc.yaml
+@@ -17,12 +17,15 @@ description: |
+ 
+ properties:
+   compatible:
+-    items:
+-      - enum:
+-          - renesas,r9a07g043-adc   # RZ/G2UL and RZ/Five
+-          - renesas,r9a07g044-adc   # RZ/G2L
+-          - renesas,r9a07g054-adc   # RZ/V2L
+-      - const: renesas,rzg2l-adc
++    oneOf:
++      - items:
++          - enum:
++              - renesas,r9a07g043-adc   # RZ/G2UL and RZ/Five
++              - renesas,r9a07g044-adc   # RZ/G2L
++              - renesas,r9a07g054-adc   # RZ/V2L
++          - const: renesas,rzg2l-adc
++      - items:
++          - const: renesas,r9a08g045-adc  # RZ/G3S
+ 
+   reg:
+     maxItems: 1
+@@ -57,6 +60,9 @@ properties:
+   '#size-cells':
+     const: 0
+ 
++  "#io-channel-cells":
++    const: 1
++
+ required:
+   - compatible
+   - reg
+@@ -68,7 +74,7 @@ required:
+   - reset-names
+ 
+ patternProperties:
+-  "^channel@[0-7]$":
++  "^channel@[0-8]$":
+     $ref: adc.yaml
+     type: object
+     description: |
+@@ -78,6 +84,8 @@ patternProperties:
+       reg:
+         description: |
+           The channel number.
++        minimum: 0
++        maximum: 8
+ 
+     required:
+       - reg
+@@ -92,18 +100,25 @@ allOf:
+             const: renesas,r9a07g043-adc
+     then:
+       patternProperties:
+-        "^channel@[2-7]$": false
++        "^channel@[2-8]$": false
+         "^channel@[0-1]$":
+           properties:
+             reg:
+-              minimum: 0
+               maximum: 1
+-    else:
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,r9a07g044-adc
++              - renesas,r9a07g054-adc
++    then:
+       patternProperties:
++        "^channel@[8]$": false
+         "^channel@[0-7]$":
+           properties:
+             reg:
+-              minimum: 0
+               maximum: 7
+ 
+ additionalProperties: false

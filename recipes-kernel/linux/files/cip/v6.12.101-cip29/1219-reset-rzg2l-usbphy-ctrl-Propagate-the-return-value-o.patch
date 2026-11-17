@@ -1,0 +1,63 @@
+From 2f59b7e425cf55b0e7e313d6086b5c2fa6a33063 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:25 +0300
+Subject: [PATCH 1219/1853] reset: rzg2l-usbphy-ctrl: Propagate the return
+ value of regmap_field_update_bits()
+
+commit 2289ccd753deeb2cfe300d97e8697680c1ce556c upstream.
+
+Propagate the return value of regmap_field_update_bits() to avoid losing
+any possible error. With this, the return type of
+rzg2l_usbphy_ctrl_set_pwrrdy() was updated accordingly.
+
+Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/reset/reset-rzg2l-usbphy-ctrl.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/reset/reset-rzg2l-usbphy-ctrl.c b/drivers/reset/reset-rzg2l-usbphy-ctrl.c
+index 6d8c48d247a0..6158f8a288af 100644
+--- a/drivers/reset/reset-rzg2l-usbphy-ctrl.c
++++ b/drivers/reset/reset-rzg2l-usbphy-ctrl.c
+@@ -117,13 +117,13 @@ static const struct regmap_config rzg2l_usb_regconf = {
+ 	.max_register = 1,
+ };
+ 
+-static void rzg2l_usbphy_ctrl_set_pwrrdy(struct regmap_field *pwrrdy,
+-					 bool power_on)
++static int rzg2l_usbphy_ctrl_set_pwrrdy(struct regmap_field *pwrrdy,
++					bool power_on)
+ {
+ 	u32 val = power_on ? 0 : 1;
+ 
+ 	/* The initialization path guarantees that the mask is 1 bit long. */
+-	regmap_field_update_bits(pwrrdy, 1, val);
++	return regmap_field_update_bits(pwrrdy, 1, val);
+ }
+ 
+ static void rzg2l_usbphy_ctrl_pwrrdy_off(void *data)
+@@ -138,6 +138,7 @@ static int rzg2l_usbphy_ctrl_pwrrdy_init(struct device *dev)
+ 	struct regmap *regmap;
+ 	const int *data;
+ 	u32 args[2];
++	int ret;
+ 
+ 	data = device_get_match_data(dev);
+ 	if ((uintptr_t)data != RZG2L_USBPHY_CTRL_PWRRDY)
+@@ -161,7 +162,9 @@ static int rzg2l_usbphy_ctrl_pwrrdy_init(struct device *dev)
+ 	if (IS_ERR(pwrrdy))
+ 		return PTR_ERR(pwrrdy);
+ 
+-	rzg2l_usbphy_ctrl_set_pwrrdy(pwrrdy, true);
++	ret = rzg2l_usbphy_ctrl_set_pwrrdy(priv->pwrrdy, true);
++	if (ret)
++		return ret;
+ 
+ 	return devm_add_action_or_reset(dev, rzg2l_usbphy_ctrl_pwrrdy_off, pwrrdy);
+ }

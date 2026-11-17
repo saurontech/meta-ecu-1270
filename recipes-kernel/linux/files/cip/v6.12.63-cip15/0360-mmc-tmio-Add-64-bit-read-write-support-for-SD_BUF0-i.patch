@@ -1,0 +1,118 @@
+From 99c7bf9a1f32a7a7285b339a12f847162b17acb3 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sun, 14 Dec 2025 12:16:17 +0000
+Subject: [PATCH 360/724] mmc: tmio: Add 64-bit read/write support for SD_BUF0
+ in polling mode
+
+[ Upstream commit 74f44ad07d1063933c237a7db16f6a4036643d60 ]
+
+As per the RZ/{G2L,G3E} HW manual SD_BUF0 can be accessed by 16/32/64
+bits. Most of the data transfer in SD/SDIO/eMMC mode is more than 8 bytes.
+During testing it is found that, if the DMA buffer is not aligned to 128
+bit it fallback to PIO mode. In such cases, 64-bit access is much more
+efficient than the current 16-bit.
+
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250730164618.233117-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/mmc/host/tmio_mmc.h        | 15 ++++++++++++++
+ drivers/mmc/host/tmio_mmc_core.c   | 33 ++++++++++++++++++++++++++++++
+ include/linux/platform_data/tmio.h |  3 +++
+ 3 files changed, 51 insertions(+)
+
+diff --git a/drivers/mmc/host/tmio_mmc.h b/drivers/mmc/host/tmio_mmc.h
+index 41787ea77a13..a7263eb10450 100644
+--- a/drivers/mmc/host/tmio_mmc.h
++++ b/drivers/mmc/host/tmio_mmc.h
+@@ -16,6 +16,7 @@
+ 
+ #include <linux/dmaengine.h>
+ #include <linux/highmem.h>
++#include <linux/io.h>
+ #include <linux/mutex.h>
+ #include <linux/pagemap.h>
+ #include <linux/scatterlist.h>
+@@ -242,6 +243,20 @@ static inline void sd_ctrl_read32_rep(struct tmio_mmc_host *host, int addr,
+ 	ioread32_rep(host->ctl + (addr << host->bus_shift), buf, count);
+ }
+ 
++#ifdef CONFIG_64BIT
++static inline void sd_ctrl_read64_rep(struct tmio_mmc_host *host, int addr,
++				      u64 *buf, int count)
++{
++	readsq(host->ctl + (addr << host->bus_shift), buf, count);
++}
++
++static inline void sd_ctrl_write64_rep(struct tmio_mmc_host *host, int addr,
++				       const u64 *buf, int count)
++{
++	writesq(host->ctl + (addr << host->bus_shift), buf, count);
++}
++#endif
++
+ static inline void sd_ctrl_write16(struct tmio_mmc_host *host, int addr,
+ 				   u16 val)
+ {
+diff --git a/drivers/mmc/host/tmio_mmc_core.c b/drivers/mmc/host/tmio_mmc_core.c
+index 45a474ccab1c..6b12607fd167 100644
+--- a/drivers/mmc/host/tmio_mmc_core.c
++++ b/drivers/mmc/host/tmio_mmc_core.c
+@@ -351,6 +351,39 @@ static void tmio_mmc_transfer_data(struct tmio_mmc_host *host,
+ 	/*
+ 	 * Transfer the data
+ 	 */
++#ifdef CONFIG_64BIT
++	if (host->pdata->flags & TMIO_MMC_64BIT_DATA_PORT) {
++		u64 *buf64 = (u64 *)buf;
++		u64 data = 0;
++
++		if (count >= 8) {
++			if (is_read)
++				sd_ctrl_read64_rep(host, CTL_SD_DATA_PORT,
++						   buf64, count >> 3);
++			else
++				sd_ctrl_write64_rep(host, CTL_SD_DATA_PORT,
++						    buf64, count >> 3);
++		}
++
++		/* if count was multiple of 8 */
++		if (!(count & 0x7))
++			return;
++
++		buf64 += count >> 3;
++		count %= 8;
++
++		if (is_read) {
++			sd_ctrl_read64_rep(host, CTL_SD_DATA_PORT, &data, 1);
++			memcpy(buf64, &data, count);
++		} else {
++			memcpy(&data, buf64, count);
++			sd_ctrl_write64_rep(host, CTL_SD_DATA_PORT, &data, 1);
++		}
++
++		return;
++	}
++#endif
++
+ 	if (host->pdata->flags & TMIO_MMC_32BIT_DATA_PORT) {
+ 		u32 data = 0;
+ 		u32 *buf32 = (u32 *)buf;
+diff --git a/include/linux/platform_data/tmio.h b/include/linux/platform_data/tmio.h
+index b060124ba1ae..426291713b83 100644
+--- a/include/linux/platform_data/tmio.h
++++ b/include/linux/platform_data/tmio.h
+@@ -47,6 +47,9 @@
+ /* Some controllers have a CBSY bit */
+ #define TMIO_MMC_HAVE_CBSY		BIT(11)
+ 
++/* Some controllers have a 64-bit wide data port register */
++#define TMIO_MMC_64BIT_DATA_PORT	BIT(12)
++
+ struct tmio_mmc_data {
+ 	void				*chan_priv_tx;
+ 	void				*chan_priv_rx;

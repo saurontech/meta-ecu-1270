@@ -1,0 +1,119 @@
+From 00e8eb00b58ed93c3a1a38ecae837b98964f4fce Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:29 +0200
+Subject: [PATCH 351/643] media: renesas: rzg2l-cru: Add 'yuv' flag to IP
+ format structure
+
+commit 2269e399b3f0f9d474606cddd9cb6a833fc62b7f upstream.
+
+Add a 'yuv' flag to the `rzg2l_cru_ip_format` structure to indicate
+whether a given format is YUV-based and update the `rzg2l_cru_ip_formats`
+array with this flag appropriately. This change enables a more efficient
+way to check if the input and output formats use the same colorspace.
+
+With this change, we can eliminate the use of `v4l2_format_info()` in
+`rzg2l_cru_initialize_image_conv()` as the necessary details for the source
+and destination formats are already available through the `yuv` flag.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-24-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h   | 2 ++
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c    | 5 +++++
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c | 6 +-----
+ 3 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index a83e78d9b0be..8b898ce05b84 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -69,6 +69,7 @@ struct rzg2l_cru_ip {
+  * @format: 4CC format identifier (V4L2_PIX_FMT_*)
+  * @icndmr: ICnDMR register value
+  * @bpp: bytes per pixel
++ * @yuv: Flag to indicate whether the format is YUV-based.
+  */
+ struct rzg2l_cru_ip_format {
+ 	u32 code;
+@@ -76,6 +77,7 @@ struct rzg2l_cru_ip_format {
+ 	u32 format;
+ 	u32 icndmr;
+ 	u8 bpp;
++	bool yuv;
+ };
+ 
+ /**
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index d935d981f9d3..76a2b451f1da 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -18,6 +18,7 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.format = V4L2_PIX_FMT_UYVY,
+ 		.bpp = 2,
+ 		.icndmr = ICnDMR_YCMODE_UYVY,
++		.yuv = true,
+ 	},
+ 	{
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+@@ -25,6 +26,7 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.datatype = MIPI_CSI2_DT_RAW8,
+ 		.bpp = 1,
+ 		.icndmr = 0,
++		.yuv = false,
+ 	},
+ 	{
+ 		.code = MEDIA_BUS_FMT_SGBRG8_1X8,
+@@ -32,6 +34,7 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.datatype = MIPI_CSI2_DT_RAW8,
+ 		.bpp = 1,
+ 		.icndmr = 0,
++		.yuv = false,
+ 	},
+ 	{
+ 		.code = MEDIA_BUS_FMT_SGRBG8_1X8,
+@@ -39,6 +42,7 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.datatype = MIPI_CSI2_DT_RAW8,
+ 		.bpp = 1,
+ 		.icndmr = 0,
++		.yuv = false,
+ 	},
+ 	{
+ 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+@@ -46,6 +50,7 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.datatype = MIPI_CSI2_DT_RAW8,
+ 		.bpp = 1,
+ 		.icndmr = 0,
++		.yuv = false,
+ 	},
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index a4dc3689599c..e980afc32504 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -210,7 +210,6 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 					   struct v4l2_mbus_framefmt *ip_sd_fmt,
+ 					   u8 csi_vc)
+ {
+-	const struct v4l2_format_info *src_finfo, *dst_finfo;
+ 	const struct rzg2l_cru_ip_format *cru_video_fmt;
+ 	const struct rzg2l_cru_ip_format *cru_ip_fmt;
+ 
+@@ -225,11 +224,8 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 		return -EINVAL;
+ 	}
+ 
+-	src_finfo = v4l2_format_info(cru_ip_fmt->format);
+-	dst_finfo = v4l2_format_info(cru->format.pixelformat);
+-
+ 	/* If input and output use same colorspace, do bypass mode */
+-	if (v4l2_is_format_yuv(src_finfo) == v4l2_is_format_yuv(dst_finfo))
++	if (cru_ip_fmt->yuv == cru_video_fmt->yuv)
+ 		rzg2l_cru_write(cru, ICnMC,
+ 				rzg2l_cru_read(cru, ICnMC) | ICnMC_CSCTHR);
+ 	else

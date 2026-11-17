@@ -1,0 +1,72 @@
+From 3e44fffa10c52275dc94f8575a6a6bd29be078a7 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:21 +0100
+Subject: [PATCH 204/246] can: rcar_canfd: Add rcar_canfd_setrnc()
+
+commit 6b9f8b53a1f3ad8e7880e3ad0e08074f5d7fd404 upstream.
+
+Add rcar_canfd_setrnc() to replace the macro RCANFD_GAFLCFG_SETRNC.
+While at it, replace int->unsigned int for local variables offset, page
+and num_rules in rcar_canfd_configure_afl_rules().
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-8-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 45d0c34f64f6..6b87c1548f68 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -90,10 +90,6 @@
+ 
+ /* AFL Rx rules registers */
+ 
+-/* RSCFDnCFDGAFLCFG0 / RSCFDnGAFLCFG0 */
+-#define RCANFD_GAFLCFG_SETRNC(gpriv, n, x) \
+-	((x) << (reg_gen4(gpriv, 16, 24) - ((n) & 1) * reg_gen4(gpriv, 16, 8)))
+-
+ /* RSCFDnCFDGAFLECTR / RSCFDnGAFLECTR */
+ #define RCANFD_GAFLECTR_AFLDAE		BIT(8)
+ #define RCANFD_GAFLECTR_AFLPN(gpriv, x)	((x) & reg_gen4(gpriv, 0x7f, 0x1f))
+@@ -677,6 +673,15 @@ static void rcar_canfd_tx_failure_cleanup(struct net_device *ndev)
+ 		can_free_echo_skb(ndev, i, NULL);
+ }
+ 
++static void rcar_canfd_setrnc(struct rcar_canfd_global *gpriv, unsigned int ch,
++			      unsigned int num_rules)
++{
++	unsigned int shift = reg_gen4(gpriv, 16, 24) - (ch & 1) * reg_gen4(gpriv, 16, 8);
++	u32 rnc = num_rules << shift;
++
++	rcar_canfd_set_bit(gpriv->base, RCANFD_GAFLCFG(ch), rnc);
++}
++
+ static void rcar_canfd_set_mode(struct rcar_canfd_global *gpriv)
+ {
+ 	if (is_gen4(gpriv)) {
+@@ -785,7 +790,7 @@ static void rcar_canfd_configure_controller(struct rcar_canfd_global *gpriv)
+ static void rcar_canfd_configure_afl_rules(struct rcar_canfd_global *gpriv,
+ 					   u32 ch, u32 rule_entry)
+ {
+-	int offset, page, num_rules = RCANFD_CHANNEL_NUMRULES;
++	unsigned int offset, page, num_rules = RCANFD_CHANNEL_NUMRULES;
+ 	u32 rule_entry_index = rule_entry % 16;
+ 	u32 ridx = ch + RCANFD_RFFIFO_IDX;
+ 
+@@ -796,8 +801,7 @@ static void rcar_canfd_configure_afl_rules(struct rcar_canfd_global *gpriv,
+ 			    RCANFD_GAFLECTR_AFLDAE));
+ 
+ 	/* Write number of rules for channel */
+-	rcar_canfd_set_bit(gpriv->base, RCANFD_GAFLCFG(ch),
+-			   RCANFD_GAFLCFG_SETRNC(gpriv, ch, num_rules));
++	rcar_canfd_setrnc(gpriv, ch, num_rules);
+ 	if (is_gen4(gpriv))
+ 		offset = RCANFD_GEN4_GAFL_OFFSET;
+ 	else if (gpriv->fdmode)

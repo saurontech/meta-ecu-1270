@@ -1,0 +1,54 @@
+From 51aae6f3ac1862056fdb0acb459145fd8bc5aaa2 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:35:49 +0200
+Subject: [PATCH 823/838] mmc: sdio: Drop dev_pm_domain_detach() call
+
+commit c2ef7a03f5c8f0a612a8beff666483b725adf8fc upstream.
+
+Starting with commit f99508074e78 ("PM: domains: Detach on
+device_unbind_cleanup()"), there is no longer a need to call
+dev_pm_domain_detach() in the bus remove function. The
+device_unbind_cleanup() function now handles this to avoid
+invoking devres cleanup handlers while the PM domain is
+powered off, which could otherwise lead to failures as
+described in the above-mentioned commit.
+
+Drop the explicit dev_pm_domain_detach() call and rely instead
+on the flags passed to dev_pm_domain_attach() to power off the
+domain.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250827101236.927313-1-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+[claudiu.beznea: drop dev_pm_domain_detach() conditionally]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/mmc/core/sdio_bus.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
+index 656601754966..07704ad86131 100644
+--- a/drivers/mmc/core/sdio_bus.c
++++ b/drivers/mmc/core/sdio_bus.c
+@@ -200,7 +200,8 @@ static int sdio_bus_probe(struct device *dev)
+ 	atomic_dec(&func->card->sdio_funcs_probed);
+ 	if (func->card->host->caps & MMC_CAP_POWER_OFF_CARD)
+ 		pm_runtime_put_noidle(dev);
+-	dev_pm_domain_detach(dev, false);
++	if (!dev_pm_domain_allow_detach_on_unbind_cleanup())
++		dev_pm_domain_detach(dev, false);
+ 	return ret;
+ }
+ 
+@@ -232,7 +233,8 @@ static void sdio_bus_remove(struct device *dev)
+ 	if (func->card->host->caps & MMC_CAP_POWER_OFF_CARD)
+ 		pm_runtime_put_sync(dev);
+ 
+-	dev_pm_domain_detach(dev, false);
++	if (!dev_pm_domain_allow_detach_on_unbind_cleanup())
++		dev_pm_domain_detach(dev, false);
+ }
+ 
+ static const struct dev_pm_ops sdio_bus_pm_ops = {

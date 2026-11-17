@@ -1,0 +1,85 @@
+From 20e703b218cbf2951699bd0794bbd17f7f77abe9 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:09 +0000
+Subject: [PATCH 020/838] arm64: dts: renesas: r9a09g077m44-rzt2h-evk: Enable
+ I2C0 and I2C1 support
+
+commit 6f21672c42fc432d69d8fd51e5d8cea145d5be5b upstream.
+
+Enable I2C0 and I2C1 on the RZ/T2H evaluation board.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250812200344.3253781-9-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g077m44-rzt2h-evk.dts    | 36 +++++++++++++++++++
+ .../dts/renesas/rzt2h-n2h-evk-common.dtsi     |  2 ++
+ 2 files changed, 38 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+index dd65eb290405..6aeb5cacead3 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+@@ -7,6 +7,8 @@
+ 
+ /dts-v1/;
+ 
++#include <dt-bindings/pinctrl/renesas,r9a09g077-pinctrl.h>
++
+ #include "r9a09g077m44.dtsi"
+ #include "rzt2h-n2h-evk-common.dtsi"
+ 
+@@ -89,3 +91,37 @@ led-8 {
+ 		};
+ 	};
+ };
++
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <400000>;
++	status = "okay";
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <400000>;
++	status = "okay";
++};
++
++&pinctrl {
++	/*
++	 * I2C0 Pin Configuration:
++	 * ------------------------
++	 * Signal | Pin     | SW6
++	 * -------|---------|--------------
++	 * SCL    | P23_3   | 7: ON, 8: OFF
++	 * SDA    | P23_4   | 9: ON, 10: OFF
++	 */
++	i2c0_pins: i2c0-pins {
++		pinmux = <RZT2H_PORT_PINMUX(23, 3, 0x17)>,
++			 <RZT2H_PORT_PINMUX(23, 4, 0x17)>;
++	};
++
++	i2c1_pins: i2c1-pins {
++		pinmux = <RZT2H_PORT_PINMUX(5, 0, 0x17)>, /* SDA */
++			 <RZT2H_PORT_PINMUX(4, 7, 0x17)>; /* SCL */
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+index 245b70f1557f..06300f806685 100644
+--- a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+@@ -11,6 +11,8 @@
+ 
+ / {
+ 	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
+ 		serial0 = &sci0;
+ 	};
+ 

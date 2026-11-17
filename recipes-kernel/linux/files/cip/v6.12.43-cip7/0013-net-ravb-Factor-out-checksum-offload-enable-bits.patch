@@ -1,0 +1,78 @@
+From 04870c1ca263fd48a9fdad56b21512ddf4ceca1e Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:25 +0100
+Subject: [PATCH 013/246] net: ravb: Factor out checksum offload enable bits
+
+Commit 8e3037924a36505531999df8f5847a68b9272c41 upstream.
+
+Introduce new constants for the CSR1 (TX) and CSR2 (RX) checksum enable
+bits, removing the risk of inconsistency when we change which flags we
+enable.
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb.h      | 4 ++++
+ drivers/net/ethernet/renesas/ravb_main.c | 9 ++++-----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index a7de5cf6b317..4e1e0a754cd9 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -998,6 +998,8 @@ enum CSR1_BIT {
+ 	CSR1_TDHD	= 0x08000000,
+ };
+ 
++#define CSR1_CSUM_ENABLE (CSR1_TIP4 | CSR1_TTCP4 | CSR1_TUDP4)
++
+ enum CSR2_BIT {
+ 	CSR2_RIP4	= 0x00000001,
+ 	CSR2_RTCP4	= 0x00000010,
+@@ -1012,6 +1014,8 @@ enum CSR2_BIT {
+ 	CSR2_RDHD	= 0x08000000,
+ };
+ 
++#define CSR2_CSUM_ENABLE (CSR2_RIP4 | CSR2_RTCP4 | CSR2_RUDP4 | CSR2_RICMP4)
++
+ #define DBAT_ENTRY_NUM	22
+ #define RX_QUEUE_OFFSET	4
+ #define NUM_RX_QUEUE	2
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index cc4f0d16c763..a4f7e395f8cb 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -504,11 +504,10 @@ static void ravb_csum_init_gbeth(struct net_device *ndev)
+ 			ndev->features &= ~NETIF_F_RXCSUM;
+ 	} else {
+ 		if (tx_enable)
+-			ravb_write(ndev, CSR1_TIP4 | CSR1_TTCP4 | CSR1_TUDP4, CSR1);
++			ravb_write(ndev, CSR1_CSUM_ENABLE, CSR1);
+ 
+ 		if (rx_enable)
+-			ravb_write(ndev, CSR2_RIP4 | CSR2_RTCP4 | CSR2_RUDP4 | CSR2_RICMP4,
+-				   CSR2);
++			ravb_write(ndev, CSR2_CSUM_ENABLE, CSR2);
+ 	}
+ 
+ done:
+@@ -2530,7 +2529,7 @@ static int ravb_set_features_gbeth(struct net_device *ndev,
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	if (changed & NETIF_F_RXCSUM) {
+ 		if (features & NETIF_F_RXCSUM)
+-			val = CSR2_RIP4 | CSR2_RTCP4 | CSR2_RUDP4 | CSR2_RICMP4;
++			val = CSR2_CSUM_ENABLE;
+ 		else
+ 			val = 0;
+ 
+@@ -2541,7 +2540,7 @@ static int ravb_set_features_gbeth(struct net_device *ndev,
+ 
+ 	if (changed & NETIF_F_HW_CSUM) {
+ 		if (features & NETIF_F_HW_CSUM)
+-			val = CSR1_TIP4 | CSR1_TTCP4 | CSR1_TUDP4;
++			val = CSR1_CSUM_ENABLE;
+ 		else
+ 			val = 0;
+ 

@@ -1,0 +1,220 @@
+From c3f851fc2e6222c75b8c3f6be50ba18c6e0b1985 Mon Sep 17 00:00:00 2001
+From: "Matthieu Baerts (NGI0)" <matttbe@kernel.org>
+Date: Wed, 16 Sep 2026 23:16:40 -0400
+Subject: [PATCH 753/854] mptcp: pm: use for_each_subflow helper
+
+[ Upstream commit f81689172429885d6c2c7c3dd4926ec626e794bb ]
+
+Similar to most places in the MPTCP code. So instead of passing the
+subflow list and use list_for_each_entry(subflow, list, node), pass the
+msk and use mptcp_for_each_subflow(msk, subflow).
+
+That's clearer and more uniform with the rest.
+
+While at it, add 'pm_' prefix for the exported one to easily identify
+the origin. Plus replace 'lookup' by 'has', because a bool is returned.
+
+Reviewed-by: Mat Martineau <martineau@kernel.org>
+Signed-off-by: Matthieu Baerts (NGI0) <matttbe@kernel.org>
+Link: https://patch.msgid.link/20260605-net-next-mptcp-add-addr6-port-ts-v2-9-758e7ca73f4d@kernel.org
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+
+Stable backport adaptation for 2ac7d6e620764f1fc79eb4edd3610a7a661981ca:
+
+The stable tree keeps both subflow lookups and their callers in
+pm_netlink.c. Apply the iterator conversion there, retaining private
+helpers and using has_subflow_saddr() for the source-address lookup.
+Drop the upstream pm.c, pm_userspace.c and protocol.h hunks, which assume
+helper moves and a userspace callback not present on this branch.
+
+Rename pm_netlink.c to pm_kernel.c and update the Makefile so the target
+patch finds its existing ID0 removal function at the upstream path.
+Rename the existing remove_anno_list_by_saddr() and
+mptcp_pm_nl_rm_subflow_received() helpers to mptcp_pm_announced_remove()
+and mptcp_pm_rm_subflow(), updating all callers, to provide the target's
+helper name and patch context. Keep their stable implementations and
+static linkage. No functions are added and the ID0 fix itself remains
+for the target commit.
+
+[ sashal: Reduced backport -- upstream f816891724298 touches 4 file(s), this
+  backport carries 2. Not backported here:
+  net/mptcp/pm.c
+  net/mptcp/pm_userspace.c
+  net/mptcp/protocol.h
+  This note is generated from the file lists only; see the resolution record
+  for the reasoning. ]
+
+Stable-dep-of: 2ac7d6e62076 ("mptcp: pm: kernel: drop pending ADD_ADDR when removing ID0")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ net/mptcp/Makefile                      |  2 +-
+ net/mptcp/{pm_netlink.c => pm_kernel.c} | 41 ++++++++++++-------------
+ 2 files changed, 21 insertions(+), 22 deletions(-)
+ rename net/mptcp/{pm_netlink.c => pm_kernel.c} (98%)
+
+diff --git a/net/mptcp/Makefile b/net/mptcp/Makefile
+index bcf1dbf3a432f..8d5efaed6f98c 100644
+--- a/net/mptcp/Makefile
++++ b/net/mptcp/Makefile
+@@ -2,7 +2,7 @@
+ obj-$(CONFIG_MPTCP) += mptcp.o
+ 
+ mptcp-y := protocol.o subflow.o options.o token.o crypto.o ctrl.o pm.o diag.o \
+-	   mib.o pm_netlink.o sockopt.o pm_userspace.o fastopen.o sched.o \
++	   mib.o pm_kernel.o sockopt.o pm_userspace.o fastopen.o sched.o \
+ 	   mptcp_pm_gen.o
+ 
+ obj-$(CONFIG_SYN_COOKIES) += syncookies.o
+diff --git a/net/mptcp/pm_netlink.c b/net/mptcp/pm_kernel.c
+similarity index 98%
+rename from net/mptcp/pm_netlink.c
+rename to net/mptcp/pm_kernel.c
+index 18f310e50d09b..b311d63e78f99 100644
+--- a/net/mptcp/pm_netlink.c
++++ b/net/mptcp/pm_kernel.c
+@@ -109,14 +109,14 @@ static void remote_address(const struct sock_common *skc,
+ #endif
+ }
+ 
+-static bool lookup_subflow_by_saddr(const struct list_head *list,
+-				    const struct mptcp_addr_info *saddr)
++static bool has_subflow_saddr(const struct mptcp_sock *msk,
++			      const struct mptcp_addr_info *saddr)
+ {
+ 	struct mptcp_subflow_context *subflow;
+ 	struct mptcp_addr_info cur;
+ 	struct sock_common *skc;
+ 
+-	list_for_each_entry(subflow, list, node) {
++	mptcp_for_each_subflow(msk, subflow) {
+ 		skc = (struct sock_common *)mptcp_subflow_tcp_sock(subflow);
+ 
+ 		mptcp_local_address(skc, &cur);
+@@ -127,13 +127,13 @@ static bool lookup_subflow_by_saddr(const struct list_head *list,
+ 	return false;
+ }
+ 
+-static bool lookup_subflow_by_daddr(const struct list_head *list,
+-				    const struct mptcp_addr_info *daddr)
++static bool has_subflow_daddr(const struct mptcp_sock *msk,
++			      const struct mptcp_addr_info *daddr)
+ {
+ 	struct mptcp_subflow_context *subflow;
+ 	struct mptcp_addr_info cur;
+ 
+-	list_for_each_entry(subflow, list, node) {
++	mptcp_for_each_subflow(msk, subflow) {
+ 		struct sock *ssk = mptcp_subflow_tcp_sock(subflow);
+ 
+ 		if (!((1 << inet_sk_state_load(ssk)) &
+@@ -843,7 +843,7 @@ static void mptcp_pm_nl_add_addr_received(struct mptcp_sock *msk)
+ 	mptcp_pm_announce_addr(msk, &remote, true);
+ 	mptcp_pm_nl_addr_send_ack(msk);
+ 
+-	if (lookup_subflow_by_daddr(&msk->conn_list, &remote))
++	if (has_subflow_daddr(msk, &remote))
+ 		return;
+ 
+ 	/* pick id 0 port, if none is provided the remote address */
+@@ -1047,8 +1047,8 @@ static void mptcp_pm_nl_rm_addr_received(struct mptcp_sock *msk)
+ 	mptcp_pm_nl_rm_addr_or_subflow(msk, &msk->pm.rm_list_rx, MPTCP_MIB_RMADDR);
+ }
+ 
+-static void mptcp_pm_nl_rm_subflow_received(struct mptcp_sock *msk,
+-					    const struct mptcp_rm_list *rm_list)
++static void mptcp_pm_rm_subflow(struct mptcp_sock *msk,
++				const struct mptcp_rm_list *rm_list)
+ {
+ 	mptcp_pm_nl_rm_addr_or_subflow(msk, rm_list, MPTCP_MIB_RMSUBFLOW);
+ }
+@@ -1572,7 +1572,7 @@ int mptcp_pm_nl_add_addr_doit(struct sk_buff *skb, struct genl_info *info)
+ 	return ret;
+ }
+ 
+-static bool remove_anno_list_by_saddr(struct mptcp_sock *msk,
++static bool mptcp_pm_announced_remove(struct mptcp_sock *msk,
+ 				      const struct mptcp_addr_info *addr)
+ {
+ 	struct mptcp_pm_add_entry *entry;
+@@ -1601,7 +1601,7 @@ static bool mptcp_pm_remove_anno_addr(struct mptcp_sock *msk,
+ 
+ 	list.ids[list.nr++] = mptcp_endp_get_local_id(msk, addr);
+ 
+-	ret = remove_anno_list_by_saddr(msk, addr);
++	ret = mptcp_pm_announced_remove(msk, addr);
+ 	if (ret || force) {
+ 		spin_lock_bh(&msk->pm.lock);
+ 		if (ret)
+@@ -1638,7 +1638,7 @@ static int mptcp_nl_remove_subflow_and_signal_addr(struct net *net,
+ 			goto next;
+ 
+ 		lock_sock(sk);
+-		remove_subflow = lookup_subflow_by_saddr(&msk->conn_list, addr);
++		remove_subflow = has_subflow_saddr(msk, addr);
+ 		mptcp_pm_remove_anno_addr(msk, addr, remove_subflow &&
+ 					  !(entry->flags & MPTCP_PM_ADDR_FLAG_IMPLICIT));
+ 
+@@ -1646,7 +1646,7 @@ static int mptcp_nl_remove_subflow_and_signal_addr(struct net *net,
+ 
+ 		spin_lock_bh(&msk->pm.lock);
+ 		if (remove_subflow)
+-			mptcp_pm_nl_rm_subflow_received(msk, &list);
++			mptcp_pm_rm_subflow(msk, &list);
+ 		if (entry->flags & MPTCP_PM_ADDR_FLAG_SUBFLOW)
+ 			__mark_subflow_endp_available(msk, list.ids[0]);
+ 		else /* mark endp ID as available, e.g. Signal or MPC endp */
+@@ -1688,7 +1688,7 @@ static int mptcp_nl_remove_id_zero_address(struct net *net,
+ 		lock_sock(sk);
+ 		spin_lock_bh(&msk->pm.lock);
+ 		mptcp_pm_remove_addr(msk, &list);
+-		mptcp_pm_nl_rm_subflow_received(msk, &list);
++		mptcp_pm_rm_subflow(msk, &list);
+ 		__mark_subflow_endp_available(msk, 0);
+ 		spin_unlock_bh(&msk->pm.lock);
+ 		release_sock(sk);
+@@ -1761,10 +1761,9 @@ void mptcp_pm_remove_addrs(struct mptcp_sock *msk, struct list_head *rm_list)
+ 			break;
+ 
+ 		/* only delete if either announced or matching a subflow */
+-		if (remove_anno_list_by_saddr(msk, &entry->addr))
++		if (mptcp_pm_announced_remove(msk, &entry->addr))
+ 			anno_nr++;
+-		else if (!lookup_subflow_by_saddr(&msk->conn_list,
+-						  &entry->addr))
++		else if (!has_subflow_saddr(msk, &entry->addr))
+ 			continue;
+ 
+ 		alist.ids[alist.nr++] = entry->addr.id;
+@@ -1787,11 +1786,11 @@ static void mptcp_pm_flush_addrs_and_subflows(struct mptcp_sock *msk,
+ 
+ 	list_for_each_entry(entry, rm_list, list) {
+ 		if (slist.nr < MPTCP_RM_IDS_MAX &&
+-		    lookup_subflow_by_saddr(&msk->conn_list, &entry->addr))
++		    has_subflow_saddr(msk, &entry->addr))
+ 			slist.ids[slist.nr++] = mptcp_endp_get_local_id(msk, &entry->addr);
+ 
+ 		if (alist.nr < MPTCP_RM_IDS_MAX &&
+-		    remove_anno_list_by_saddr(msk, &entry->addr))
++		    mptcp_pm_announced_remove(msk, &entry->addr))
+ 			alist.ids[alist.nr++] = mptcp_endp_get_local_id(msk, &entry->addr);
+ 	}
+ 
+@@ -1801,7 +1800,7 @@ static void mptcp_pm_flush_addrs_and_subflows(struct mptcp_sock *msk,
+ 		mptcp_pm_remove_addr(msk, &alist);
+ 	}
+ 	if (slist.nr)
+-		mptcp_pm_nl_rm_subflow_received(msk, &slist);
++		mptcp_pm_rm_subflow(msk, &slist);
+ 	/* Reset counters: maybe some subflows have been removed before */
+ 	bitmap_fill(msk->pm.id_avail_bitmap, MPTCP_PM_MAX_ADDR_ID + 1);
+ 	msk->pm.local_addr_used = 0;
+@@ -2101,7 +2100,7 @@ static void mptcp_pm_nl_fullmesh(struct mptcp_sock *msk,
+ 	list.ids[list.nr++] = mptcp_endp_get_local_id(msk, addr);
+ 
+ 	spin_lock_bh(&msk->pm.lock);
+-	mptcp_pm_nl_rm_subflow_received(msk, &list);
++	mptcp_pm_rm_subflow(msk, &list);
+ 	__mark_subflow_endp_available(msk, list.ids[0]);
+ 	mptcp_pm_create_subflow_or_signal_addr(msk);
+ 	spin_unlock_bh(&msk->pm.lock);

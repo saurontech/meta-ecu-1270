@@ -1,0 +1,33 @@
+From c4661e69889eae830aab0cc9d57300a70d778f79 Mon Sep 17 00:00:00 2001
+From: Simon Liebold <simonlie@amazon.de>
+Date: Thu, 12 Mar 2026 14:02:00 +0000
+Subject: [PATCH 075/432] selftests/mqueue: Fix incorrectly named file
+
+commit 64fac99037689020ad97e472ae898e96ea3616dc upstream.
+
+Commit 85506aca2eb4 ("selftests/mqueue: Set timeout to 180 seconds")
+intended to increase the timeout for mq_perf_tests from the default
+kselftest limit of 45 seconds to 180 seconds.
+
+Unfortunately, the file storing this information was incorrectly named
+`setting` instead of `settings`, causing the kselftest runner not to
+pick up the limit and keep using the default 45 seconds limit.
+
+Fix this by renaming it to `settings` to ensure that the kselftest
+runner uses the increased timeout of 180 seconds for this test.
+
+Fixes: 85506aca2eb4 ("selftests/mqueue: Set timeout to 180 seconds")
+Cc: <stable@vger.kernel.org> # 5.10.y
+Signed-off-by: Simon Liebold <simonlie@amazon.de>
+Link: https://lore.kernel.org/r/20260312140200.2224850-1-simonlie@amazon.de
+Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ tools/testing/selftests/mqueue/{setting => settings} | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename tools/testing/selftests/mqueue/{setting => settings} (100%)
+
+diff --git a/tools/testing/selftests/mqueue/setting b/tools/testing/selftests/mqueue/settings
+similarity index 100%
+rename from tools/testing/selftests/mqueue/setting
+rename to tools/testing/selftests/mqueue/settings

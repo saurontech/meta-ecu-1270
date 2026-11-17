@@ -1,0 +1,90 @@
+From 392fe4cd04d5cda8b8bb5b50b8be3b34096993ec Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:24 +0000
+Subject: [PATCH 037/838] arm64: dts: renesas: r9a09g077: Add WDT nodes
+
+commit 19adb35f9dccd16df111f2d0ec265d572f8bb3f5 upstream.
+
+Add WDT0-5 nodes to RZ/T2H (R9A09G077) SoC DTSI.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250821161946.1096033-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 60 ++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index da7aa2e3b043..74ab90b92c96 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -90,6 +90,66 @@ sci0: serial@80005000 {
+ 			status = "disabled";
+ 		};
+ 
++		wdt0: watchdog@80082000 {
++			compatible = "renesas,r9a09g077-wdt";
++			reg = <0 0x80082000 0 0x400>,
++			      <0 0x81295100 0 0x04>;
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
++			clock-names = "pclk";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt1: watchdog@80082400 {
++			compatible = "renesas,r9a09g077-wdt";
++			reg = <0 0x80082400 0 0x400>,
++			      <0 0x81295104 0 0x04>;
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
++			clock-names = "pclk";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt2: watchdog@80082800 {
++			compatible = "renesas,r9a09g077-wdt";
++			reg = <0 0x80082800 0 0x400>,
++			      <0 0x81295108 0 0x04>;
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
++			clock-names = "pclk";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt3: watchdog@80082c00 {
++			compatible = "renesas,r9a09g077-wdt";
++			reg = <0 0x80082c00 0 0x400>,
++			      <0 0x8129510c 0 0x04>;
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
++			clock-names = "pclk";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt4: watchdog@80083000 {
++			compatible = "renesas,r9a09g077-wdt";
++			reg = <0 0x80083000 0 0x400>,
++			      <0 0x81295110 0 0x04>;
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
++			clock-names = "pclk";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt5: watchdog@80083400 {
++			compatible = "renesas,r9a09g077-wdt";
++			reg = <0 0x80083400 0 0x400>,
++			      <0 0x81295114 0 0x04>;
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
++			clock-names = "pclk";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
+ 		i2c0: i2c@80088000 {
+ 			compatible = "renesas,riic-r9a09g077";
+ 			reg = <0 0x80088000 0 0x400>;

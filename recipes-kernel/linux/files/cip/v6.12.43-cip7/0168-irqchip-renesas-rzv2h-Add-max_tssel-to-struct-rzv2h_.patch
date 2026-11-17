@@ -1,0 +1,74 @@
+From 699a237324018b023348c1fdca1c08de9e4ffd9a Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Jul 2025 11:07:18 +0200
+Subject: [PATCH 168/246] irqchip/renesas-rzv2h: Add max_tssel to struct
+ rzv2h_hw_info
+
+commit eb23d23d082d097e2a8154a57da72061cb7e33b3 upstream.
+
+The number of GPIO interrupts on RZ/G3E for TINT selection is 141 compared
+to 86 on RZ/V2H. Rename the macro ICU_PB5_TINT->ICU_RZV2H_TSSEL_MAX_VAL to
+hold this difference for RZ/V2H.
+
+Add max_tssel to struct rzv2h_hw_info and replace the hardcoded constants
+in the code.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Reviewed-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/all/20250224131253.134199-9-biju.das.jz@bp.renesas.com
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 43b805b6df94..2fae3274c015 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -78,14 +78,16 @@
+ 
+ #define ICU_TINT_EXTRACT_HWIRQ(x)		FIELD_GET(GENMASK(15, 0), (x))
+ #define ICU_TINT_EXTRACT_GPIOINT(x)		FIELD_GET(GENMASK(31, 16), (x))
+-#define ICU_PB5_TINT				0x55
++#define ICU_RZV2H_TSSEL_MAX_VAL			0x55
+ 
+ /**
+  * struct rzv2h_hw_info - Interrupt Control Unit controller hardware info structure.
+  * @t_offs:		TINT offset
++ * @max_tssel:		TSSEL max value
+  */
+ struct rzv2h_hw_info {
+ 	u16		t_offs;
++	u8		max_tssel;
+ };
+ 
+ /**
+@@ -298,13 +300,12 @@ static int rzv2h_tint_set_type(struct irq_data *d, unsigned int type)
+ 		return -EINVAL;
+ 	}
+ 
++	priv = irq_data_to_priv(d);
+ 	tint = (u32)(uintptr_t)irq_data_get_irq_chip_data(d);
+-	if (tint > ICU_PB5_TINT)
++	if (tint > priv->info->max_tssel)
+ 		return -EINVAL;
+ 
+-	priv = irq_data_to_priv(d);
+ 	hwirq = irqd_to_hwirq(d);
+-
+ 	tint_nr = hwirq - ICU_TINT_START;
+ 
+ 	tssr_k = ICU_TSSR_K(tint_nr);
+@@ -517,6 +518,7 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 
+ static const struct rzv2h_hw_info rzv2h_hw_params = {
+ 	.t_offs		= 0,
++	.max_tssel	= ICU_RZV2H_TSSEL_MAX_VAL,
+ };
+ 
+ static int rzv2h_icu_init(struct device_node *node, struct device_node *parent)

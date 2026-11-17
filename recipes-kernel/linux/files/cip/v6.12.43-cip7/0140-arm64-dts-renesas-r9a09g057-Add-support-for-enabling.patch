@@ -1,0 +1,69 @@
+From 1c31e72a2d7a12d9401d7b6a3c39f43f6aafa14d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:14 +0200
+Subject: [PATCH 140/246] arm64: dts: renesas: r9a09g057: Add support for
+ enabling SDHI internal regulator
+
+commit 674080a22768dd4c30f2272acbe03fe94c7387cf upstream.
+
+Add support for enabling SDHI internal regulator, by overriding the
+status on the board DTS, when needed.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/20250206134047.67866-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g057.dtsi | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+index 3a433f1e940c..0f8a769f1cbc 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+@@ -512,6 +512,13 @@ sdhi0: mmc@15c00000  {
+ 			resets = <&cpg 0xa7>;
+ 			power-domains = <&cpg>;
+ 			status = "disabled";
++
++			sdhi0_vqmmc: vqmmc-regulator {
++				regulator-name = "SDHI0-VQMMC";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				status = "disabled";
++			};
+ 		};
+ 
+ 		sdhi1: mmc@15c10000 {
+@@ -525,6 +532,13 @@ sdhi1: mmc@15c10000 {
+ 			resets = <&cpg 0xa8>;
+ 			power-domains = <&cpg>;
+ 			status = "disabled";
++
++			sdhi1_vqmmc: vqmmc-regulator {
++				regulator-name = "SDHI1-VQMMC";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				status = "disabled";
++			};
+ 		};
+ 
+ 		sdhi2: mmc@15c20000 {
+@@ -538,6 +552,13 @@ sdhi2: mmc@15c20000 {
+ 			resets = <&cpg 0xa9>;
+ 			power-domains = <&cpg>;
+ 			status = "disabled";
++
++			sdhi2_vqmmc: vqmmc-regulator {
++				regulator-name = "SDHI2-VQMMC";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				status = "disabled";
++			};
+ 		};
+ 	};
+ 

@@ -1,0 +1,51 @@
+From 736104ed7f7251ec740ab5c6d7fc0ece1eaf7bf6 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 20 Nov 2025 17:03:52 +0000
+Subject: [PATCH 568/768] dt-bindings: phy: renesas,usb2-phy: Document
+ RZ/V2H(P) SoC
+
+commit 9c4fbefc962dd13694b4a5051f432ed435c92220 upstream.
+
+Document USB2.0 phy bindings for RZ/V2H(P) ("R9A09gG57") SoC.
+
+RZ/V2H(P) USB2.0 phy is similar to one found on the RZ/G2L SoC, but it
+needs additional configuration to be done as compared RZ/G2L USB2.0 phy.
+To handle this difference a SoC specific compat string is added for
+RZ/V2H(P) SoC.
+
+Like the RZ/G2L SoC, the RZ/V2H(P) USB2.0 PHY requires the `resets`
+property and has two clocks.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250414145729.343133-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+index f8d15f239b18..2822dce8d9f4 100644
+--- a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+@@ -16,6 +16,7 @@ properties:
+           - enum:
+               - renesas,usb2-phy-r8a77470  # RZ/G1C
+               - renesas,usb2-phy-r9a08g045 # RZ/G3S
++              - renesas,usb2-phy-r9a09g057 # RZ/V2H(P)
+ 
+       - items:
+           - enum:
+@@ -105,7 +106,9 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            const: renesas,rzg2l-usb2-phy
++            enum:
++              - renesas,usb2-phy-r9a09g057
++              - renesas,rzg2l-usb2-phy
+     then:
+       properties:
+         clocks:

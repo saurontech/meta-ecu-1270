@@ -1,0 +1,46 @@
+From d6ddc64b6a57bdc1a7336c3a0d0087a12e556984 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 17 Jul 2026 15:14:57 +0200
+Subject: [PATCH 393/399] hwmon: (lm75) simplify lm75_write_config()
+
+commit c4d08cf8a03eb9b14858a9b8cf8f4d71a639da57 upstream.
+
+After previous refactoring, it is now possible to make
+lm75_write_config() a simple inline function.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20241219225522.3490-8-wsa+renesas@sang-engineering.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/lm75.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/hwmon/lm75.c b/drivers/hwmon/lm75.c
+index b8889392d5da..b03e760cf3a1 100644
+--- a/drivers/hwmon/lm75.c
++++ b/drivers/hwmon/lm75.c
+@@ -340,17 +340,11 @@ static inline long lm75_reg_to_mc(s16 temp, u8 resolution)
+ 	return ((temp >> (16 - resolution)) * 1000) >> (resolution - 8);
+ }
+ 
+-static int lm75_write_config(struct lm75_data *data, u16 set_mask,
+-			     u16 clr_mask)
++static inline int lm75_write_config(struct lm75_data *data, u16 set_mask,
++				    u16 clr_mask)
+ {
+-	int err;
+-
+-	err = regmap_update_bits(data->regmap, LM75_REG_CONF,
+-				 clr_mask | LM75_SHUTDOWN, set_mask);
+-	if (err)
+-		return err;
+-
+-	return 0;
++	return regmap_update_bits(data->regmap, LM75_REG_CONF,
++				  clr_mask | LM75_SHUTDOWN, set_mask);
+ }
+ 
+ static irqreturn_t lm75_alarm_handler(int irq, void *private)

@@ -1,0 +1,70 @@
+From 59de751d2bcc93e731da709a8f90f99ca8e4e58d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 2 Sep 2026 09:26:56 +0000
+Subject: [PATCH 428/435] irqchip/renesas-rzv2h: Clarify IRQ range definitions
+ and tighten TINT validation
+
+commit 9dc4335758c983045ab38871e2411fa1ae7e438d upstream.
+
+Introduce ICU_IRQ_LAST and ICU_TINT_LAST macros to make range boundaries
+explicit and reduce the chance of off-by-one errors.
+
+Extract the TINT information up front in rzv2h_icu_alloc() and validate
+the resulting hardware IRQ against the full TINT range
+[ICU_TINT_START, ICU_TINT_LAST].
+
+[ tglx: Convert the hard to parse inverse conditions to use a simple helper
+  	macro hwirq_within() which is easy to read, less error prone and
+  	avoids a lot of typing ]
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260304113317.129339-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 7468eaec6bad..8a95f19a40a9 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -25,9 +25,11 @@
+ /* DT "interrupts" indexes */
+ #define ICU_IRQ_START				1
+ #define ICU_IRQ_COUNT				16
+-#define ICU_TINT_START				(ICU_IRQ_START + ICU_IRQ_COUNT)
++#define ICU_IRQ_LAST				(ICU_IRQ_START + ICU_IRQ_COUNT - 1)
++#define ICU_TINT_START				(ICU_IRQ_LAST + 1)
+ #define ICU_TINT_COUNT				32
+-#define ICU_NUM_IRQ				(ICU_TINT_START + ICU_TINT_COUNT)
++#define ICU_TINT_LAST				(ICU_TINT_START + ICU_TINT_COUNT - 1)
++#define ICU_NUM_IRQ				(ICU_TINT_LAST + 1)
+ 
+ /* Registers */
+ #define ICU_NSCNT				0x00
+@@ -487,6 +489,8 @@ static const struct irq_chip rzv2h_icu_chip = {
+ 				  IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
++#define hwirq_within(hwirq, which)	((hwirq) >= which##_START && (hwirq) <= which##_LAST)
++
+ static int rzv2h_icu_alloc(struct irq_domain *domain, unsigned int virq, unsigned int nr_irqs,
+ 			   void *arg)
+ {
+@@ -506,11 +510,11 @@ static int rzv2h_icu_alloc(struct irq_domain *domain, unsigned int virq, unsigne
+ 	 * hwirq is embedded in bits 0-15.
+ 	 * TINT is embedded in bits 16-31.
+ 	 */
+-	if (hwirq >= ICU_TINT_START) {
+-		tint = ICU_TINT_EXTRACT_GPIOINT(hwirq);
++	tint = ICU_TINT_EXTRACT_GPIOINT(hwirq);
++	if (tint || hwirq_within(hwirq, ICU_TINT)) {
+ 		hwirq = ICU_TINT_EXTRACT_HWIRQ(hwirq);
+ 
+-		if (hwirq < ICU_TINT_START)
++		if (!hwirq_within(hwirq, ICU_TINT))
+ 			return -EINVAL;
+ 	}
+ 

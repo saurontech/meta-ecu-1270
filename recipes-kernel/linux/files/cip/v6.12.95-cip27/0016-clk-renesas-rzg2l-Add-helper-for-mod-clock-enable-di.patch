@@ -1,0 +1,65 @@
+From 15c1daa9f7427aaeeb29db4bea30b13a29ac3d13 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:35 +0100
+Subject: [PATCH 016/286] clk: renesas: rzg2l: Add helper for mod clock
+ enable/disable
+
+[ Upstream commit 867fb0bc60602cb3c2458fcd25c841650d37563f ]
+
+Refactor rzg2l_mod_clock_endisable() by extracting its logic into a new
+helper function rzg2l_mod_clock_endisable_helper(), which accepts an
+additional set_mstop_state boolean parameter.  This allows callers to
+control whether the module stop state is updated alongside the clock
+enable/disable operation.  No functional change for existing callers.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260324114329.268249-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index da211010d2ba..840147ca601f 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1440,7 +1440,8 @@ static int rzg2l_mod_clock_mstop_show(struct seq_file *s, void *what)
+ }
+ DEFINE_SHOW_ATTRIBUTE(rzg2l_mod_clock_mstop);
+ 
+-static int rzg2l_mod_clock_endisable(struct clk_hw *hw, bool enable)
++static int rzg2l_mod_clock_endisable_helper(struct clk_hw *hw, bool enable,
++					    bool set_mstop_state)
+ {
+ 	struct mod_clock *clock = to_mod_clock(hw);
+ 	struct rzg2l_cpg_priv *priv = clock->priv;
+@@ -1465,9 +1466,11 @@ static int rzg2l_mod_clock_endisable(struct clk_hw *hw, bool enable)
+ 	scoped_guard(spinlock_irqsave, &priv->rmw_lock) {
+ 		if (enable) {
+ 			writel(value, priv->base + CLK_ON_R(reg));
+-			rzg2l_mod_clock_module_set_state(clock, false);
++			if (set_mstop_state)
++				rzg2l_mod_clock_module_set_state(clock, false);
+ 		} else {
+-			rzg2l_mod_clock_module_set_state(clock, true);
++			if (set_mstop_state)
++				rzg2l_mod_clock_module_set_state(clock, true);
+ 			writel(value, priv->base + CLK_ON_R(reg));
+ 		}
+ 	}
+@@ -1487,6 +1490,11 @@ static int rzg2l_mod_clock_endisable(struct clk_hw *hw, bool enable)
+ 	return error;
+ }
+ 
++static int rzg2l_mod_clock_endisable(struct clk_hw *hw, bool enable)
++{
++	return rzg2l_mod_clock_endisable_helper(hw, enable, true);
++}
++
+ static int rzg2l_mod_clock_enable(struct clk_hw *hw)
+ {
+ 	struct mod_clock *clock = to_mod_clock(hw);

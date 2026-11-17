@@ -1,0 +1,38 @@
+From 87fd92cea90fe9ed6081bb306f43fa40eb63e8fb Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 3 Nov 2025 12:37:50 +0100
+Subject: [PATCH 166/192] pinctrl: renesas: rzg2l: Remove OEN ops for RZ/G3E
+
+[ Upstream commit dd0d40d8f4ac8c2cb5967fdb2e1efa70cfc0c9ee ]
+
+The RZ/G3E pin controller does not advertise PIN_CFG_OEN capability, so
+there is no valid mapping for output-enable bits on this SoC. Remove the
+oen_read and oen_write callbacks from the RZ/G3E driver data to defer
+OEN support until PIN_CFG_OEN support is added.
+
+This is a preparatory change for future unification of OEN handling across
+the driver.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250806195555.1372317-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index dda610c74120..bce510112e8d 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -3337,8 +3337,6 @@ static struct rzg2l_pinctrl_data r9a09g047_data = {
+ #endif
+ 	.pwpr_pfc_lock_unlock = &rzv2h_pwpr_pfc_lock_unlock,
+ 	.pmc_writeb = &rzv2h_pmc_writeb,
+-	.oen_read = &rzv2h_oen_read,
+-	.oen_write = &rzv2h_oen_write,
+ 	.hw_to_bias_param = &rzv2h_hw_to_bias_param,
+ 	.bias_param_to_hw = &rzv2h_bias_param_to_hw,
+ };

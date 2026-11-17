@@ -1,0 +1,39 @@
+From 948055d0152b5b386eed57742a949af5c7af3eea Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 13:06:31 +0200
+Subject: [PATCH 018/283] arm64: dts: renesas: rzg3s-smarc-som: Add PCIe
+ reference clock
+
+commit 1a66160fb28abcd228f69e00bb183a4749f23805 upstream.
+
+Versa3 clock generator available on RZ/G3S SMARC Module provides the
+reference clock for SoC PCIe interface. Update the device tree to reflect
+this connection.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Link: https://patch.msgid.link/20251119143523.977085-5-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index 6f25ab617982..982f17aafbc5 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -168,6 +168,11 @@ a0 80 30 30 9c
+ 	};
+ };
+ 
++&pcie_port0 {
++	clocks = <&versa3 5>;
++	clock-names = "ref";
++};
++
+ #if SW_CONFIG2 == SW_ON
+ /* SD0 slot */
+ &sdhi0 {

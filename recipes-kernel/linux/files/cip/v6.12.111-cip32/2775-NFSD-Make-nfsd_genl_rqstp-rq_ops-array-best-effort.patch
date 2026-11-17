@@ -1,0 +1,49 @@
+From 839d12aa693a0342cc45dc58e63c44548fa3658a Mon Sep 17 00:00:00 2001
+From: Chuck Lever <chuck.lever@oracle.com>
+Date: Fri, 4 Sep 2026 23:28:18 -0400
+Subject: [PATCH 2775/2868] NFSD: Make nfsd_genl_rqstp::rq_ops array
+ best-effort
+
+[ Upstream commit a2d61427fb4b630b94ed9bd457dd8bc239b83e4b ]
+
+To enable NFSD to handle NFSv4 COMPOUNDs of unrestricted size,
+resize the array in struct nfsd_genl_rqstp so it saves only up to
+16 operations per COMPOUND.
+
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
+Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
+Stable-dep-of: a99d720ed2a5 ("nfsd: widen nfsd_genl_rqstp address fields to sockaddr_storage")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/nfsd/nfsctl.c | 3 ++-
+ fs/nfsd/nfsd.h   | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/nfsd/nfsctl.c b/fs/nfsd/nfsctl.c
+index 238dd2ce0ce4..18bfe4446473 100644
+--- a/fs/nfsd/nfsctl.c
++++ b/fs/nfsd/nfsctl.c
+@@ -1627,7 +1627,8 @@ int nfsd_nl_rpc_status_get_dumpit(struct sk_buff *skb,
+ 				int j;
+ 
+ 				args = rqstp->rq_argp;
+-				genl_rqstp.rq_opcnt = args->opcnt;
++				genl_rqstp.rq_opcnt = min_t(u32, args->opcnt,
++							    ARRAY_SIZE(genl_rqstp.rq_opnum));
+ 				for (j = 0; j < genl_rqstp.rq_opcnt; j++)
+ 					genl_rqstp.rq_opnum[j] =
+ 						args->ops[j].opnum;
+diff --git a/fs/nfsd/nfsd.h b/fs/nfsd/nfsd.h
+index ad0af259e98f..fea716bbebf1 100644
+--- a/fs/nfsd/nfsd.h
++++ b/fs/nfsd/nfsd.h
+@@ -82,7 +82,7 @@ struct nfsd_genl_rqstp {
+ 
+ 	/* NFSv4 compound */
+ 	u32			rq_opcnt;
+-	u32			rq_opnum[NFSD_MAX_OPS_PER_COMPOUND];
++	u32			rq_opnum[16];
+ };
+ 
+ extern struct svc_program	nfsd_programs[];

@@ -1,0 +1,37 @@
+From cec503575c75e05fc2b99bee08963d521dbcbaef Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:31:41 +0300
+Subject: [PATCH 083/246] dt-bindings: clock: versaclock3: Document 5L35023
+ Versa3 clock generator
+
+commit 626b77735a3712b02dabb25be3a0abdde6696bf3 upstream.
+
+There are some differences b/w 5L35023 and 5P35023 Versa3 clock
+generator variants but the same driver could be used with minimal
+adjustments. The identified differences are PLL2 Fvco, the clock sel
+bit for SE2 clock and different default values for some registers.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20241210170953.2936724-3-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Stephen Boyd <sboyd@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/clock/renesas,5p35023.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/clock/renesas,5p35023.yaml b/Documentation/devicetree/bindings/clock/renesas,5p35023.yaml
+index 42b6f80613f3..162d38035188 100644
+--- a/Documentation/devicetree/bindings/clock/renesas,5p35023.yaml
++++ b/Documentation/devicetree/bindings/clock/renesas,5p35023.yaml
+@@ -31,6 +31,7 @@ description: |
+ properties:
+   compatible:
+     enum:
++      - renesas,5l35023
+       - renesas,5p35023
+ 
+   reg:

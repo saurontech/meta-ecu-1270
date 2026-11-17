@@ -1,0 +1,44 @@
+From d29f5cacec63aa0fbe1d0c2f3cf99fe671875ceb Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:43 +0100
+Subject: [PATCH 283/286] irqchip/renesas-rzg2l: Replace raw_spin_{lock,unlock}
+ with guard() in rzg2l_irq_set_type()
+
+[ Upstream commit 9fd2170d70178faa0427adaa9d2dfdbfa231d1b7 ]
+
+Simplify the locking logic in rzg2l_irq_set_type() by using guard(),
+eliminating the need for an explicit unlock call.
+
+[ tglx: Remove the pointless cleanup.h include. The spinlock guards come
+  	from spinlock.h ]
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260328103324.134131-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index f97d8f170634..cece433dc1fb 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -374,14 +374,13 @@ static int rzg2l_irq_set_type(struct irq_data *d, unsigned int type)
+ 		return -EINVAL;
+ 	}
+ 
+-	raw_spin_lock(&priv->lock);
++	guard(raw_spinlock)(&priv->lock);
+ 	tmp = readl_relaxed(priv->base + IITSR);
+ 	tmp &= ~IITSR_IITSEL_MASK(iitseln);
+ 	tmp |= IITSR_IITSEL(iitseln, sense);
+ 	if (clear_irq_int)
+ 		rzg2l_clear_irq_int(priv, hwirq);
+ 	writel_relaxed(tmp, priv->base + IITSR);
+-	raw_spin_unlock(&priv->lock);
+ 
+ 	return 0;
+ }

@@ -1,0 +1,67 @@
+From 93d2f64bd0eeff55c4a141a1da7386e279eeb81d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:09 +0200
+Subject: [PATCH 135/246] dt-bindings: mmc: renesas,sdhi: Document RZ/G3E
+ support
+
+commit 93745285ad9ba11ef68922787e0f46da408ab0b7 upstream.
+
+The SD/MMC block on the RZ/G3E ("R9A09G047") SoC is similar to that
+of the RZ/V2H, but the SD0 channel has only dedicated pins, so we must
+use SD_STATUS register to control voltage and power enable (internal
+regulator), for non-fixed voltage (SD) MMC interface. However, it is
+optional for fixed voltage MMC interface (eMMC).
+
+For SD1 and SD2 channels, we can either use gpio regulator or internal
+regulator (using SD_STATUS register) for voltage switching.
+
+Document RZ/G3E SDHI IP support with optional internal regulator for
+both RZ/G3E and RZ/V2H SoC.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250305092958.21865-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/mmc/renesas,sdhi.yaml    | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml b/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
+index af378b9ff3f4..773baa6c2656 100644
+--- a/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
++++ b/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
+@@ -68,6 +68,9 @@ properties:
+               - renesas,sdhi-r9a08g045 # RZ/G3S
+               - renesas,sdhi-r9a09g011 # RZ/V2M
+           - const: renesas,rzg2l-sdhi
++      - items:
++          - const: renesas,sdhi-r9a09g047 # RZ/G3E
++          - const: renesas,sdhi-r9a09g057 # RZ/V2H(P)
+ 
+   reg:
+     maxItems: 1
+@@ -211,6 +214,19 @@ allOf:
+         sectioned off to be run by a separate second clock source to allow
+         the main core clock to be turned off to save power.
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,sdhi-r9a09g057
++    then:
++      properties:
++        vqmmc-regulator:
++          type: object
++          description: VQMMC SD regulator
++          $ref: /schemas/regulator/regulator.yaml#
++          unevaluatedProperties: false
++
+ required:
+   - compatible
+   - reg

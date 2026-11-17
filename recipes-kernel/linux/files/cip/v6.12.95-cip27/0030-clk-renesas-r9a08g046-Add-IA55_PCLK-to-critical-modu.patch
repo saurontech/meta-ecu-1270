@@ -1,0 +1,35 @@
+From afe2b671633075cfae4ddd9ffe8c0e8d2742572d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:49 +0100
+Subject: [PATCH 030/286] clk: renesas: r9a08g046: Add IA55_PCLK to critical
+ module clocks
+
+[ Upstream commit 01a20f1c46ed8fdbc9c4c97de60fae1a49f81b48 ]
+
+Add R9A08G046_IA55_PCLK to the critical module clocks list to prevent
+the clock from being gated during suspend, as it is required for the
+interrupt controller (IA55) to function correctly.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430100838.157306-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a08g046-cpg.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/renesas/r9a08g046-cpg.c b/drivers/clk/renesas/r9a08g046-cpg.c
+index ce9503c3cfd1..0004b9516fdf 100644
+--- a/drivers/clk/renesas/r9a08g046-cpg.c
++++ b/drivers/clk/renesas/r9a08g046-cpg.c
+@@ -312,6 +312,7 @@ static const struct rzg2l_reset r9a08g046_resets[] = {
+ 
+ static const unsigned int r9a08g046_crit_mod_clks[] __initconst = {
+ 	MOD_CLK_BASE + R9A08G046_GIC600_GICCLK,
++	MOD_CLK_BASE + R9A08G046_IA55_PCLK,
+ 	MOD_CLK_BASE + R9A08G046_IA55_CLK,
+ 	MOD_CLK_BASE + R9A08G046_DMAC_ACLK,
+ };

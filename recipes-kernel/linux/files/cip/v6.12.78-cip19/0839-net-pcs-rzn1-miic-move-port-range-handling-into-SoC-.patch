@@ -1,0 +1,137 @@
+From 3605579708e9019f178e9e2a31a320a8eec53a7b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:59:02 +0000
+Subject: [PATCH 839/851] net: pcs: rzn1-miic: move port range handling into
+ SoC data
+
+commit c112520de041758e037682bb63c51ab0d69e1adf upstream.
+
+Define per-SoC miic_port_start and miic_port_max fields in struct
+miic_of_data and use them to validate the device-tree "reg" port number
+and to compute the driver's internal zero-based port index as
+(port - miic_port_start). Replace uses of the hard-coded MIIC_MAX_NR_PORTS
+with the SoC-provided miic_port_max when iterating over ports.
+
+On RZ/N1 the MIIC ports are numbered 1..5, whereas RZ/T2H numbers its MIIC
+ports 0..3. By making the port base and range part of the OF data the
+driver no longer assumes a fixed numbering scheme and can support SoCs that
+enumerate ports from either zero or one and that expose different numbers
+of ports.
+
+This change is preparatory work for adding RZ/T2H support.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://patch.msgid.link/20250910204132.319975-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/pcs/pcs-rzn1-miic.c | 26 ++++++++++++++++++--------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/pcs/pcs-rzn1-miic.c b/drivers/net/pcs/pcs-rzn1-miic.c
+index 87c3512bd569..b0bd3eef0e82 100644
+--- a/drivers/net/pcs/pcs-rzn1-miic.c
++++ b/drivers/net/pcs/pcs-rzn1-miic.c
+@@ -49,8 +49,6 @@
+ #define MIIC_SWCTRL			0x304
+ #define MIIC_SWDUPC			0x308
+ 
+-#define MIIC_MAX_NR_PORTS		5
+-
+ #define MIIC_MODCTRL_CONF_CONV_MAX	6
+ #define MIIC_MODCTRL_CONF_NONE		-1
+ 
+@@ -146,6 +144,8 @@ struct miic {
+  * @conf_to_string_count: Number of entries in the conf_to_string array
+  * @index_to_string: String representations of the index values
+  * @index_to_string_count: Number of entries in the index_to_string array
++ * @miic_port_start: MIIC port start number
++ * @miic_port_max: Maximum MIIC supported
+  */
+ struct miic_of_data {
+ 	struct modctrl_match *match_table;
+@@ -155,6 +155,8 @@ struct miic_of_data {
+ 	u8 conf_to_string_count;
+ 	const char * const *index_to_string;
+ 	u8 index_to_string_count;
++	u8 miic_port_start;
++	u8 miic_port_max;
+ };
+ 
+ /**
+@@ -342,6 +344,7 @@ static const struct phylink_pcs_ops miic_phylink_ops = {
+ 
+ struct phylink_pcs *miic_create(struct device *dev, struct device_node *np)
+ {
++	const struct miic_of_data *of_data;
+ 	struct platform_device *pdev;
+ 	struct miic_port *miic_port;
+ 	struct device_node *pcs_np;
+@@ -354,9 +357,6 @@ struct phylink_pcs *miic_create(struct device *dev, struct device_node *np)
+ 	if (of_property_read_u32(np, "reg", &port))
+ 		return ERR_PTR(-EINVAL);
+ 
+-	if (port > MIIC_MAX_NR_PORTS || port < 1)
+-		return ERR_PTR(-EINVAL);
+-
+ 	/* The PCS pdev is attached to the parent node */
+ 	pcs_np = of_get_parent(np);
+ 	if (!pcs_np)
+@@ -375,18 +375,24 @@ struct phylink_pcs *miic_create(struct device *dev, struct device_node *np)
+ 		return ERR_PTR(-EPROBE_DEFER);
+ 	}
+ 
++	miic = platform_get_drvdata(pdev);
++	of_data = miic->of_data;
++	if (port > of_data->miic_port_max || port < of_data->miic_port_start) {
++		put_device(&pdev->dev);
++		return ERR_PTR(-EINVAL);
++	}
++
+ 	miic_port = kzalloc(sizeof(*miic_port), GFP_KERNEL);
+ 	if (!miic_port) {
+ 		put_device(&pdev->dev);
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+-	miic = platform_get_drvdata(pdev);
+ 	device_link_add(dev, miic->dev, DL_FLAG_AUTOREMOVE_CONSUMER);
+ 	put_device(&pdev->dev);
+ 
+ 	miic_port->miic = miic;
+-	miic_port->port = port - 1;
++	miic_port->port = port - of_data->miic_port_start;
+ 	miic_port->pcs.ops = &miic_phylink_ops;
+ 	miic_port->pcs.neg_mode = true;
+ 
+@@ -419,7 +425,7 @@ static int miic_init_hw(struct miic *miic, u32 cfg_mode)
+ 	miic_reg_writel(miic, MIIC_MODCTRL,
+ 			FIELD_PREP(MIIC_MODCTRL_SW_MODE, cfg_mode));
+ 
+-	for (port = 0; port < MIIC_MAX_NR_PORTS; port++) {
++	for (port = 0; port < miic->of_data->miic_port_max; port++) {
+ 		miic_converter_enable(miic, port, 0);
+ 		/* Disable speed/duplex control from these registers, datasheet
+ 		 * says switch registers should be used to setup switch port
+@@ -508,6 +514,8 @@ static int miic_parse_dt(struct miic *miic, u32 *mode_cfg)
+ 		if (of_property_read_u32(conv, "reg", &port))
+ 			continue;
+ 
++		/* Adjust for 0 based index */
++		port += !miic->of_data->miic_port_start;
+ 		if (of_property_read_u32(conv, "renesas,miic-input", &conf) == 0)
+ 			dt_val[port] = conf;
+ 	}
+@@ -581,6 +589,8 @@ static struct miic_of_data rzn1_miic_of_data = {
+ 	.conf_to_string_count = ARRAY_SIZE(conf_to_string),
+ 	.index_to_string = index_to_string,
+ 	.index_to_string_count = ARRAY_SIZE(index_to_string),
++	.miic_port_start = 1,
++	.miic_port_max = 5,
+ };
+ 
+ static const struct of_device_id miic_of_mtable[] = {

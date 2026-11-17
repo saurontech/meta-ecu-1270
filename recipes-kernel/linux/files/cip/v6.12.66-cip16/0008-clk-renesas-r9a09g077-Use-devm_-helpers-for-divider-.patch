@@ -1,0 +1,63 @@
+From 79213a6b9e4168b72e9fcf0d82dd9843a00a6ef0 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:38:57 +0000
+Subject: [PATCH 008/838] clk: renesas: r9a09g077: Use devm_ helpers for
+ divider clock registration
+
+commit 7a9d0318da5d1d148021d9c9762cefecb552c54f upstream.
+
+Convert the divider clock registration in the R9A09G077 CPG driver to use
+device-managed (devm_) helper functions.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251028165127.991351-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 30 +++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index b1b4c66c12bb..04fbc0539241 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -164,21 +164,23 @@ r9a09g077_cpg_div_clk_register(struct device *dev,
+ 	parent_name = __clk_get_name(parent);
+ 
+ 	if (core->dtable)
+-		clk_hw = clk_hw_register_divider_table(dev, core->name,
+-						       parent_name, CLK_SET_RATE_PARENT,
+-						       addr,
+-						       GET_SHIFT(core->conf),
+-						       GET_WIDTH(core->conf),
+-						       core->flag,
+-						       core->dtable,
+-						       &pub->rmw_lock);
++		clk_hw = devm_clk_hw_register_divider_table(dev, core->name,
++							    parent_name,
++							    CLK_SET_RATE_PARENT,
++							    addr,
++							    GET_SHIFT(core->conf),
++							    GET_WIDTH(core->conf),
++							    core->flag,
++							    core->dtable,
++							    &pub->rmw_lock);
+ 	else
+-		clk_hw = clk_hw_register_divider(dev, core->name,
+-						 parent_name, CLK_SET_RATE_PARENT,
+-						 addr,
+-						 GET_SHIFT(core->conf),
+-						 GET_WIDTH(core->conf),
+-						 core->flag, &pub->rmw_lock);
++		clk_hw = devm_clk_hw_register_divider(dev, core->name,
++						      parent_name,
++						      CLK_SET_RATE_PARENT,
++						      addr,
++						      GET_SHIFT(core->conf),
++						      GET_WIDTH(core->conf),
++						      core->flag, &pub->rmw_lock);
+ 
+ 	if (IS_ERR(clk_hw))
+ 		return ERR_CAST(clk_hw);

@@ -1,0 +1,54 @@
+From a7b6fa22b15472909c07c2d6251c843e493961f3 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 1 Nov 2024 11:57:16 +0200
+Subject: [PATCH 008/246] arm64: dts: renesas: r9a08g045: Add VBATTB node
+
+Commit 23c44956bce5aa79c060fc3e5d51843735e6eda6 upstream.
+
+Add the DT node for the VBATTB IP along with DT bindings for the clock
+it provides.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20241101095720.2247815-6-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 067a26a66c24..a1d5084b074a 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -72,6 +72,18 @@ scif0: serial@1004b800 {
+ 			status = "disabled";
+ 		};
+ 
++		vbattb: clock-controller@1005c000 {
++			compatible = "renesas,r9a08g045-vbattb";
++			reg = <0 0x1005c000 0 0x1000>;
++			interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A08G045_VBAT_BCLK>, <&vbattb_xtal>;
++			clock-names = "bclk", "rtx";
++			#clock-cells = <1>;
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G045_VBAT_BRESETN>;
++			status = "disabled";
++		};
++
+ 		i2c0: i2c@10090000 {
+ 			compatible = "renesas,riic-r9a08g045", "renesas,riic-r9a09g057";
+ 			reg = <0 0x10090000 0 0x400>;
+@@ -425,4 +437,11 @@ timer {
+ 		interrupt-names = "sec-phys", "phys", "virt", "hyp-phys",
+ 				  "hyp-virt";
+ 	};
++
++	vbattb_xtal: vbattb-xtal {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by the board. */
++		clock-frequency = <0>;
++	};
+ };

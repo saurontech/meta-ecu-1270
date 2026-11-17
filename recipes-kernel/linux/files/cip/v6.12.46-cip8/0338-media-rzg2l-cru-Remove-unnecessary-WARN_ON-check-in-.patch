@@ -1,0 +1,43 @@
+From 562770653ac83d556feded239a68a3bd6ffc99e3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:16 +0200
+Subject: [PATCH 338/643] media: rzg2l-cru: Remove unnecessary WARN_ON check in
+ format func
+
+commit 0e575e4eb6574f8530b22e8efa6419836cf1ca0d upstream.
+
+`WARN_ON(!fmt)` check in `rzg2l_cru_format_bytesperline()` is unnecessary
+because the `rzg2l_cru_format_align()` function ensures that a valid
+`pixelformat` is set before calling `rzg2l_cru_format_bytesperline()`. As
+a result, `rzg2l_cru_format_from_pixel()` is guaranteed to return a
+non-NULL value, making the check redundant.
+
+Additionally, the return type of `rzg2l_cru_format_bytesperline()` is
+`u32`, but the code returned `-EINVAL`, a negative value. This mismatch is
+now resolved by removing the invalid error return path.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-11-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index de88c0fab961..401ef7be58ec 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -835,9 +835,6 @@ static u32 rzg2l_cru_format_bytesperline(struct v4l2_pix_format *pix)
+ 
+ 	fmt = rzg2l_cru_format_from_pixel(pix->pixelformat);
+ 
+-	if (WARN_ON(!fmt))
+-		return -EINVAL;
+-
+ 	return pix->width * fmt->bpp[0];
+ }
+ 

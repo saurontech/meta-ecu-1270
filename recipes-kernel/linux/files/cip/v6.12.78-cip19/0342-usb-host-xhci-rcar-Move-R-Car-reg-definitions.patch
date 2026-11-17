@@ -1,0 +1,140 @@
+From c2fa2f20f278e7a337dc2a3a673e6cff635517b9 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 12 Mar 2026 15:35:09 +0000
+Subject: [PATCH 342/851] usb: host: xhci-rcar: Move R-Car reg definitions
+
+[ Upstream commit f7acd12eba05fb9e7dba3222e2aeca5f49d38b3a ]
+
+Move xhci-rcar reg definitions to a header file for the preparation of adding
+support for RZ/G3E XHCI that has different register definitions.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250916150255.4231-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/usb/host/xhci-rcar-regs.h | 49 +++++++++++++++++++++++++++++++
+ drivers/usb/host/xhci-rcar.c      | 45 +---------------------------
+ 2 files changed, 50 insertions(+), 44 deletions(-)
+ create mode 100644 drivers/usb/host/xhci-rcar-regs.h
+
+diff --git a/drivers/usb/host/xhci-rcar-regs.h b/drivers/usb/host/xhci-rcar-regs.h
+new file mode 100644
+index 000000000000..5ecbda858be0
+--- /dev/null
++++ b/drivers/usb/host/xhci-rcar-regs.h
+@@ -0,0 +1,49 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __XHCI_RCAR_H
++#define __XHCI_RCAR_H
++
++/*** Register Offset ***/
++#define RCAR_USB3_AXH_STA	0x104	/* AXI Host Control Status */
++#define RCAR_USB3_INT_ENA	0x224	/* Interrupt Enable */
++#define RCAR_USB3_DL_CTRL	0x250	/* FW Download Control & Status */
++#define RCAR_USB3_FW_DATA0	0x258	/* FW Data0 */
++
++#define RCAR_USB3_LCLK		0xa44	/* LCLK Select */
++#define RCAR_USB3_CONF1		0xa48	/* USB3.0 Configuration1 */
++#define RCAR_USB3_CONF2		0xa5c	/* USB3.0 Configuration2 */
++#define RCAR_USB3_CONF3		0xaa8	/* USB3.0 Configuration3 */
++#define RCAR_USB3_RX_POL	0xab0	/* USB3.0 RX Polarity */
++#define RCAR_USB3_TX_POL	0xab8	/* USB3.0 TX Polarity */
++
++/*** Register Settings ***/
++/* AXI Host Control Status */
++#define RCAR_USB3_AXH_STA_B3_PLL_ACTIVE		0x00010000
++#define RCAR_USB3_AXH_STA_B2_PLL_ACTIVE		0x00000001
++#define RCAR_USB3_AXH_STA_PLL_ACTIVE_MASK (RCAR_USB3_AXH_STA_B3_PLL_ACTIVE | \
++					   RCAR_USB3_AXH_STA_B2_PLL_ACTIVE)
++
++/* Interrupt Enable */
++#define RCAR_USB3_INT_XHC_ENA	0x00000001
++#define RCAR_USB3_INT_PME_ENA	0x00000002
++#define RCAR_USB3_INT_HSE_ENA	0x00000004
++#define RCAR_USB3_INT_ENA_VAL	(RCAR_USB3_INT_XHC_ENA | \
++				RCAR_USB3_INT_PME_ENA | RCAR_USB3_INT_HSE_ENA)
++
++/* FW Download Control & Status */
++#define RCAR_USB3_DL_CTRL_ENABLE	0x00000001
++#define RCAR_USB3_DL_CTRL_FW_SUCCESS	0x00000010
++#define RCAR_USB3_DL_CTRL_FW_SET_DATA0	0x00000100
++
++/* LCLK Select */
++#define RCAR_USB3_LCLK_ENA_VAL	0x01030001
++
++/* USB3.0 Configuration */
++#define RCAR_USB3_CONF1_VAL	0x00030204
++#define RCAR_USB3_CONF2_VAL	0x00030300
++#define RCAR_USB3_CONF3_VAL	0x13802007
++
++/* USB3.0 Polarity */
++#define RCAR_USB3_RX_POL_VAL	BIT(21)
++#define RCAR_USB3_TX_POL_VAL	BIT(4)
++
++#endif /* __XHCI_RCAR_H */
+diff --git a/drivers/usb/host/xhci-rcar.c b/drivers/usb/host/xhci-rcar.c
+index 8b357647728c..b5099d2e2e65 100644
+--- a/drivers/usb/host/xhci-rcar.c
++++ b/drivers/usb/host/xhci-rcar.c
+@@ -14,6 +14,7 @@
+ 
+ #include "xhci.h"
+ #include "xhci-plat.h"
++#include "xhci-rcar-regs.h"
+ #include "xhci-rzv2m.h"
+ 
+ #define XHCI_RCAR_FIRMWARE_NAME_V1	"r8a779x_usb3_v1.dlmem"
+@@ -29,50 +30,6 @@
+ MODULE_FIRMWARE(XHCI_RCAR_FIRMWARE_NAME_V1);
+ MODULE_FIRMWARE(XHCI_RCAR_FIRMWARE_NAME_V3);
+ 
+-/*** Register Offset ***/
+-#define RCAR_USB3_AXH_STA	0x104	/* AXI Host Control Status */
+-#define RCAR_USB3_INT_ENA	0x224	/* Interrupt Enable */
+-#define RCAR_USB3_DL_CTRL	0x250	/* FW Download Control & Status */
+-#define RCAR_USB3_FW_DATA0	0x258	/* FW Data0 */
+-
+-#define RCAR_USB3_LCLK		0xa44	/* LCLK Select */
+-#define RCAR_USB3_CONF1		0xa48	/* USB3.0 Configuration1 */
+-#define RCAR_USB3_CONF2		0xa5c	/* USB3.0 Configuration2 */
+-#define RCAR_USB3_CONF3		0xaa8	/* USB3.0 Configuration3 */
+-#define RCAR_USB3_RX_POL	0xab0	/* USB3.0 RX Polarity */
+-#define RCAR_USB3_TX_POL	0xab8	/* USB3.0 TX Polarity */
+-
+-/*** Register Settings ***/
+-/* AXI Host Control Status */
+-#define RCAR_USB3_AXH_STA_B3_PLL_ACTIVE		0x00010000
+-#define RCAR_USB3_AXH_STA_B2_PLL_ACTIVE		0x00000001
+-#define RCAR_USB3_AXH_STA_PLL_ACTIVE_MASK (RCAR_USB3_AXH_STA_B3_PLL_ACTIVE | \
+-					   RCAR_USB3_AXH_STA_B2_PLL_ACTIVE)
+-
+-/* Interrupt Enable */
+-#define RCAR_USB3_INT_XHC_ENA	0x00000001
+-#define RCAR_USB3_INT_PME_ENA	0x00000002
+-#define RCAR_USB3_INT_HSE_ENA	0x00000004
+-#define RCAR_USB3_INT_ENA_VAL	(RCAR_USB3_INT_XHC_ENA | \
+-				RCAR_USB3_INT_PME_ENA | RCAR_USB3_INT_HSE_ENA)
+-
+-/* FW Download Control & Status */
+-#define RCAR_USB3_DL_CTRL_ENABLE	0x00000001
+-#define RCAR_USB3_DL_CTRL_FW_SUCCESS	0x00000010
+-#define RCAR_USB3_DL_CTRL_FW_SET_DATA0	0x00000100
+-
+-/* LCLK Select */
+-#define RCAR_USB3_LCLK_ENA_VAL	0x01030001
+-
+-/* USB3.0 Configuration */
+-#define RCAR_USB3_CONF1_VAL	0x00030204
+-#define RCAR_USB3_CONF2_VAL	0x00030300
+-#define RCAR_USB3_CONF3_VAL	0x13802007
+-
+-/* USB3.0 Polarity */
+-#define RCAR_USB3_RX_POL_VAL	BIT(21)
+-#define RCAR_USB3_TX_POL_VAL	BIT(4)
+-
+ static void xhci_rcar_start_gen2(struct usb_hcd *hcd)
+ {
+ 	/* LCLK Select */

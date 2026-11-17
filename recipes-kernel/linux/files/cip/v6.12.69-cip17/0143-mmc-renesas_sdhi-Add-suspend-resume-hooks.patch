@@ -1,0 +1,120 @@
+From b4a92890c7c837dcf525c02759eed34a00349f30 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Mon, 26 Jan 2026 11:44:09 +0200
+Subject: [PATCH 143/420] mmc: renesas_sdhi: Add suspend/resume hooks
+
+commit dcbce328d3a2d87770133834210cf328c083d480 upstream.
+
+Add suspend/resume hooks which assert/deassert the reset signals, along
+with forcing runtime suspend/resume. This allows using the driver in
+scenarios where the resume is done with the help of bootloader and the
+bootloader disables the SDHI clocks, resets, IRQs before passing execution
+to Linux.
+
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/mmc/host/renesas_sdhi.h               |  3 ++
+ drivers/mmc/host/renesas_sdhi_core.c          | 37 +++++++++++++++++++
+ drivers/mmc/host/renesas_sdhi_internal_dmac.c |  3 +-
+ 3 files changed, 41 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi.h b/drivers/mmc/host/renesas_sdhi.h
+index 291ddb4ad9be..ac5b0cf673d5 100644
+--- a/drivers/mmc/host/renesas_sdhi.h
++++ b/drivers/mmc/host/renesas_sdhi.h
+@@ -9,6 +9,7 @@
+ #ifndef RENESAS_SDHI_H
+ #define RENESAS_SDHI_H
+ 
++#include <linux/device.h>
+ #include <linux/dmaengine.h>
+ #include <linux/platform_device.h>
+ #include <linux/workqueue.h>
+@@ -106,4 +107,6 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 		       const struct renesas_sdhi_of_data *of_data,
+ 		       const struct renesas_sdhi_quirks *quirks);
+ void renesas_sdhi_remove(struct platform_device *pdev);
++int renesas_sdhi_suspend(struct device *dev);
++int renesas_sdhi_resume(struct device *dev);
+ #endif
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index bc1d6a877c0e..ce0ccc3261b8 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -31,6 +31,7 @@
+ #include <linux/platform_data/tmio.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/regulator/driver.h>
+ #include <linux/regulator/of_regulator.h>
+@@ -1292,5 +1293,41 @@ void renesas_sdhi_remove(struct platform_device *pdev)
+ }
+ EXPORT_SYMBOL_GPL(renesas_sdhi_remove);
+ 
++int renesas_sdhi_suspend(struct device *dev)
++{
++	struct tmio_mmc_host *host = dev_get_drvdata(dev);
++	struct renesas_sdhi *priv = host_to_priv(host);
++	int ret;
++
++	ret = pm_runtime_force_suspend(dev);
++	if (ret)
++		return ret;
++
++	ret = reset_control_assert(priv->rstc);
++	if (ret)
++		pm_runtime_force_resume(dev);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(renesas_sdhi_suspend);
++
++int renesas_sdhi_resume(struct device *dev)
++{
++	struct tmio_mmc_host *host = dev_get_drvdata(dev);
++	struct renesas_sdhi *priv = host_to_priv(host);
++	int ret;
++
++	ret = reset_control_deassert(priv->rstc);
++	if (ret)
++		return ret;
++
++	ret = pm_runtime_force_resume(dev);
++	if (ret)
++		reset_control_assert(priv->rstc);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(renesas_sdhi_resume);
++
+ MODULE_DESCRIPTION("Renesas SDHI core driver");
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/mmc/host/renesas_sdhi_internal_dmac.c b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+index ec475d427421..6ebe71248620 100644
+--- a/drivers/mmc/host/renesas_sdhi_internal_dmac.c
++++ b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+@@ -18,7 +18,6 @@
+ #include <linux/pagemap.h>
+ #include <linux/platform_data/tmio.h>
+ #include <linux/platform_device.h>
+-#include <linux/pm_runtime.h>
+ #include <linux/scatterlist.h>
+ #include <linux/sys_soc.h>
+ 
+@@ -599,7 +598,7 @@ static int renesas_sdhi_internal_dmac_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct dev_pm_ops renesas_sdhi_internal_dmac_dev_pm_ops = {
+-	SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend, pm_runtime_force_resume)
++	SYSTEM_SLEEP_PM_OPS(renesas_sdhi_suspend, renesas_sdhi_resume)
+ 	RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
+ 		       tmio_mmc_host_runtime_resume,
+ 		       NULL)

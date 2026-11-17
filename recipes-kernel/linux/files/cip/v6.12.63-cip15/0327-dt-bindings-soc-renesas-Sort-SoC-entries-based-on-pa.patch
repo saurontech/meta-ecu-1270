@@ -1,0 +1,76 @@
+From abb073f64e2a0544f6cb07edc53b3e6a9742b262 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:31 +0000
+Subject: [PATCH 327/724] dt-bindings: soc: renesas: Sort SoC entries based on
+ part number
+
+`renesas.yaml` maintains its SoC definitions in ascending part number
+order. This ordering was unintentionally broken when backporting support
+for the RZ/G3E SoC in commit c06b797739f2 ("dt-bindings: soc: renesas:
+Document Renesas RZ/G3E SoC variants"), which placed the new entry out
+of sequence.
+
+Restore the correct ordering by re-sorting the SoC block so that it
+follows the established part-number progression. This keeps the binding
+consistent with upstream structure and avoids future placement errors.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-12-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/soc/renesas/renesas.yaml         | 34 +++++++++----------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+index 467bf01bc12d..d05e8b158589 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+@@ -525,6 +525,23 @@ properties:
+               - renesas,rzv2mevk2   # RZ/V2M Eval Board v2.0
+           - const: renesas,r9a09g011
+ 
++      - description: RZ/G3E (R9A09G047)
++        items:
++          - enum:
++              - renesas,smarc2-evk # RZ SMARC Carrier-II EVK
++          - enum:
++              - renesas,rzg3e-smarcm # RZ/G3E SMARC Module (SoM)
++          - enum:
++              - renesas,r9a09g047e27 # Dual Cortex-A55 + Cortex-M33 (15mm BGA)
++              - renesas,r9a09g047e28 # Dual Cortex-A55 + Cortex-M33 (21mm BGA)
++              - renesas,r9a09g047e37 # Dual Cortex-A55 + Cortex-M33 + Ethos-U55 (15mm BGA)
++              - renesas,r9a09g047e38 # Dual Cortex-A55 + Cortex-M33 + Ethos-U55 (21mm BGA)
++              - renesas,r9a09g047e47 # Quad Cortex-A55 + Cortex-M33 (15mm BGA)
++              - renesas,r9a09g047e48 # Quad Cortex-A55 + Cortex-M33 (21mm BGA)
++              - renesas,r9a09g047e57 # Quad Cortex-A55 + Cortex-M33 + Ethos-U55 (15mm BGA)
++              - renesas,r9a09g047e58 # Quad Cortex-A55 + Cortex-M33 + Ethos-U55 (21mm BGA)
++          - const: renesas,r9a09g047
++
+       - description: RZ/V2N (R9A09G056)
+         items:
+           - enum:
+@@ -550,23 +567,6 @@ properties:
+               - renesas,r9a09g057h44 # RZ/V2HP with Mali-G31 + Mali-C55 support
+           - const: renesas,r9a09g057
+ 
+-      - description: RZ/G3E (R9A09G047)
+-        items:
+-          - enum:
+-              - renesas,smarc2-evk # RZ SMARC Carrier-II EVK
+-          - enum:
+-              - renesas,rzg3e-smarcm # RZ/G3E SMARC Module (SoM)
+-          - enum:
+-              - renesas,r9a09g047e27 # Dual Cortex-A55 + Cortex-M33 (15mm BGA)
+-              - renesas,r9a09g047e28 # Dual Cortex-A55 + Cortex-M33 (21mm BGA)
+-              - renesas,r9a09g047e37 # Dual Cortex-A55 + Cortex-M33 + Ethos-U55 (15mm BGA)
+-              - renesas,r9a09g047e38 # Dual Cortex-A55 + Cortex-M33 + Ethos-U55 (21mm BGA)
+-              - renesas,r9a09g047e47 # Quad Cortex-A55 + Cortex-M33 (15mm BGA)
+-              - renesas,r9a09g047e48 # Quad Cortex-A55 + Cortex-M33 (21mm BGA)
+-              - renesas,r9a09g047e57 # Quad Cortex-A55 + Cortex-M33 + Ethos-U55 (15mm BGA)
+-              - renesas,r9a09g047e58 # Quad Cortex-A55 + Cortex-M33 + Ethos-U55 (21mm BGA)
+-          - const: renesas,r9a09g047
+-
+ additionalProperties: true
+ 
+ ...

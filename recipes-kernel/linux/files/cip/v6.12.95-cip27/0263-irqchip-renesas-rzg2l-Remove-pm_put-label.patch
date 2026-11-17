@@ -1,0 +1,49 @@
+From 8bfce9623ea4af9b5c26382246ca52d5c0c8b186 Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Fri, 3 Jul 2026 11:07:23 +0100
+Subject: [PATCH 263/286] irqchip/renesas-rzg2l: Remove pm_put label
+
+[ Upstream commit bec8a3712943282fcac10647905c021335e27c2b ]
+
+No need to keep label `pm_put`, as it's only used once.
+Call pm_runtime_put() directly from the error path.
+
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/all/20250212182034.366167-5-fabrizio.castro.jz@renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 1f95039a84f4..9063bb98753f 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -586,9 +586,9 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 					      node, &rzg2l_irqc_domain_ops,
+ 					      rzg2l_irqc_data);
+ 	if (!irq_domain) {
++		pm_runtime_put(dev);
+ 		dev_err(dev, "failed to add irq domain\n");
+-		ret = -ENOMEM;
+-		goto pm_put;
++		return -ENOMEM;
+ 	}
+ 
+ 	register_syscore_ops(&rzg2l_irqc_syscore_ops);
+@@ -605,11 +605,6 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 	dev = NULL;
+ 
+ 	return 0;
+-
+-pm_put:
+-	pm_runtime_put(dev);
+-
+-	return ret;
+ }
+ 
+ static int rzg2l_irqc_init(struct device_node *node, struct device_node *parent)

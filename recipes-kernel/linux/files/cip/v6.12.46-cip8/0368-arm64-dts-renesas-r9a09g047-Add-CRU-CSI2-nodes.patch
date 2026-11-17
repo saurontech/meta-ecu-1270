@@ -1,0 +1,99 @@
+From c806fd49a46d1bd44430a3469ed247252dc6f620 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:46 +0200
+Subject: [PATCH 368/643] arm64: dts: renesas: r9a09g047: Add CRU, CSI2 nodes
+
+commit c3303e7162184551d82b88311922b7026dfdfdde upstream.
+
+Add CRU, CSI2 nodes to RZ/RZG3E SoC DTSI.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250514162422.910114-2-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 69 ++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index 3d3aa371dad8..a0d4fab4fe05 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -690,6 +690,75 @@ sdhi2_vqmmc: vqmmc-regulator {
+ 				status = "disabled";
+ 			};
+ 		};
++
++		cru: video@16000000 {
++			compatible = "renesas,r9a09g047-cru";
++			reg = <0 0x16000000 0 0x400>;
++			clocks = <&cpg CPG_MOD 0xd3>,
++				 <&cpg CPG_MOD 0xd4>,
++				 <&cpg CPG_MOD 0xd2>;
++			clock-names = "video", "apb", "axi";
++			interrupts = <GIC_SPI 838 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 839 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 840 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 841 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 842 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "image_conv", "axi_mst_err",
++					  "vd_addr_wend", "sd_addr_wend",
++					  "vsd_addr_wend";
++			resets = <&cpg 0xc5>, <&cpg 0xc6>;
++			reset-names = "presetn", "aresetn";
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				port@1 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++
++					reg = <1>;
++					crucsi2: endpoint@0 {
++						reg = <0>;
++						remote-endpoint = <&csi2cru>;
++					};
++				};
++			};
++		};
++
++		csi2: csi2@16000400 {
++			compatible = "renesas,r9a09g047-csi2", "renesas,r9a09g057-csi2";
++			reg = <0 0x16000400 0 0xc00>;
++			interrupts = <GIC_SPI 837 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 0xd3>, <&cpg CPG_MOD 0xd4>;
++			clock-names = "video", "apb";
++			resets = <&cpg 0xc5>, <&cpg 0xc7>;
++			reset-names = "presetn", "cmn-rstb";
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				port@0 {
++					reg = <0>;
++				};
++
++				port@1 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					reg = <1>;
++
++					csi2cru: endpoint@0 {
++						reg = <0>;
++						remote-endpoint = <&crucsi2>;
++					};
++				};
++			};
++		};
+ 	};
+ 
+ 	timer {

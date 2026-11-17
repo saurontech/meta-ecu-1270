@@ -1,0 +1,44 @@
+From f4d446fbf128f99615835b8124540bb216afd59c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 3 Dec 2025 15:40:50 +0000
+Subject: [PATCH 121/724] dt-bindings: soc: renesas: Document SYS for RZ/V2N
+ SoC
+
+commit dc7af24bd60bdced496d03473e67ce5eb51236a5 upstream.
+
+Add the RZ/V2N (R9A09G056) variant to the existing RZ/V2H(P) System
+Controller (SYS) binding, as both IPs are very similar.
+
+However, they have different SoC IDs, and the RZ/V2N does not have
+PCIE1 configuration registers, unlike the RZ/V2H(P) SYS IP. To handle
+these differences, introduce a new compatible string
+`renesas,r9a09g056-sys`.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407191628.323613-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[OP: used "enum" to match mainline code]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/soc/renesas/renesas,r9a09g057-sys.yaml          | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas,r9a09g057-sys.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas,r9a09g057-sys.yaml
+index ebbf0c9109ce..8d91466170e5 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas,r9a09g057-sys.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas,r9a09g057-sys.yaml
+@@ -22,7 +22,10 @@ description: |
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g057-sys
++    items:
++      - enum:
++          - renesas,r9a09g056-sys # RZ/V2N
++          - renesas,r9a09g057-sys # RZ/V2H
+ 
+   reg:
+     maxItems: 1

@@ -1,0 +1,35 @@
+From 100b98d46d79fc1c5633e1e8f5086c9fda321052 Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Wed, 20 Aug 2025 09:45:54 +0100
+Subject: [PATCH 230/246] clk: renesas: rzv2h: Add missing include file
+
+commit b7c26cbd5b704a350b3176669f47047153903bc9 upstream.
+
+File `rzv2h-cpg.h' makes use of data types defined in `linux/types.h',
+but it does not include the latter, which could lead to build errors.
+
+Include `linux/types.h' to fix this problem.
+
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250624192748.340196-1-fabrizio.castro.jz@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index 540f2f3d8a01..bf543e13eb1a 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -9,6 +9,7 @@
+ #define __RENESAS_RZV2H_CPG_H__
+ 
+ #include <linux/bitfield.h>
++#include <linux/types.h>
+ 
+ /**
+  * struct pll - Structure for PLL configuration

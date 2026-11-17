@@ -1,0 +1,132 @@
+From 7a1e59d6b4b2d1b0401b76c476ced0c125565944 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:01 +0000
+Subject: [PATCH 012/838] dt-bindings: i2c: renesas,riic: Document RZ/T2H and
+ RZ/N2H support
+
+commit 13aa792c10ada4f8870da5ba0fb51e478eb5a45e upstream.
+
+Document support for the I2C Bus Interface (RIIC) found on the Renesas
+RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs.
+
+The RIIC IP on these parts is similar to that on RZ/V2H(P) but supports
+only four interrupts (including a combined error/event), lacks FM+ mode,
+and does not require reset. Introduce a new compatible string
+`renesas,riic-r9a09g077` for RZ/T2H and use it as a fallback for RZ/N2H.
+
+Unlike earlier SoCs that use eight distinct interrupts, the RZ/T2H uses
+only four. Update the binding schema to reflect this interrupt layout
+and skip the `resets` property check, as it is not required on these SoCs.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Andi Shyti <andi.shyti@kernel.org>
+Link: https://lore.kernel.org/r/20250625104526.101004-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../devicetree/bindings/i2c/renesas,riic.yaml | 75 ++++++++++++++-----
+ 1 file changed, 56 insertions(+), 19 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+index 4038c6d4acfc..207cb2eb25c8 100644
+--- a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
++++ b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+@@ -28,32 +28,50 @@ properties:
+               - renesas,riic-r9a09g047   # RZ/G3E
+           - const: renesas,riic-r9a09g057   # RZ/V2H(P)
+ 
+-      - const: renesas,riic-r9a09g057   # RZ/V2H(P)
++      - enum:
++          - renesas,riic-r9a09g057   # RZ/V2H(P)
++          - renesas,riic-r9a09g077   # RZ/T2H
++
++      - items:
++          - const: renesas,riic-r9a09g087  # RZ/N2H
++          - const: renesas,riic-r9a09g077  # RZ/T2H
+ 
+   reg:
+     maxItems: 1
+ 
+   interrupts:
+-    items:
+-      - description: Transmit End Interrupt
+-      - description: Receive Data Full Interrupt
+-      - description: Transmit Data Empty Interrupt
+-      - description: Stop Condition Detection Interrupt
+-      - description: Start Condition Detection Interrupt
+-      - description: NACK Reception Interrupt
+-      - description: Arbitration-Lost Interrupt
+-      - description: Timeout Interrupt
++    oneOf:
++      - items:
++          - description: Transmit End Interrupt
++          - description: Receive Data Full Interrupt
++          - description: Transmit Data Empty Interrupt
++          - description: Stop Condition Detection Interrupt
++          - description: Start Condition Detection Interrupt
++          - description: NACK Reception Interrupt
++          - description: Arbitration-Lost Interrupt
++          - description: Timeout Interrupt
++      - items:
++          - description: Transfer Error Or Event Generation
++          - description: Receive Data Full Interrupt
++          - description: Transmit Data Empty Interrupt
++          - description: Transmit End Interrupt
+ 
+   interrupt-names:
+-    items:
+-      - const: tei
+-      - const: ri
+-      - const: ti
+-      - const: spi
+-      - const: sti
+-      - const: naki
+-      - const: ali
+-      - const: tmoi
++    oneOf:
++      - items:
++          - const: tei
++          - const: ri
++          - const: ti
++          - const: spi
++          - const: sti
++          - const: naki
++          - const: ali
++          - const: tmoi
++      - items:
++          - const: eei
++          - const: rxi
++          - const: txi
++          - const: tei
+ 
+   clock-frequency:
+     description:
+@@ -83,6 +101,25 @@ required:
+ allOf:
+   - $ref: /schemas/i2c/i2c-controller.yaml#
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,riic-r9a09g077
++    then:
++      properties:
++        interrupts:
++          maxItems: 4
++        interrupt-names:
++          maxItems: 4
++        resets: false
++    else:
++      properties:
++        interrupts:
++          minItems: 8
++        interrupt-names:
++          minItems: 8
++
+   - if:
+       properties:
+         compatible:

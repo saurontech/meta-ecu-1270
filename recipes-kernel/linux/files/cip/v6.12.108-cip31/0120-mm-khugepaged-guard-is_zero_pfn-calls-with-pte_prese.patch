@@ -1,0 +1,121 @@
+From 41a1bc677fb2520ce082d541f88477215fdd34b8 Mon Sep 17 00:00:00 2001
+From: Lance Yang <lance.yang@linux.dev>
+Date: Fri, 7 Aug 2026 22:52:29 -0400
+Subject: [PATCH 120/435] mm/khugepaged: guard is_zero_pfn() calls with
+ pte_present()
+
+[ Upstream commit 074f027d15c10cb376b3ad88405b8e512fa5b3a8 ]
+
+A non-present entry, like a swap PTE, contains completely different data
+(swap type and offset).  pte_pfn() doesn't know this, so if we feed it a
+non-present entry, it will spit out a junk PFN.
+
+What if that junk PFN happens to match the zeropage's PFN by sheer chance?
+While really unlikely, this would be really bad if it did.
+
+So, let's fix this potential bug by ensuring all calls to is_zero_pfn() in
+khugepaged.c are properly guarded by a pte_present() check.
+
+Link: https://lkml.kernel.org/r/20251020151111.53561-1-lance.yang@linux.dev
+Signed-off-by: Lance Yang <lance.yang@linux.dev>
+Suggested-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Reviewed-by: Nico Pache <npache@redhat.com>
+Reviewed-by: Dev Jain <dev.jain@arm.com>
+Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+Reviewed-by: Wei Yang <richard.weiyang@gmail.com>
+Acked-by: David Hildenbrand <david@redhat.com>
+Reviewed-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Liam Howlett <liam.howlett@oracle.com>
+Cc: Ryan Roberts <ryan.roberts@arm.com>
+Cc: Wei Yang <richard.weiyang@gmail.com>
+Cc: Zi Yan <ziy@nvidia.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Stable-dep-of: 3c58f641e813 ("userfaultfd: prevent registration of special VMAs")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ mm/khugepaged.c | 35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 95b49ca6b196..a6b2c7d7d73b 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -346,6 +346,13 @@ struct attribute_group khugepaged_attr_group = {
+ };
+ #endif /* CONFIG_SYSFS */
+ 
++static bool pte_none_or_zero(pte_t pte)
++{
++	if (pte_none(pte))
++		return true;
++	return pte_present(pte) && is_zero_pfn(pte_pfn(pte));
++}
++
+ int hugepage_madvise(struct vm_area_struct *vma,
+ 		     unsigned long *vm_flags, int advice)
+ {
+@@ -529,6 +536,7 @@ static void release_pte_pages(pte_t *pte, pte_t *_pte,
+ 
+ 		if (pte_none(pteval))
+ 			continue;
++		VM_WARN_ON_ONCE(!pte_present(pteval));
+ 		pfn = pte_pfn(pteval);
+ 		if (is_zero_pfn(pfn))
+ 			continue;
+@@ -572,8 +580,7 @@ static int __collapse_huge_page_isolate(struct vm_area_struct *vma,
+ 	for (_pte = pte; _pte < pte + HPAGE_PMD_NR;
+ 	     _pte++, address += PAGE_SIZE) {
+ 		pte_t pteval = ptep_get(_pte);
+-		if (pte_none(pteval) || (pte_present(pteval) &&
+-				is_zero_pfn(pte_pfn(pteval)))) {
++		if (pte_none_or_zero(pteval)) {
+ 			++none_or_zero;
+ 			if (!userfaultfd_armed(vma) &&
+ 			    (!cc->is_khugepaged ||
+@@ -716,17 +723,17 @@ static void __collapse_huge_page_copy_succeeded(pte_t *pte,
+ 	for (_pte = pte; _pte < pte + HPAGE_PMD_NR;
+ 	     _pte++, address += PAGE_SIZE) {
+ 		pteval = ptep_get(_pte);
+-		if (pte_none(pteval) || is_zero_pfn(pte_pfn(pteval))) {
++		if (pte_none_or_zero(pteval)) {
+ 			add_mm_counter(vma->vm_mm, MM_ANONPAGES, 1);
+-			if (is_zero_pfn(pte_pfn(pteval))) {
+-				/*
+-				 * ptl mostly unnecessary.
+-				 */
+-				spin_lock(ptl);
+-				ptep_clear(vma->vm_mm, address, _pte);
+-				spin_unlock(ptl);
+-				ksm_might_unmap_zero_page(vma->vm_mm, pteval);
+-			}
++			if (pte_none(pteval))
++				continue;
++			/*
++			 * ptl mostly unnecessary.
++			 */
++			spin_lock(ptl);
++			ptep_clear(vma->vm_mm, address, _pte);
++			spin_unlock(ptl);
++			ksm_might_unmap_zero_page(vma->vm_mm, pteval);
+ 		} else {
+ 			struct page *src_page = pte_page(pteval);
+ 
+@@ -812,7 +819,7 @@ static int __collapse_huge_page_copy(pte_t *pte, struct folio *folio,
+ 		unsigned long src_addr = address + i * PAGE_SIZE;
+ 		struct page *src_page;
+ 
+-		if (pte_none(pteval) || is_zero_pfn(pte_pfn(pteval))) {
++		if (pte_none_or_zero(pteval)) {
+ 			clear_user_highpage(page, src_addr);
+ 			continue;
+ 		}
+@@ -1305,7 +1312,7 @@ static int hpage_collapse_scan_pmd(struct mm_struct *mm,
+ 				goto out_unmap;
+ 			}
+ 		}
+-		if (pte_none(pteval) || is_zero_pfn(pte_pfn(pteval))) {
++		if (pte_none_or_zero(pteval)) {
+ 			++none_or_zero;
+ 			if (!userfaultfd_armed(vma) &&
+ 			    (!cc->is_khugepaged ||

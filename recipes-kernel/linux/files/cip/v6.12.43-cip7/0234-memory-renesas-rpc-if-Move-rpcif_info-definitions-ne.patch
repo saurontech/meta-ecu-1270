@@ -1,0 +1,79 @@
+From 2a887a88260396bd9ac5c2d947d48d8217caccf3 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:45:58 +0100
+Subject: [PATCH 234/246] memory: renesas-rpc-if: Move rpcif_info definitions
+ near to the user
+
+commit 74c35c84f2ba942e7a7744658a8257d0b3188ac2 upstream.
+
+Move rpcif_info definitions near to the user.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250401143537.224047-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/memory/renesas-rpc-if.c | 40 ++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/memory/renesas-rpc-if.c b/drivers/memory/renesas-rpc-if.c
+index 11461f6ceb71..c194390b1cdd 100644
+--- a/drivers/memory/renesas-rpc-if.c
++++ b/drivers/memory/renesas-rpc-if.c
+@@ -191,26 +191,6 @@ struct rpcif_priv {
+ 	u32 ddr;		/* DRDRENR or SMDRENR */
+ };
+ 
+-static const struct rpcif_info rpcif_info_r8a7796 = {
+-	.type = RPCIF_RCAR_GEN3,
+-	.strtim = 6,
+-};
+-
+-static const struct rpcif_info rpcif_info_gen3 = {
+-	.type = RPCIF_RCAR_GEN3,
+-	.strtim = 7,
+-};
+-
+-static const struct rpcif_info rpcif_info_rz_g2l = {
+-	.type = RPCIF_RZ_G2L,
+-	.strtim = 7,
+-};
+-
+-static const struct rpcif_info rpcif_info_gen4 = {
+-	.type = RPCIF_RCAR_GEN4,
+-	.strtim = 15,
+-};
+-
+ /*
+  * Custom accessor functions to ensure SM[RW]DR[01] are always accessed with
+  * proper width.  Requires rpcif_priv.xfer_size to be correctly set before!
+@@ -784,6 +764,26 @@ static void rpcif_remove(struct platform_device *pdev)
+ 	platform_device_unregister(rpc->vdev);
+ }
+ 
++static const struct rpcif_info rpcif_info_r8a7796 = {
++	.type = RPCIF_RCAR_GEN3,
++	.strtim = 6,
++};
++
++static const struct rpcif_info rpcif_info_gen3 = {
++	.type = RPCIF_RCAR_GEN3,
++	.strtim = 7,
++};
++
++static const struct rpcif_info rpcif_info_rz_g2l = {
++	.type = RPCIF_RZ_G2L,
++	.strtim = 7,
++};
++
++static const struct rpcif_info rpcif_info_gen4 = {
++	.type = RPCIF_RCAR_GEN4,
++	.strtim = 15,
++};
++
+ static const struct of_device_id rpcif_of_match[] = {
+ 	{ .compatible = "renesas,r8a7796-rpc-if", .data = &rpcif_info_r8a7796 },
+ 	{ .compatible = "renesas,rcar-gen3-rpc-if", .data = &rpcif_info_gen3 },

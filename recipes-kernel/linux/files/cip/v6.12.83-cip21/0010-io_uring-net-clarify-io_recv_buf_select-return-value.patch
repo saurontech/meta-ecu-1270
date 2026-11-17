@@ -1,0 +1,29 @@
+From e6f280230e40108c5717df2ce8f6412646dfc18b Mon Sep 17 00:00:00 2001
+From: Jens Axboe <axboe@kernel.dk>
+Date: Wed, 20 Aug 2025 20:03:32 -0600
+Subject: [PATCH 010/497] io_uring/net: clarify io_recv_buf_select() return
+ value
+
+Commit b22743f29b7d3dc68c68f9bd39a1b2600ec6434e upstream.
+
+It returns 0 on success, less than zero on error.
+
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ io_uring/net.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/io_uring/net.c b/io_uring/net.c
+index e672966de4cb..e67362666880 100644
+--- a/io_uring/net.c
++++ b/io_uring/net.c
+@@ -1192,7 +1192,7 @@ int io_recv(struct io_kiocb *req, unsigned int issue_flags)
+ retry_multishot:
+ 	if (io_do_buffer_select(req)) {
+ 		ret = io_recv_buf_select(req, kmsg, &len, issue_flags);
+-		if (unlikely(ret)) {
++		if (unlikely(ret < 0)) {
+ 			kmsg->msg.msg_inq = -1;
+ 			goto out_free;
+ 		}

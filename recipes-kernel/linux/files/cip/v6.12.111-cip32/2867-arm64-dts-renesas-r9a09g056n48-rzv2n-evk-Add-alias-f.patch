@@ -1,0 +1,38 @@
+From ff408912a4965fda5612af44ed6f2b81177b492c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 17 Sep 2026 10:16:21 +0100
+Subject: [PATCH 2867/2868] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Add
+ alias for on-SoC RTC
+
+commit 8fdfbe0f114fd406a1e98d185a8f9e1d193a6526 upstream.
+
+The RZ/V2N SoC provides an internal RTC, which is enabled in the DT.
+The RZ/V2N EVK board also includes an external RTC in the RAA215300
+PMIC.
+
+Add an "rtc0" alias pointing to the on-SoC RTC node to ensure a stable
+device numbering.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260506155804.3984418-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index 914960100e65..29364343048c 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -26,6 +26,7 @@ aliases {
+ 		i2c7 = &i2c7;
+ 		i2c8 = &i2c8;
+ 		mmc1 = &sdhi1;
++		rtc0 = &rtc;
+ 		serial0 = &scif;
+ 	};
+ 

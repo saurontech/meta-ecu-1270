@@ -1,0 +1,42 @@
+From 1699d2befbfc9928d9331a530fa72a7c8f9b895e Mon Sep 17 00:00:00 2001
+From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Date: Fri, 17 Jul 2026 15:14:52 +0200
+Subject: [PATCH 388/399] hwmon: (tmp108) Do not fail in I3C probe when I3C
+ regmap is a module
+
+commit 8281d627905dc72241ca3969ee18f3e029e96d00 upstream.
+
+I3C device probe fails when CONFIG_REGMAP_I3C=m:
+
+	p3t1085_i3c 0-23615290090: error -ENODEV: Failed to register i3c regmap
+
+Fix this by using the IS_ENABLED(CONFIG_REGMAP_I3C) macro in the code.
+
+Fixes: c40655e33106 ("hwmon: (tmp108) Add support for I3C device")
+Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Message-ID: <20241121121819.393104-1-jarkko.nikula@linux.intel.com>
+[groeck: Remove #ifdef entirely; it is not needed due to dead code elimination]
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/tmp108.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/hwmon/tmp108.c b/drivers/hwmon/tmp108.c
+index 1f36af2cd2d9..fbe673009126 100644
+--- a/drivers/hwmon/tmp108.c
++++ b/drivers/hwmon/tmp108.c
+@@ -452,12 +452,7 @@ static int p3t1085_i3c_probe(struct i3c_device *i3cdev)
+ 	struct device *dev = i3cdev_to_dev(i3cdev);
+ 	struct regmap *regmap;
+ 
+-#ifdef CONFIG_REGMAP_I3C
+ 	regmap = devm_regmap_init_i3c(i3cdev, &tmp108_regmap_config);
+-#else
+-	regmap = ERR_PTR(-ENODEV);
+-#endif
+-
+ 	if (IS_ERR(regmap))
+ 		return dev_err_probe(dev, PTR_ERR(regmap),
+ 				     "Failed to register i3c regmap\n");

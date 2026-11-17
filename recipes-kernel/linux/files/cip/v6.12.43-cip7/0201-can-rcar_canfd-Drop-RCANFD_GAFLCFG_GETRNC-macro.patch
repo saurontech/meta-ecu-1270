@@ -1,0 +1,36 @@
+From 43da9afe191d68bb00e6776ec008fcdc7ed915d0 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:18 +0100
+Subject: [PATCH 201/246] can: rcar_canfd: Drop RCANFD_GAFLCFG_GETRNC macro
+
+commit 05e7f5a90c306dd1b94d3f15ab084755c03f1202 upstream.
+
+Drop the unused macro RCANFD_GAFLCFG_GETRNC.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 2d9569fd0e0b..565a91c2ca83 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -94,10 +94,6 @@
+ 	(((x) & reg_gen4(gpriv, 0x1ff, 0xff)) << \
+ 	 (reg_gen4(gpriv, 16, 24) - ((n) & 1) * reg_gen4(gpriv, 16, 8)))
+ 
+-#define RCANFD_GAFLCFG_GETRNC(gpriv, n, x) \
+-	(((x) >> (reg_gen4(gpriv, 16, 24) - ((n) & 1) * reg_gen4(gpriv, 16, 8))) & \
+-	 reg_gen4(gpriv, 0x1ff, 0xff))
+-
+ /* RSCFDnCFDGAFLECTR / RSCFDnGAFLECTR */
+ #define RCANFD_GAFLECTR_AFLDAE		BIT(8)
+ #define RCANFD_GAFLECTR_AFLPN(gpriv, x)	((x) & reg_gen4(gpriv, 0x7f, 0x1f))

@@ -1,0 +1,58 @@
+From 34cd117a3e63109295e983cf067907af8a661b13 Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:28 +0100
+Subject: [PATCH 016/246] net: ravb: Combine if conditions in RX csum
+ validation
+
+Commit 5a2d973e36061cbf8d1ba00a9294244522715e53 upstream.
+
+We can merge the two if conditions on skb_is_nonlinear(). Since
+skb_frag_size_sub() and skb_trim() do not free memory, it is still safe
+to access the trimmed bytes at the end of the packet after these calls.
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 4fb479800431..94eabec7889e 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -750,7 +750,6 @@ static void ravb_rx_csum_gbeth(struct sk_buff *skb)
+ {
+ 	struct skb_shared_info *shinfo = skb_shinfo(skb);
+ 	__wsum csum_proto;
+-	skb_frag_t *last_frag;
+ 	u8 *hw_csum;
+ 
+ 	/* The hardware checksum status is contained in sizeof(__sum16) * 2 = 4
+@@ -766,21 +765,19 @@ static void ravb_rx_csum_gbeth(struct sk_buff *skb)
+ 		return;
+ 
+ 	if (skb_is_nonlinear(skb)) {
+-		last_frag = &shinfo->frags[shinfo->nr_frags - 1];
++		skb_frag_t *last_frag = &shinfo->frags[shinfo->nr_frags - 1];
++
+ 		hw_csum = skb_frag_address(last_frag) +
+ 			  skb_frag_size(last_frag);
++		skb_frag_size_sub(last_frag, 2 * sizeof(__sum16));
+ 	} else {
+ 		hw_csum = skb_tail_pointer(skb);
++		skb_trim(skb, skb->len - 2 * sizeof(__sum16));
+ 	}
+ 
+ 	hw_csum -= sizeof(__sum16);
+ 	csum_proto = csum_unfold((__force __sum16)get_unaligned_le16(hw_csum));
+ 
+-	if (skb_is_nonlinear(skb))
+-		skb_frag_size_sub(last_frag, 2 * sizeof(__sum16));
+-	else
+-		skb_trim(skb, skb->len - 2 * sizeof(__sum16));
+-
+ 	if (!csum_proto)
+ 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+ }

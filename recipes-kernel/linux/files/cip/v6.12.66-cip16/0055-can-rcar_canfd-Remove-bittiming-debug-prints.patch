@@ -1,0 +1,54 @@
+From ec9bfb578ef71486c2ee9635863820eb07313b1c Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:25 +0000
+Subject: [PATCH 055/838] can: rcar_canfd: Remove bittiming debug prints
+
+[ Upstream commit a627813431600c5582e59022659f11790f94a25c ]
+
+There is no need to have debug code to print the bittiming values, as
+the user can get all values through the netlink interface.
+
+Suggested-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/a8b9f2c8938dc5e63b8faf1d0cdc91dadc12117e.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 423343671bb4..fe72f7680fbd 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1466,8 +1466,6 @@ static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ 		       RCANFD_NCFG_NSJW(gpriv, sjw) | RCANFD_NCFG_NTSEG2(gpriv, tseg2));
+ 
+ 		rcar_canfd_write(priv->base, RCANFD_CCFG(ch), cfg);
+-		netdev_dbg(priv->ndev, "nrate: brp %u, sjw %u, tseg1 %u, tseg2 %u\n",
+-			   brp, sjw, tseg1, tseg2);
+ 
+ 		/* Data bit timing settings */
+ 		brp = dbt->brp - 1;
+@@ -1479,8 +1477,6 @@ static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ 		       RCANFD_DCFG_DSJW(gpriv, sjw) | RCANFD_DCFG_DTSEG2(gpriv, tseg2));
+ 
+ 		rcar_canfd_write(priv->base, RCANFD_F_DCFG(gpriv, ch), cfg);
+-		netdev_dbg(priv->ndev, "drate: brp %u, sjw %u, tseg1 %u, tseg2 %u\n",
+-			   brp, sjw, tseg1, tseg2);
+ 	} else {
+ 		/* Classical CAN only mode */
+ 		if (gpriv->info->shared_can_regs) {
+@@ -1496,9 +1492,6 @@ static void rcar_canfd_set_bittiming(struct net_device *ndev)
+ 		}
+ 
+ 		rcar_canfd_write(priv->base, RCANFD_CCFG(ch), cfg);
+-		netdev_dbg(priv->ndev,
+-			   "rate: brp %u, sjw %u, tseg1 %u, tseg2 %u\n",
+-			   brp, sjw, tseg1, tseg2);
+ 	}
+ }
+ 

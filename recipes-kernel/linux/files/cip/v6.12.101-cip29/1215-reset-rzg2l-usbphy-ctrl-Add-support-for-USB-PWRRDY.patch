@@ -1,0 +1,207 @@
+From e91fa181f2a79b3561511b3f1cbeee58f0461ac4 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:21 +0300
+Subject: [PATCH 1215/1853] reset: rzg2l-usbphy-ctrl: Add support for USB
+ PWRRDY
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+commit 78f2d64e484753bfede6a0e9eab0ef35830c34fb upstream.
+
+On the Renesas RZ/G3S SoC, the USB PHY block has an input signal called
+PWRRDY. This signal is managed by the system controller and must be
+de-asserted after powering on the area where USB PHY resides and asserted
+before powering it off.
+
+On power-on/resume the USB PWRRDY signal need to be de-asserted before
+enabling clock and switching the module to normal state (through MSTOP
+support). The power-on/resume configuration sequence must be:
+
+1/ PWRRDY=0
+2/ CLK_ON=1
+3/ MSTOP=0
+
+On power-off/suspend the configuration sequence should be:
+
+1/ MSTOP=1
+2/ CLK_ON=0
+3/ PWRRDY=1
+
+The CLK_ON and MSTOP functionalities are controlled by clock drivers.
+The suspend/resume support will be handled by different patches.
+
+After long discussions with the internal HW team, it has been confirmed
+that the HW connection b/w USB PHY block, the USB channels, the system
+controller, clock, MSTOP, PWRRDY signal is as follows:
+
+                               ┌──────────────────────────────┐
+                               │                              │◄── CPG_CLKON_USB.CLK0_ON
+                               │     USB CH0                  │
+┌──────────────────────────┐   │┌───────────────────────────┐ │◄── CPG_CLKON_USB.CLK2_ON
+│                 ┌────────┐   ││host controller registers  │ │
+│                 │        │   ││function controller registers│
+│                 │ PHY0   │◄──┤└───────────────────────────┘ │
+│     USB PHY     │        │   └────────────▲─────────────────┘
+│                 └────────┘                │
+│                          │    CPG_BUS_PERI_COM_MSTOP.MSTOP{6, 5}_ON
+│┌──────────────┐ ┌────────┐
+││USHPHY control│ │        │
+││  registers   │ │ PHY1   │   ┌──────────────────────────────┐
+│└──────────────┘ │        │◄──┤     USB CH1                  │
+│                 └────────┘   │┌───────────────────────────┐ │◄── CPG_CLKON_USB.CLK1_ON
+└─▲───────▲─────────▲──────┘   ││ host controller registers │ │
+  │       │         │          │└───────────────────────────┘ │
+  │       │         │          └────────────▲─────────────────┘
+  │       │         │                       │
+  │       │         │           CPG_BUS_PERI_COM_MSTOP.MSTOP7_ON
+  │PWRRDY │         │
+  │       │   CPG_CLK_ON_USB.CLK3_ON
+  │       │
+  │  CPG_BUS_PERI_COM_MSTOP.MSTOP4_ON
+  │
+┌────┐
+│SYSC│
+└────┘
+
+where:
+- CPG_CLKON_USB.CLK.CLKX_ON is the register bit controlling the clock X
+  of different USB blocks, X in {0, 1, 2, 3}
+- CPG_BUS_PERI_COM_MSTOP.MSTOPX_ON is the register bit controlling the
+  MSTOP of different USB blocks, X in {4, 5, 6, 7}
+- USB PHY is the USB PHY block exposing 2 ports, port0 and port1, used
+  by the USB CH0, USB CH1
+- SYSC is the system controller block controlling the PWRRDY signal
+- USB CHx are individual USB block with host and function capabilities
+  (USB CH0 have both host and function capabilities, USB CH1 has only
+  host capabilities)
+
+The USBPHY control registers are controlled though the
+reset-rzg2l-usbphy-ctrl driver. The USB PHY ports are controlled by
+phy_rcar_gen3_usb2 (drivers/phy/renesas/phy-rcar-gen3-usb2.c file). The
+USB PHY ports request resets from the reset-rzg2l-usbphy-ctrl driver.
+
+The connection b/w the system controller and the USB PHY CTRL driver is
+implemented through the renesas,sysc-pwrrdy device tree property
+proposed in this patch. This property specifies the register offset and the
+bitmask required to control the PWRRDY signal.
+
+Since the USB PHY CTRL driver needs to be probed before any other
+USB-specific driver on RZ/G3S, control of PWRRDY is passed exclusively
+to it. This guarantees the correct configuration sequence between clocks,
+MSTOP bits, and the PWRRDY bit on probe/resume and remove/suspend. At the
+same time, changes are kept minimal by avoiding modifications to the USB
+PHY driver to also handle the PWRRDY itself.
+
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/reset/Kconfig                   |  1 +
+ drivers/reset/reset-rzg2l-usbphy-ctrl.c | 56 +++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+)
+
+diff --git a/drivers/reset/Kconfig b/drivers/reset/Kconfig
+index 8329ebd982f1..380b7e87fcd6 100644
+--- a/drivers/reset/Kconfig
++++ b/drivers/reset/Kconfig
+@@ -227,6 +227,7 @@ config RESET_RASPBERRYPI
+ config RESET_RZG2L_USBPHY_CTRL
+ 	tristate "Renesas RZ/G2L USBPHY control driver"
+ 	depends on ARCH_RZG2L || COMPILE_TEST
++	select MFD_SYSCON
+ 	help
+ 	  Support for USBPHY Control found on RZ/G2L family. It mainly
+ 	  controls reset and power down of the USB/PHY.
+diff --git a/drivers/reset/reset-rzg2l-usbphy-ctrl.c b/drivers/reset/reset-rzg2l-usbphy-ctrl.c
+index 4e2ac1f0060c..dcc8c2dde3f8 100644
+--- a/drivers/reset/reset-rzg2l-usbphy-ctrl.c
++++ b/drivers/reset/reset-rzg2l-usbphy-ctrl.c
+@@ -13,6 +13,7 @@
+ #include <linux/regmap.h>
+ #include <linux/reset.h>
+ #include <linux/reset-controller.h>
++#include <linux/mfd/syscon.h>
+ 
+ #define RESET			0x000
+ #define VBENCTL			0x03c
+@@ -91,6 +92,8 @@ static int rzg2l_usbphy_ctrl_status(struct reset_controller_dev *rcdev,
+ 	return !!(readl(priv->base + RESET) & port_mask);
+ }
+ 
++#define RZG2L_USBPHY_CTRL_PWRRDY	1
++
+ static const struct of_device_id rzg2l_usbphy_ctrl_match_table[] = {
+ 	{ .compatible = "renesas,rzg2l-usbphy-ctrl" },
+ 	{ /* Sentinel */ }
+@@ -110,6 +113,55 @@ static const struct regmap_config rzg2l_usb_regconf = {
+ 	.max_register = 1,
+ };
+ 
++static void rzg2l_usbphy_ctrl_set_pwrrdy(struct regmap_field *pwrrdy,
++					 bool power_on)
++{
++	u32 val = power_on ? 0 : 1;
++
++	/* The initialization path guarantees that the mask is 1 bit long. */
++	regmap_field_update_bits(pwrrdy, 1, val);
++}
++
++static void rzg2l_usbphy_ctrl_pwrrdy_off(void *data)
++{
++	rzg2l_usbphy_ctrl_set_pwrrdy(data, false);
++}
++
++static int rzg2l_usbphy_ctrl_pwrrdy_init(struct device *dev)
++{
++	struct regmap_field *pwrrdy;
++	struct reg_field field;
++	struct regmap *regmap;
++	const int *data;
++	u32 args[2];
++
++	data = device_get_match_data(dev);
++	if ((uintptr_t)data != RZG2L_USBPHY_CTRL_PWRRDY)
++		return 0;
++
++	regmap = syscon_regmap_lookup_by_phandle_args(dev->of_node,
++						      "renesas,sysc-pwrrdy",
++						      ARRAY_SIZE(args), args);
++	if (IS_ERR(regmap))
++		return PTR_ERR(regmap);
++
++	/* Don't allow more than one bit in mask. */
++	if (hweight32(args[1]) != 1)
++		return -EINVAL;
++
++	field.reg = args[0];
++	field.lsb = __ffs(args[1]);
++	field.msb = __fls(args[1]);
++
++	pwrrdy = devm_regmap_field_alloc(dev, regmap, field);
++	if (!pwrrdy)
++		return -ENOMEM;
++
++	rzg2l_usbphy_ctrl_set_pwrrdy(pwrrdy, true);
++
++	return devm_add_action_or_reset(dev, rzg2l_usbphy_ctrl_pwrrdy_off, pwrrdy);
++}
++
+ static int rzg2l_usbphy_ctrl_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -132,6 +184,10 @@ static int rzg2l_usbphy_ctrl_probe(struct platform_device *pdev)
+ 	if (IS_ERR(regmap))
+ 		return PTR_ERR(regmap);
+ 
++	error = rzg2l_usbphy_ctrl_pwrrdy_init(dev);
++	if (error)
++		return error;
++
+ 	priv->rstc = devm_reset_control_get_exclusive(&pdev->dev, NULL);
+ 	if (IS_ERR(priv->rstc))
+ 		return dev_err_probe(dev, PTR_ERR(priv->rstc),

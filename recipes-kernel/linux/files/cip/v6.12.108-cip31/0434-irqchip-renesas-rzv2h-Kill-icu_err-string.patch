@@ -1,0 +1,51 @@
+From 63d7ec904738378d81c280471479db75e3409631 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Wed, 2 Sep 2026 09:27:02 +0000
+Subject: [PATCH 434/435] irqchip/renesas-rzv2h: Kill icu_err string
+
+commit 669d2067e3d095d525c69e675d8b9c738e3616c6 upstream.
+
+Replace the string variable icu_err by its expanded value where needed,
+to improve readability.
+
+This reduces generated code size by 16 bytes.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/c7472bec20dea2c4d63e390e8e293b7d7003ef39.1775205874.git.geert+renesas@glider.be
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 4f687510f903..c12f7072f5cc 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -758,7 +758,6 @@ static int rzv2h_icu_setup_irqs(struct platform_device *pdev, struct irq_domain
+ {
+ 	const struct rzv2h_hw_info *hw_info = rzv2h_icu_data->info;
+ 	bool irq_inject = IS_ENABLED(CONFIG_GENERIC_IRQ_INJECTION);
+-	static const char *icu_err = "icu-error-ca55";
+ 	void __iomem *base = rzv2h_icu_data->base;
+ 	struct device *dev = &pdev->dev;
+ 	struct irq_fwspec fwspec;
+@@ -803,14 +802,12 @@ static int rzv2h_icu_setup_irqs(struct platform_device *pdev, struct irq_domain
+ 	fwspec.param[1] = IRQ_TYPE_LEVEL_HIGH;
+ 
+ 	virq = irq_create_fwspec_mapping(&fwspec);
+-	if (!virq) {
+-		return dev_err_probe(dev, -EINVAL, "failed to create IRQ mapping for %s\n",
+-				     icu_err);
+-	}
++	if (!virq)
++		return dev_err_probe(dev, -EINVAL, "failed to create icu-error-ca55 IRQ mapping\n");
+ 
+ 	ret = devm_request_irq(dev, virq, rzv2h_icu_error_irq, 0, dev_name(dev), rzv2h_icu_data);
+ 	if (ret)
+-		return dev_err_probe(dev, ret, "Failed to request %s IRQ\n", icu_err);
++		return dev_err_probe(dev, ret, "Failed to request icu-error-ca55 IRQ\n");
+ 
+ 	return 0;
+ }

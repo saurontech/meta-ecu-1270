@@ -1,0 +1,62 @@
+From 14666e2659d39e8dcc1ec1630885557f22ec95cc Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:05 +0300
+Subject: [PATCH 118/246] iio: adc: rzg2l_adc: Simplify the locking scheme in
+ rzg2l_adc_read_raw()
+
+commit 5d7fb2d589c56877bf220f73debd134c09e8209f upstream.
+
+Simplify the locking scheme in rzg2l_adc_read_raw() by using
+guard(mutex)().
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20241206111337.726244-8-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/iio/adc/rzg2l_adc.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/iio/adc/rzg2l_adc.c b/drivers/iio/adc/rzg2l_adc.c
+index ae8a7a02bffc..ef7b14747409 100644
+--- a/drivers/iio/adc/rzg2l_adc.c
++++ b/drivers/iio/adc/rzg2l_adc.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <linux/bitfield.h>
++#include <linux/cleanup.h>
+ #include <linux/completion.h>
+ #include <linux/delay.h>
+ #include <linux/iio/iio.h>
+@@ -220,21 +221,21 @@ static int rzg2l_adc_read_raw(struct iio_dev *indio_dev,
+ 	u8 ch;
+ 
+ 	switch (mask) {
+-	case IIO_CHAN_INFO_RAW:
++	case IIO_CHAN_INFO_RAW: {
+ 		if (chan->type != IIO_VOLTAGE)
+ 			return -EINVAL;
+ 
+-		mutex_lock(&adc->lock);
++		guard(mutex)(&adc->lock);
++
+ 		ch = chan->channel & RZG2L_ADC_CHN_MASK;
+ 		ret = rzg2l_adc_conversion(indio_dev, adc, ch);
+-		if (ret) {
+-			mutex_unlock(&adc->lock);
++		if (ret)
+ 			return ret;
+-		}
++
+ 		*val = adc->last_val[ch];
+-		mutex_unlock(&adc->lock);
+ 
+ 		return IIO_VAL_INT;
++	}
+ 
+ 	default:
+ 		return -EINVAL;

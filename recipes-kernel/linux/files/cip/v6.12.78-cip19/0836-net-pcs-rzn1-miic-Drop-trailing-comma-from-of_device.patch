@@ -1,0 +1,36 @@
+From 5e73c9251ee0401cb92fea811eed79c63c387786 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:58:59 +0000
+Subject: [PATCH 836/851] net: pcs: rzn1-miic: Drop trailing comma from
+ of_device_id table
+
+commit b2e12fca3164faf7e0c073000ef693c7d9f764b2 upstream.
+
+Remove the trailing comma after the sentinel entry in the
+of_device_id match table.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://patch.msgid.link/20250910204132.319975-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/pcs/pcs-rzn1-miic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/pcs/pcs-rzn1-miic.c b/drivers/net/pcs/pcs-rzn1-miic.c
+index 52fb2c30fba4..5e3be121efca 100644
+--- a/drivers/net/pcs/pcs-rzn1-miic.c
++++ b/drivers/net/pcs/pcs-rzn1-miic.c
+@@ -538,7 +538,7 @@ static void miic_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id miic_of_mtable[] = {
+ 	{ .compatible = "renesas,rzn1-miic" },
+-	{ /* sentinel */ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, miic_of_mtable);
+ 

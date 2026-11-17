@@ -1,0 +1,55 @@
+From 80204a2ac1f40100f33dea15c38d829df7c31ca5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:58:41 +0000
+Subject: [PATCH 818/851] dt-bindings: clock: renesas,r9a09g077/87: Add
+ Ethernet clock IDs
+
+commit 0dcfb6fcdd085bbfcdfdcf64a7d4a75c63c108af upstream.
+
+Add clock definitions for Ethernet (ETCLK A-E) to both R9A09G077 and
+R9A09G087 SoCs. These definitions are required for describing Ethernet
+devices in DT.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250904071954.3176806-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h | 5 +++++
+ include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h | 5 +++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+index 0c2ce81a8744..2a805e06487b 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+@@ -26,5 +26,10 @@
+ #define R9A09G077_CLK_PCLKL		14
+ #define R9A09G077_SDHI_CLKHS		15
+ #define R9A09G077_USB_CLK		16
++#define R9A09G077_ETCLKA		17
++#define R9A09G077_ETCLKB		18
++#define R9A09G077_ETCLKC		19
++#define R9A09G077_ETCLKD		20
++#define R9A09G077_ETCLKE		21
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__ */
+diff --git a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+index 70ee883f2386..09da0ad33be6 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+@@ -26,5 +26,10 @@
+ #define R9A09G087_CLK_PCLKL		14
+ #define R9A09G087_SDHI_CLKHS		15
+ #define R9A09G087_USB_CLK		16
++#define R9A09G087_ETCLKA		17
++#define R9A09G087_ETCLKB		18
++#define R9A09G087_ETCLKC		19
++#define R9A09G087_ETCLKD		20
++#define R9A09G087_ETCLKE		21
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G087_CPG_H__ */

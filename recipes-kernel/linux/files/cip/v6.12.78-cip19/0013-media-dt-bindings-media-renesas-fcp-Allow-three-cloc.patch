@@ -1,0 +1,37 @@
+From 2385933663e77bfafae57aeb65c3ea186f03a6e3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 5 Mar 2026 15:37:19 +0000
+Subject: [PATCH 013/851] media: dt-bindings: media: renesas,fcp: Allow three
+ clocks for RZ/V2N SoC
+
+commit ae8694393e13f563209fad681e5bc1b99d558646 upstream.
+
+Update the FCP DT schema to permit three clock inputs for the RZ/V2N SoC.
+The FCP block on this SoC requires three separate clocks, unlike other
+variants which use only one.
+
+Fixes: f42eddf44fbf ("media: dt-bindings: media: renesas,fcp: Document RZ/V2N SoC")
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://patch.msgid.link/20251103194554.54313-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil+cisco@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/media/renesas,fcp.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/media/renesas,fcp.yaml b/Documentation/devicetree/bindings/media/renesas,fcp.yaml
+index 074be99ca004..947c5d00088e 100644
+--- a/Documentation/devicetree/bindings/media/renesas,fcp.yaml
++++ b/Documentation/devicetree/bindings/media/renesas,fcp.yaml
+@@ -68,6 +68,7 @@ allOf:
+               - renesas,r9a07g043u-fcpvd
+               - renesas,r9a07g044-fcpvd
+               - renesas,r9a07g054-fcpvd
++              - renesas,r9a09g056-fcpvd
+               - renesas,r9a09g057-fcpvd
+     then:
+       properties:

@@ -1,0 +1,66 @@
+From 246bbe3ee76f68e71f4bc99813d516c157edf767 Mon Sep 17 00:00:00 2001
+From: Pratyush Yadav <p.yadav@ti.com>
+Date: Tue, 8 Jul 2025 17:16:46 +0800
+Subject: [PATCH] mtd: spi-nor: core: avoid odd length/address writes in
+ 8D-8D-8D mode
+
+commit 17926cd770ec837ed27d9856cf07f2da8dda4131 upstream.
+
+On Octal DTR capable flashes like Micron Xcella the writes cannot start
+or end at an odd address in Octal DTR mode. Extra 0xff bytes need to be
+appended or prepended to make sure the start address and end address are
+even. 0xff is used because on NOR flashes a program operation can only
+flip bits from 1 to 0, not the other way round. 0 to 1 flip needs to
+happen via erases.
+
+Signed-off-by: Pratyush Yadav <p.yadav@ti.com>
+Reviewed-by: Michael Walle <michael@walle.cc>
+Signed-off-by: Luke Wang <ziniu.wang_1@nxp.com>
+Signed-off-by: Pratyush Yadav <pratyush@kernel.org>
+Link: https://lore.kernel.org/r/20250708091646.292-2-ziniu.wang_1@nxp.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/mtd/spi-nor/core.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/mtd/spi-nor/core.c b/drivers/mtd/spi-nor/core.c
+index ab22277c6e7d..4fe1fff570ea 100644
+--- a/drivers/mtd/spi-nor/core.c
++++ b/drivers/mtd/spi-nor/core.c
+@@ -2172,11 +2172,11 @@ static int spi_nor_read(struct mtd_info *mtd, loff_t from, size_t len,
+ }
+ 
+ /*
+- * On Octal DTR capable flashes like Micron Xcella the writes cannot start or
+- * end at an odd address in Octal DTR mode. Extra 0xff bytes need to be appended
+- * or prepended to make sure the start address and end address are even. 0xff is
+- * used because on NOR flashes a program operation can only flip bits from 1 to
+- * 0, not the other way round. 0 to 1 flip needs to happen via erases.
++ * On Octal DTR capable flashes, writes cannot start or end at an odd address
++ * in Octal DTR mode. Extra 0xff bytes need to be appended or prepended to
++ * make sure the start address and end address are even. 0xff is used because
++ * on NOR flashes a program operation can only flip bits from 1 to 0, not the
++ * other way round. 0 to 1 flip needs to happen via erases.
+  */
+ static int spi_nor_octal_dtr_write(struct spi_nor *nor, loff_t to, size_t len,
+ 				   const u8 *buf)
+@@ -2228,9 +2228,6 @@ static int spi_nor_octal_dtr_write(struct spi_nor *nor, loff_t to, size_t len,
+ 	if (start + bytes_written == end)
+ 		ret -= end - (to + len);
+ 
+-	if (ret < 0)
+-		ret = -EIO;
+-
+ out:
+ 	kfree(tmp_buf);
+ 	return ret;
+@@ -2278,9 +2275,7 @@ static int spi_nor_write(struct mtd_info *mtd, loff_t to, size_t len,
+ 		else
+ 			ret = spi_nor_write_data(nor, addr, page_remain,
+ 						 buf + i);
+-
+ 		spi_nor_unlock_device(nor);
+-
+ 		if (ret < 0)
+ 			goto write_err;
+ 		written = ret;

@@ -1,0 +1,44 @@
+From be083b67adf49a6629979839ca41aea5769fa124 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Feb 2026 15:18:19 +0000
+Subject: [PATCH 0149/1190] arm64: dts: renesas: r9a09g057h44-rzv2h-evk: Rename
+ fixed regulator node names
+
+commit c0cd5213d409994f65ebd900f7f54d6d7a6435a4 upstream.
+
+Rename "regulator0" to "regulator-0p8v" and "regulator1" to
+"regulator-3p3v" for consistency as done in the RZ/V2N EVK.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250620121045.56114-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+index 03bae0a5be7b..738ca0027d48 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+@@ -58,7 +58,7 @@ memory@240000000 {
+ 		reg = <0x2 0x40000000 0x2 0x00000000>;
+ 	};
+ 
+-	reg_0p8v: regulator0 {
++	reg_0p8v: regulator-0p8v {
+ 		compatible = "regulator-fixed";
+ 
+ 		regulator-name = "fixed-0.8V";
+@@ -77,7 +77,7 @@ reg_1p8v: regulator-1p8v {
+ 		regulator-always-on;
+ 	};
+ 
+-	reg_3p3v: regulator1 {
++	reg_3p3v: regulator-3p3v {
+ 		compatible = "regulator-fixed";
+ 
+ 		regulator-name = "fixed-3.3V";

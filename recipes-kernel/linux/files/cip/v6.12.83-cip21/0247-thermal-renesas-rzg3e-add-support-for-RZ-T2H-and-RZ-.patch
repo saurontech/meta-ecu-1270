@@ -1,0 +1,98 @@
+From 1fd5180c90bf9c711499c50686fa52f3d0e37e73 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 10 Apr 2026 20:02:10 +0300
+Subject: [PATCH 247/497] thermal: renesas: rzg3e: add support for RZ/T2H and
+ RZ/N2H
+
+commit 0061030929e2d09398ade9fae320528bdcba2bed upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs expose the
+temperature calibration via SMC SIP and do not have a reset for the
+TSU peripheral, and use different minimum and maximum temperature values
+compared to the already supported RZ/G3E.
+
+Although the calibration data is stored in an OTP memory, the OTP itself
+is not memory-mapped, access to it is done through an OTP controller.
+
+The OTP controller is only accessible from the secure world,
+but the temperature calibration data stored in the OTP is exposed via
+SMC.
+
+Add support for retrieving the calibration data using arm_smcc_smc().
+
+Add a compatible for RZ/T2H, RZ/N2H can use it as a fallback.
+
+Reviewed-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Tested-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260108195223.193531-6-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/thermal/renesas/rzg3e_thermal.c | 27 +++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/thermal/renesas/rzg3e_thermal.c b/drivers/thermal/renesas/rzg3e_thermal.c
+index 97c4053303e0..dde021e283b7 100644
+--- a/drivers/thermal/renesas/rzg3e_thermal.c
++++ b/drivers/thermal/renesas/rzg3e_thermal.c
+@@ -4,6 +4,7 @@
+  *
+  * Copyright (C) 2025 Renesas Electronics Corporation
+  */
++#include <linux/arm-smccc.h>
+ #include <linux/clk.h>
+ #include <linux/cleanup.h>
+ #include <linux/delay.h>
+@@ -70,6 +71,10 @@
+ #define TSU_POLL_DELAY_US	10	/* Polling interval */
+ #define TSU_MIN_CLOCK_RATE	24000000  /* TSU_PCLK minimum 24MHz */
+ 
++#define RZ_SIP_SVC_GET_SYSTSU	0x82000022
++#define OTP_TSU_REG_ADR_TEMPHI	0x01DC
++#define OTP_TSU_REG_ADR_TEMPLO	0x01DD
++
+ struct rzg3e_thermal_priv;
+ 
+ struct rzg3e_thermal_info {
+@@ -362,6 +367,21 @@ static int rzg3e_thermal_get_syscon_trim(struct rzg3e_thermal_priv *priv)
+ 	return 0;
+ }
+ 
++static int rzg3e_thermal_get_smc_trim(struct rzg3e_thermal_priv *priv)
++{
++	struct arm_smccc_res local_res;
++
++	arm_smccc_smc(RZ_SIP_SVC_GET_SYSTSU, OTP_TSU_REG_ADR_TEMPLO,
++		      0, 0, 0, 0, 0, 0, &local_res);
++	priv->trmval0 = local_res.a0 & TSU_CODE_MAX;
++
++	arm_smccc_smc(RZ_SIP_SVC_GET_SYSTSU, OTP_TSU_REG_ADR_TEMPHI,
++		      0, 0, 0, 0, 0, 0, &local_res);
++	priv->trmval1 = local_res.a0 & TSU_CODE_MAX;
++
++	return 0;
++}
++
+ static int rzg3e_thermal_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -524,8 +544,15 @@ static const struct rzg3e_thermal_info rzg3e_thermal_info = {
+ 	.temp_e_mc = 126000,
+ };
+ 
++static const struct rzg3e_thermal_info rzt2h_thermal_info = {
++	.get_trim = rzg3e_thermal_get_smc_trim,
++	.temp_d_mc = -40000,
++	.temp_e_mc = 125000,
++};
++
+ static const struct of_device_id rzg3e_thermal_dt_ids[] = {
+ 	{ .compatible = "renesas,r9a09g047-tsu", .data = &rzg3e_thermal_info },
++	{ .compatible = "renesas,r9a09g077-tsu", .data = &rzt2h_thermal_info },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, rzg3e_thermal_dt_ids);

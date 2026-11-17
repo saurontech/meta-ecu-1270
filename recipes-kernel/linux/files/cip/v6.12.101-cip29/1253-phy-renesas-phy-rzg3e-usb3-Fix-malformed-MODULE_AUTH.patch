@@ -1,0 +1,36 @@
+From de270f834817edb2097e8931244a5ac37fff8773 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:49 +0100
+Subject: [PATCH 1253/1853] phy: renesas: phy-rzg3e-usb3: Fix malformed
+ MODULE_AUTHOR string
+
+[ Upstream commit 53f60930e3d20883364fc01fd46b6099acb8127a ]
+
+Fix a malformed MODULE_AUTHOR macro in the RZ/G3E USB3.0 PHY driver where
+the author's name and opening angle bracket were missing, leaving only the
+email address with a stray closing >. Correct it to the standard Name
+<email> format.
+
+Reported-by: Pavel Machek <pavel@nabladev.com>
+Closes: https://lore.kernel.org/all/abp4KprlYyU+jMPu@duo.ucw.cz/
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260319063211.5056-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/phy/renesas/phy-rzg3e-usb3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/phy/renesas/phy-rzg3e-usb3.c b/drivers/phy/renesas/phy-rzg3e-usb3.c
+index 6b3453ea0004..030c600a53e6 100644
+--- a/drivers/phy/renesas/phy-rzg3e-usb3.c
++++ b/drivers/phy/renesas/phy-rzg3e-usb3.c
+@@ -256,4 +256,4 @@ module_platform_driver(rzg3e_phy_usb3_driver);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Renesas RZ/G3E USB3.0 PHY Driver");
+-MODULE_AUTHOR("biju.das.jz@bp.renesas.com>");
++MODULE_AUTHOR("Biju Das <biju.das.jz@bp.renesas.com>");

@@ -1,0 +1,68 @@
+From 0c63741deb02b4c325860ab97717c8588d54a30e Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:03 +0300
+Subject: [PATCH 116/246] iio: adc: rzg2l_adc: Switch to RUNTIME_PM_OPS() and
+ pm_ptr()
+
+commit 7842ef74c5fc807e1ebd221b6301cc144057280c upstream.
+
+The use of SET_RUNTIME_PM_OPS() is now deprecated and requires
+__maybe_unused annotations to avoid warnings about unused functions.
+Switching to RUNTIME_PM_OPS() and pm_ptr() eliminates the need for such
+annotations because the compiler can directly reference the runtime PM
+functions, thereby suppressing the warnings. As a result, the
+__maybe_unused markings can be removed.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20241206111337.726244-6-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/iio/adc/rzg2l_adc.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/iio/adc/rzg2l_adc.c b/drivers/iio/adc/rzg2l_adc.c
+index bfa70a3c6541..46493fadab48 100644
+--- a/drivers/iio/adc/rzg2l_adc.c
++++ b/drivers/iio/adc/rzg2l_adc.c
+@@ -483,7 +483,7 @@ static const struct of_device_id rzg2l_adc_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, rzg2l_adc_match);
+ 
+-static int __maybe_unused rzg2l_adc_pm_runtime_suspend(struct device *dev)
++static int rzg2l_adc_pm_runtime_suspend(struct device *dev)
+ {
+ 	struct iio_dev *indio_dev = dev_get_drvdata(dev);
+ 	struct rzg2l_adc *adc = iio_priv(indio_dev);
+@@ -493,7 +493,7 @@ static int __maybe_unused rzg2l_adc_pm_runtime_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
+-static int __maybe_unused rzg2l_adc_pm_runtime_resume(struct device *dev)
++static int rzg2l_adc_pm_runtime_resume(struct device *dev)
+ {
+ 	struct iio_dev *indio_dev = dev_get_drvdata(dev);
+ 	struct rzg2l_adc *adc = iio_priv(indio_dev);
+@@ -504,9 +504,7 @@ static int __maybe_unused rzg2l_adc_pm_runtime_resume(struct device *dev)
+ }
+ 
+ static const struct dev_pm_ops rzg2l_adc_pm_ops = {
+-	SET_RUNTIME_PM_OPS(rzg2l_adc_pm_runtime_suspend,
+-			   rzg2l_adc_pm_runtime_resume,
+-			   NULL)
++	RUNTIME_PM_OPS(rzg2l_adc_pm_runtime_suspend, rzg2l_adc_pm_runtime_resume, NULL)
+ };
+ 
+ static struct platform_driver rzg2l_adc_driver = {
+@@ -514,7 +512,7 @@ static struct platform_driver rzg2l_adc_driver = {
+ 	.driver		= {
+ 		.name		= DRIVER_NAME,
+ 		.of_match_table = rzg2l_adc_match,
+-		.pm		= &rzg2l_adc_pm_ops,
++		.pm		= pm_ptr(&rzg2l_adc_pm_ops),
+ 	},
+ };
+ 

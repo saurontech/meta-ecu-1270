@@ -1,0 +1,93 @@
+From 0843fe9bce28e3c781687ffe19b400cfc28c73ca Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 25 Mar 2025 15:55:57 +0100
+Subject: [PATCH 029/246] dt-bindings: clock: renesas: Document RZ/G3E SoC CPG
+
+commit 25458fdd39a18a5ce00c36f38992da54bb7453f3 upstream.
+
+Document the device tree bindings for the Renesas RZ/G3E SoC
+Clock Pulse Generator (CPG).
+
+Also define constants for the core clocks of the RZ/G3E SoC.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241203105005.103927-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/clock/renesas,rzv2h-cpg.yaml     | 15 +++++++------
+ .../dt-bindings/clock/renesas,r9a09g047-cpg.h | 21 +++++++++++++++++++
+ 2 files changed, 30 insertions(+), 6 deletions(-)
+ create mode 100644 include/dt-bindings/clock/renesas,r9a09g047-cpg.h
+
+diff --git a/Documentation/devicetree/bindings/clock/renesas,rzv2h-cpg.yaml b/Documentation/devicetree/bindings/clock/renesas,rzv2h-cpg.yaml
+index 926c503bed1f..c3fe76abd549 100644
+--- a/Documentation/devicetree/bindings/clock/renesas,rzv2h-cpg.yaml
++++ b/Documentation/devicetree/bindings/clock/renesas,rzv2h-cpg.yaml
+@@ -4,19 +4,22 @@
+ $id: http://devicetree.org/schemas/clock/renesas,rzv2h-cpg.yaml#
+ $schema: http://devicetree.org/meta-schemas/core.yaml#
+ 
+-title: Renesas RZ/V2H(P) Clock Pulse Generator (CPG)
++title: Renesas RZ/{G3E,V2H(P)} Clock Pulse Generator (CPG)
+ 
+ maintainers:
+   - Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+ 
+ description:
+-  On Renesas RZ/V2H(P) SoCs, the CPG (Clock Pulse Generator) handles generation
+-  and control of clock signals for the IP modules, generation and control of resets,
+-  and control over booting, low power consumption and power supply domains.
++  On Renesas RZ/{G3E,V2H(P)} SoCs, the CPG (Clock Pulse Generator) handles
++  generation and control of clock signals for the IP modules, generation and
++  control of resets, and control over booting, low power consumption and power
++  supply domains.
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g057-cpg
++    enum:
++      - renesas,r9a09g047-cpg # RZ/G3E
++      - renesas,r9a09g057-cpg # RZ/V2H
+ 
+   reg:
+     maxItems: 1
+@@ -37,7 +40,7 @@ properties:
+     description: |
+       - For CPG core clocks, the two clock specifier cells must be "CPG_CORE"
+         and a core clock reference, as defined in
+-        <dt-bindings/clock/renesas,r9a09g057-cpg.h>,
++        <dt-bindings/clock/renesas,r9a09g0*-cpg.h>,
+       - For module clocks, the two clock specifier cells must be "CPG_MOD" and
+         a module number.  The module number is calculated as the CLKON register
+         offset index multiplied by 16, plus the actual bit in the register
+diff --git a/include/dt-bindings/clock/renesas,r9a09g047-cpg.h b/include/dt-bindings/clock/renesas,r9a09g047-cpg.h
+new file mode 100644
+index 000000000000..1d031bf6bf03
+--- /dev/null
++++ b/include/dt-bindings/clock/renesas,r9a09g047-cpg.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * Copyright (C) 2024 Renesas Electronics Corp.
++ */
++#ifndef __DT_BINDINGS_CLOCK_RENESAS_R9A09G047_CPG_H__
++#define __DT_BINDINGS_CLOCK_RENESAS_R9A09G047_CPG_H__
++
++#include <dt-bindings/clock/renesas-cpg-mssr.h>
++
++/* Core Clock list */
++#define R9A09G047_SYS_0_PCLK			0
++#define R9A09G047_CA55_0_CORECLK0		1
++#define R9A09G047_CA55_0_CORECLK1		2
++#define R9A09G047_CA55_0_CORECLK2		3
++#define R9A09G047_CA55_0_CORECLK3		4
++#define R9A09G047_CA55_0_PERIPHCLK		5
++#define R9A09G047_CM33_CLK0			6
++#define R9A09G047_CST_0_SWCLKTCK		7
++#define R9A09G047_IOTOP_0_SHCLK			8
++
++#endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G047_CPG_H__ */

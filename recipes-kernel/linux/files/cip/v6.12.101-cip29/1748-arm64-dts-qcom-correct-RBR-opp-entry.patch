@@ -1,0 +1,324 @@
+From 05fa602d6adc9cc7ea0a9f79a41f9794f057a7c1 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Date: Wed, 22 Jul 2026 19:46:59 -0400
+Subject: [PATCH 1748/1853] arm64: dts: qcom: correct RBR opp entry
+
+[ Upstream commit a5c21b9bd5f531e50141b0484faabb707b92f1e2 ]
+
+DisplayPort Reduced Bit Rate uses link rate of 1.62 Gbps, the main link
+clock should be 162 MHz. Having the incorrect frequency (160 MHz) in the
+OPP table will result in selecting wrong link frequency. Correct the
+entry in the OPP table.
+
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/20260304-msm-fix-rbr-v1-1-b9eba986eaef@oss.qualcomm.com
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Stable-dep-of: c17e22094667 ("arm64: dts: qcom: hamoa: Fix OPP tables for all DisplayPort controllers")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/arm64/boot/dts/qcom/sc7180.dtsi   |  4 ++--
+ arch/arm64/boot/dts/qcom/sc7280.dtsi   |  8 +++----
+ arch/arm64/boot/dts/qcom/sc8180x.dtsi  | 12 +++++-----
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 32 +++++++++++++-------------
+ arch/arm64/boot/dts/qcom/sm6350.dtsi   |  4 ++--
+ arch/arm64/boot/dts/qcom/sm8150.dtsi   |  4 ++--
+ arch/arm64/boot/dts/qcom/sm8250.dtsi   |  4 ++--
+ arch/arm64/boot/dts/qcom/sm8350.dtsi   |  4 ++--
+ arch/arm64/boot/dts/qcom/sm8450.dtsi   |  4 ++--
+ arch/arm64/boot/dts/qcom/x1e80100.dtsi | 16 ++++++-------
+ 10 files changed, 46 insertions(+), 46 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc7180.dtsi b/arch/arm64/boot/dts/qcom/sc7180.dtsi
+index e52d938df1be..d8fb0d2a89ca 100644
+--- a/arch/arm64/boot/dts/qcom/sc7180.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc7180.dtsi
+@@ -3410,8 +3410,8 @@ port@1 {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+index b47ad94f7d1a..088dc46dd32b 100644
+--- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+@@ -4723,8 +4723,8 @@ port@1 {
+ 				edp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -4820,8 +4820,8 @@ port@1 {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sc8180x.dtsi b/arch/arm64/boot/dts/qcom/sc8180x.dtsi
+index 6ca9fba74c08..4715e26fc264 100644
+--- a/arch/arm64/boot/dts/qcom/sc8180x.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8180x.dtsi
+@@ -3269,8 +3269,8 @@ mdss_dp0_out: endpoint {
+ 				dp0_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -3347,8 +3347,8 @@ mdss_dp1_out: endpoint {
+ 				dp1_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -3415,8 +3415,8 @@ edp_in: endpoint {
+ 				edp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index c10ee18cb611..3fa2e13f4baf 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -4259,8 +4259,8 @@ mdss0_dp0_out: endpoint {
+ 				mdss0_dp0_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -4337,8 +4337,8 @@ mdss0_dp1_out: endpoint {
+ 				mdss0_dp1_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -4409,8 +4409,8 @@ port@1 {
+ 				mdss0_dp2_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -4481,8 +4481,8 @@ port@1 {
+ 				mdss0_dp3_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -5547,8 +5547,8 @@ port@1 {
+ 				mdss1_dp0_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -5619,8 +5619,8 @@ port@1 {
+ 				mdss1_dp1_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -5691,8 +5691,8 @@ port@1 {
+ 				mdss1_dp2_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -5763,8 +5763,8 @@ port@1 {
+ 				mdss1_dp3_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sm6350.dtsi b/arch/arm64/boot/dts/qcom/sm6350.dtsi
+index 10418fccfea2..1234df16d51f 100644
+--- a/arch/arm64/boot/dts/qcom/sm6350.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm6350.dtsi
+@@ -2222,8 +2222,8 @@ mdss_dp_out: endpoint {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+index 27f87835bc55..0aeceffd872c 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+@@ -3932,8 +3932,8 @@ mdss_dp_out: endpoint {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+index 9995fc515e11..4cb91f31340d 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+@@ -4818,8 +4818,8 @@ mdss_dp_out: endpoint {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sm8350.dtsi b/arch/arm64/boot/dts/qcom/sm8350.dtsi
+index 0be8f2befec7..1870ec4176da 100644
+--- a/arch/arm64/boot/dts/qcom/sm8350.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8350.dtsi
+@@ -2909,8 +2909,8 @@ mdss_dp_out: endpoint {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+index 4147d3164574..59172db1e3d9 100644
+--- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+@@ -3223,8 +3223,8 @@ mdss_dp0_out: endpoint {
+ 				dp_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/x1e80100.dtsi b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+index 8843dac44900..022fe7c9cd3a 100644
+--- a/arch/arm64/boot/dts/qcom/x1e80100.dtsi
++++ b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+@@ -4758,8 +4758,8 @@ mdss_dp0_out: endpoint {
+ 				mdss_dp0_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -4841,8 +4841,8 @@ mdss_dp1_out: endpoint {
+ 				mdss_dp1_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -4923,8 +4923,8 @@ mdss_dp2_out: endpoint {
+ 				mdss_dp2_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 
+@@ -5002,8 +5002,8 @@ port@1 {
+ 				mdss_dp3_opp_table: opp-table {
+ 					compatible = "operating-points-v2";
+ 
+-					opp-160000000 {
+-						opp-hz = /bits/ 64 <160000000>;
++					opp-162000000 {
++						opp-hz = /bits/ 64 <162000000>;
+ 						required-opps = <&rpmhpd_opp_low_svs>;
+ 					};
+ 

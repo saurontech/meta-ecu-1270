@@ -1,0 +1,70 @@
+From 8f122d319547e7e803415553bd8b2ae000fddd16 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 22 Oct 2026 14:40:10 +0100
+Subject: [PATCH 1359/1368] dt-bindings: serial: renesas,rsci: Document RZ/G3L
+ SoC
+
+[ Upstream commit 6672462c97ed29f1cf04317663ae0bffff261c3b ]
+
+Document the serial communication interface (RSCI) used on the Renesas
+RZ/G3L (R9A08G046) SoC. This SoC integrates the same RSCI IP block as
+the RZ/G3E (R9A09G047), but it has 3 clocks compared to 6 clocks on
+the RZ/G3E SoC. The RZ/G3L has a single TCLK with internal dividers,
+whereas the RZ/G3E has explicit clocks for TCLK and its dividers.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://patch.msgid.link/20260312082708.98835-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/serial/renesas,rsci.yaml         | 26 +++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/serial/renesas,rsci.yaml b/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
+index 1f8cee8171de3..9e2460f546824 100644
+--- a/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
++++ b/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
+@@ -14,6 +14,7 @@ properties:
+   compatible:
+     oneOf:
+       - enum:
++          - renesas,r9a08g046-rsci # RZ/G3L
+           - renesas,r9a09g047-rsci # RZ/G3E
+           - renesas,r9a09g077-rsci # RZ/T2H
+ 
+@@ -139,6 +140,31 @@ allOf:
+         - resets
+         - reset-names
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a08g046-rsci
++    then:
++      properties:
++        interrupts:
++          minItems: 6
++
++        interrupt-names:
++          minItems: 6
++
++        clocks:
++          minItems: 2
++          maxItems: 3
++
++        clock-names:
++          minItems: 2
++          maxItems: 3
++
++      required:
++        - resets
++        - reset-names
++
+ unevaluatedProperties: false
+ 
+ examples:

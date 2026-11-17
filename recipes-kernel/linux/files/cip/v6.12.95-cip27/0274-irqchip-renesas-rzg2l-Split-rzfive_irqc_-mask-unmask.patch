@@ -1,0 +1,120 @@
+From ab569cb788b7fc729e024953198169e33e4c7268 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:34 +0100
+Subject: [PATCH 274/286] irqchip/renesas-rzg2l: Split
+ rzfive_irqc_{mask,unmask} into separate IRQ and TINT handlers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit bcb30669088a69cc8de2a5cf446b8b72f6b6e8eb ]
+
+rzfive_irqc_mask() and rzfive_irqc_unmask() use hw_irq range checks to
+dispatch between IRQ and TINT masking operations. Split each into two
+dedicated handlers — rzfive_irqc_irq_mask(), rzfive_irqc_tint_mask(),
+rzfive_irqc_irq_unmask(), and rzfive_irqc_tint_unmask() — each operating
+unconditionally on its respective interrupt type, removing the runtime
+conditionals.
+
+Assign the IRQ-specific handlers to rzfive_irqc_irq_chip and the
+TINT-specific handlers to rzfive_irqc_tint_chip, consistent with the
+separation applied to the EOI, set_type, and enable/disable callbacks in
+previous patches.
+
+While at it, simplify rzfive_irqc_{irq,tint}_{mask,unmask}() by replacing
+raw_spin_lock locking/unlocking with scoped_guard().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-11-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 44 ++++++++++++++++++++---------
+ 1 file changed, 30 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 547191642f26..1511e6bcbc4e 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -185,31 +185,47 @@ static void rzfive_irqc_unmask_tint_interrupt(struct rzg2l_irqc_priv *priv,
+ 	writel_relaxed(readl_relaxed(priv->base + TMSK) & ~bit, priv->base + TMSK);
+ }
+ 
+-static void rzfive_irqc_mask(struct irq_data *d)
++static void rzfive_irqc_irq_mask(struct irq_data *d)
+ {
+ 	struct rzg2l_irqc_priv *priv = irq_data_to_priv(d);
+ 	unsigned int hwirq = irqd_to_hwirq(d);
+ 
+-	raw_spin_lock(&priv->lock);
+-	if (hwirq >= IRQC_IRQ_START && hwirq <= IRQC_IRQ_COUNT)
++	scoped_guard(raw_spinlock, &priv->lock)
+ 		rzfive_irqc_mask_irq_interrupt(priv, hwirq);
+-	else if (hwirq >= IRQC_TINT_START && hwirq < IRQC_NUM_IRQ)
++
++	irq_chip_mask_parent(d);
++}
++
++static void rzfive_irqc_tint_mask(struct irq_data *d)
++{
++	struct rzg2l_irqc_priv *priv = irq_data_to_priv(d);
++	unsigned int hwirq = irqd_to_hwirq(d);
++
++	scoped_guard(raw_spinlock, &priv->lock)
+ 		rzfive_irqc_mask_tint_interrupt(priv, hwirq);
+-	raw_spin_unlock(&priv->lock);
++
+ 	irq_chip_mask_parent(d);
+ }
+ 
+-static void rzfive_irqc_unmask(struct irq_data *d)
++static void rzfive_irqc_irq_unmask(struct irq_data *d)
+ {
+ 	struct rzg2l_irqc_priv *priv = irq_data_to_priv(d);
+ 	unsigned int hwirq = irqd_to_hwirq(d);
+ 
+-	raw_spin_lock(&priv->lock);
+-	if (hwirq >= IRQC_IRQ_START && hwirq <= IRQC_IRQ_COUNT)
++	scoped_guard(raw_spinlock, &priv->lock)
+ 		rzfive_irqc_unmask_irq_interrupt(priv, hwirq);
+-	else if (hwirq >= IRQC_TINT_START && hwirq < IRQC_NUM_IRQ)
++
++	irq_chip_unmask_parent(d);
++}
++
++static void rzfive_irqc_tint_unmask(struct irq_data *d)
++{
++	struct rzg2l_irqc_priv *priv = irq_data_to_priv(d);
++	unsigned int hwirq = irqd_to_hwirq(d);
++
++	scoped_guard(raw_spinlock, &priv->lock)
+ 		rzfive_irqc_unmask_tint_interrupt(priv, hwirq);
+-	raw_spin_unlock(&priv->lock);
++
+ 	irq_chip_unmask_parent(d);
+ }
+ 
+@@ -492,8 +508,8 @@ static const struct irq_chip rzg2l_irqc_tint_chip = {
+ static const struct irq_chip rzfive_irqc_irq_chip = {
+ 	.name			= "rzfive-irqc",
+ 	.irq_eoi		= rzg2l_irqc_irq_eoi,
+-	.irq_mask		= rzfive_irqc_mask,
+-	.irq_unmask		= rzfive_irqc_unmask,
++	.irq_mask		= rzfive_irqc_irq_mask,
++	.irq_unmask		= rzfive_irqc_irq_unmask,
+ 	.irq_disable		= rzfive_irqc_irq_disable,
+ 	.irq_enable		= rzfive_irqc_irq_enable,
+ 	.irq_get_irqchip_state	= irq_chip_get_parent_state,
+@@ -509,8 +525,8 @@ static const struct irq_chip rzfive_irqc_irq_chip = {
+ static const struct irq_chip rzfive_irqc_tint_chip = {
+ 	.name			= "rzfive-irqc",
+ 	.irq_eoi		= rzg2l_irqc_tint_eoi,
+-	.irq_mask		= rzfive_irqc_mask,
+-	.irq_unmask		= rzfive_irqc_unmask,
++	.irq_mask		= rzfive_irqc_tint_mask,
++	.irq_unmask		= rzfive_irqc_tint_unmask,
+ 	.irq_disable		= rzfive_irqc_tint_disable,
+ 	.irq_enable		= rzfive_irqc_tint_enable,
+ 	.irq_get_irqchip_state	= irq_chip_get_parent_state,

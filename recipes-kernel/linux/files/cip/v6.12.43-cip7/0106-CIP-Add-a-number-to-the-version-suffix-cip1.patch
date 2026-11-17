@@ -1,0 +1,21 @@
+From d8e2d5a17a48a46f0b764a0eb56808c0ec0c044b Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Date: Tue, 20 May 2025 10:39:35 +0900
+Subject: [PATCH 106/246] CIP: Add a number to the version suffix (-cip1)
+
+This is the first release of CIP kernel for 6.12.y tree.
+Like the previous CIP kernel, add -cipX to the kernel version.
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ localversion-cip | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 localversion-cip
+
+diff --git a/localversion-cip b/localversion-cip
+new file mode 100644
+index 000000000000..5ce6abb54950
+--- /dev/null
++++ b/localversion-cip
+@@ -0,0 +1 @@
++-cip1

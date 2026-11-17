@@ -1,0 +1,35 @@
+From 13d0addc3b7a97021c65641a992c34ec0429238e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:35 +0000
+Subject: [PATCH 324/851] serial: sh-sci: Use
+ devm_reset_control_array_get_exclusive()
+
+[ Upstream commit 850ec928922fb819c28eb175bf85b01e28afdea7 ]
+
+Replace devm_*_get_exclusive()->devm_*_array_get_exclusive() to support
+existing SoCs along with RZ/G3E as RZ/G3E has 2 resets.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-10-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/sh-sci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 97f6dc8692f5..cc6765463003 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3706,7 +3706,7 @@ static struct plat_sci_port *sci_parse_dt(struct platform_device *pdev,
+ 
+ 	data = of_device_get_match_data(&pdev->dev);
+ 
+-	rstc = devm_reset_control_get_optional_exclusive(&pdev->dev, NULL);
++	rstc = devm_reset_control_array_get_optional_exclusive(&pdev->dev);
+ 	if (IS_ERR(rstc))
+ 		return ERR_PTR(dev_err_probe(&pdev->dev, PTR_ERR(rstc),
+ 					     "failed to get reset ctrl\n"));

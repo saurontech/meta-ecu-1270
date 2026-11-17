@@ -1,0 +1,35 @@
+From 8e5aa33ef580cc546519d8ba5b353d5181ffc49e Mon Sep 17 00:00:00 2001
+From: Huacai Chen <chenhuacai@loongson.cn>
+Date: Sun, 9 Nov 2025 16:02:00 +0800
+Subject: [PATCH 718/768] LoongArch: Use physical addresses for
+ CSR_MERRENTRY/CSR_TLBRENTRY
+
+commit 4e67526840fc55917581b90f6a4b65849a616dd8 upstream.
+
+Now we use virtual addresses to fill CSR_MERRENTRY/CSR_TLBRENTRY, but
+hardware hope physical addresses. Now it works well because the high
+bits are ignored above PA_BITS (48 bits), but explicitly use physical
+addresses can avoid potential bugs. So fix it.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/loongarch/kernel/traps.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/loongarch/kernel/traps.c b/arch/loongarch/kernel/traps.c
+index 00424b7e34c1..d827ed3178b0 100644
+--- a/arch/loongarch/kernel/traps.c
++++ b/arch/loongarch/kernel/traps.c
+@@ -1123,8 +1123,8 @@ static void configure_exception_vector(void)
+ 	tlbrentry = (unsigned long)exception_handlers + 80*VECSIZE;
+ 
+ 	csr_write64(eentry, LOONGARCH_CSR_EENTRY);
+-	csr_write64(eentry, LOONGARCH_CSR_MERRENTRY);
+-	csr_write64(tlbrentry, LOONGARCH_CSR_TLBRENTRY);
++	csr_write64(__pa(eentry), LOONGARCH_CSR_MERRENTRY);
++	csr_write64(__pa(tlbrentry), LOONGARCH_CSR_TLBRENTRY);
+ }
+ 
+ void per_cpu_trap_init(int cpu)

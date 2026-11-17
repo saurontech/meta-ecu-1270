@@ -1,0 +1,102 @@
+From 260fa380bcced0310a121d136c059e88d7e6e1b3 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Thu, 14 May 2026 09:39:33 +0000
+Subject: [PATCH 160/163] arm64: dts: renesas: r9a09g047: Add PCIe node
+
+[ Upstream commit 1ac57c9830cb0b586387367f88dbb10d21ec166c ]
+
+The RZ/G3E SoC family features an x2 PCIe IP.  Add the PCIe node.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N EVK
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260318085119.44717-3-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 69 ++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index 0a2fc3480a43..cc0dc3df9e7f 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -841,6 +841,75 @@ wdt3: watchdog@13000400 {
+ 			status = "disabled";
+ 		};
+ 
++		pcie: pcie@13400000 {
++			compatible = "renesas,r9a09g047-pcie";
++			reg = <0 0x13400000 0 0x10000>;
++			ranges = <0x02000000 0 0x30000000 0 0x30000000 0 0x08000000>,
++				 <0x43000000 4 0x40000000 4 0x40000000 6 0x00000000>;
++			dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 2 0x00000000>;
++			bus-range = <0x0 0xff>;
++			interrupts = <GIC_SPI 800 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 801 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 802 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 803 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 806 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 792 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 793 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 794 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 795 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 796 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 797 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 799 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 804 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 805 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 807 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 791 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 798 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 808 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 809 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 810 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 811 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 812 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 813 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "serr", "serr_cor", "serr_nonfatal",
++					  "serr_fatal", "axi_err", "inta",
++					  "intb", "intc", "intd", "msi",
++					  "link_bandwidth", "pm_pme", "dma",
++					  "pcie_evt", "msg", "all",
++					  "link_equalization_request",
++					  "turn_off_event", "pmu_poweroff",
++					  "d3_event_f0", "d3_event_f1",
++					  "cfg_pmcsr_writeclear_f0",
++					  "cfg_pmcsr_writeclear_f1";
++			#interrupt-cells = <1>;
++			interrupt-controller;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0 0 0 1 &pcie 0 0 0 0>, /* INTA */
++					<0 0 0 2 &pcie 0 0 0 1>, /* INTB */
++					<0 0 0 3 &pcie 0 0 0 2>, /* INTC */
++					<0 0 0 4 &pcie 0 0 0 3>; /* INTD */
++			clocks = <&cpg CPG_MOD 0xc4>, <&cpg CPG_MOD 0xc5>;
++			clock-names = "aclk", "pmu";
++			resets = <&cpg 0xb2>;
++			reset-names = "aresetn";
++			power-domains = <&cpg>;
++			device_type = "pci";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			renesas,sysc = <&sys>;
++			status = "disabled";
++
++			pcie_port0: pcie@0,0 {
++				reg = <0x0 0x0 0x0 0x0 0x0>;
++				ranges;
++				device_type = "pci";
++				vendor-id = <0x1912>;
++				device-id = <0x0039>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++			};
++		};
++
+ 		tsu: thermal@14002000 {
+ 			compatible = "renesas,r9a09g047-tsu";
+ 			reg = <0 0x14002000 0 0x1000>;

@@ -1,0 +1,137 @@
+From e696e1e0d2b3246862d288fb875353399972ec96 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Thu, 14 May 2026 09:39:24 +0000
+Subject: [PATCH 151/163] PCI: rzg3s-host: Rework inbound window algorithm for
+ supporting RZ/G3E SoC
+
+[ Upstream commit d17a200a747b01e05bb0fc14d62fbb5ad6653869 ]
+
+The existing inbound window configuration algorithm has two issues that
+prevent proper operation on RZ/G3E:
+
+1. Over-mapping: Using roundup_pow_of_two() on the remaining region size
+   can result in windows that extend beyond the intended memory region.
+
+2. Alignment violation: Addresses are only aligned to 4K regardless of
+   the actual window size. According to the RZ/G3S HW manual (Rev.1.10,
+   section 34.6.6.7) and RZ/G3E HW manual (Rev.1.15, section 6.6.7.6),
+   bit carry must not occur when adding AXI Window Base and AXI Window
+   Mask registers. This effectively requires the base address to be
+   aligned to the window size.
+
+RZ/G3E strictly enforces these constraints and requires precise window
+boundaries with properly aligned addresses.
+
+Rework the algorithm to properly handle arbitrary region sizes and
+alignment constraints by splitting non-power-of-2 regions into multiple
+windows. The new approach iteratively selects the largest power-of-2
+size that:
+ - Fits within the remaining region (__fls of remaining size)
+ - Does not exceed the natural alignment of the CPU address (__ffs)
+ - Does not exceed the natural alignment of the PCI address (__ffs)
+
+This ensures windows never over-map beyond the intended region and
+satisfies the hardware requirement that base address + mask must not
+cause bit carry, while maintaining the 4K * 2^N byte window size
+constraint.
+
+The reworked algorithm is required for RZ/G3E support and remains
+fully compatible with RZ/G3S.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N EVK
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20260306143423.19562-4-john.madieu.xa@bp.renesas.com
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 53 +++++++++++++-----------
+ 1 file changed, 29 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 1afccfb6d3ee..f47a9a9427b4 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1293,50 +1293,55 @@ static int rzg3s_pcie_set_inbound_windows(struct rzg3s_pcie_host *host,
+ 	u64 pci_addr = entry->res->start - entry->offset;
+ 	u64 cpu_addr = entry->res->start;
+ 	u64 cpu_end = entry->res->end;
+-	u64 size_id = 0;
+ 	int id = *index;
+ 	u64 size;
+ 
+-	while (cpu_addr < cpu_end) {
++	/*
++	 * According to the RZ/G3S HW manual (Rev.1.10, section 34.6.6.7) and
++	 * RZ/G3E HW manual (Rev.1.15, section 6.6.7.6):
++	 * - Each window must be a single memory size of power of two
++	 * - Mask registers must be set to (2^N - 1)
++	 * - Bit carry must not occur when adding base and mask registers,
++	 *   meaning the base address must be aligned to the window size
++	 *
++	 * Split non-power-of-2 regions into multiple windows to satisfy
++	 * these constraints without over-mapping.
++	 */
++	while (cpu_addr <= cpu_end) {
++		u64 remaining_size = cpu_end - cpu_addr + 1;
++		u64 align_limit;
++
+ 		if (id >= RZG3S_MAX_WINDOWS)
+ 			return dev_err_probe(host->dev, -ENOSPC,
+ 					     "Failed to map inbound window for resource (%s)\n",
+ 					     entry->res->name);
+ 
+-		size = resource_size(entry->res) - size_id;
++		/* Start with largest power-of-two that fits in remaining size */
++		size = 1ULL << __fls(remaining_size);
+ 
+ 		/*
+-		 * According to the RZ/G3S HW manual (Rev.1.10,
+-		 * section 34.3.1.71 AXI Window Mask (Lower) Registers) the min
+-		 * size is 4K.
++		 * The "no bit carry" rule requires base addresses to be
++		 * aligned to the window size. Find the maximum window size
++		 * that both addresses can support based on their natural
++		 * alignment (lowest set bit).
+ 		 */
+-		size = max(size, SZ_4K);
++		align_limit = min(cpu_addr ? (1ULL << __ffs(cpu_addr)) : ~0ULL,
++				  pci_addr ? (1ULL << __ffs(pci_addr)) : ~0ULL);
+ 
+-		/*
+-		 * According the RZ/G3S HW manual (Rev.1.10, sections:
+-		 * - 34.3.1.69 AXI Window Base (Lower) Registers
+-		 * - 34.3.1.71 AXI Window Mask (Lower) Registers
+-		 * - 34.3.1.73 AXI Destination (Lower) Registers)
+-		 * the CPU addr, PCIe addr, size should be 4K aligned and be a
+-		 * power of 2.
+-		 */
+-		size = ALIGN(size, SZ_4K);
+-		size = roundup_pow_of_two(size);
+-
+-		cpu_addr = ALIGN(cpu_addr, SZ_4K);
+-		pci_addr = ALIGN(pci_addr, SZ_4K);
++		size = min(size, align_limit);
+ 
+ 		/*
+-		 * According to the RZ/G3S HW manual (Rev.1.10, section
+-		 * 34.3.1.71 AXI Window Mask (Lower) Registers) HW expects first
+-		 * 12 LSB bits to be 0xfff. Subtract 1 from size for this.
++		 * Minimum window size is 4KB.
++		 * See RZ/G3S HW manual (Rev.1.10, section 34.3.1.71) and
++		 * RZ/G3E HW manual (Rev.1.15, section 6.6.4.1.3.(74)).
+ 		 */
++		size = max(size, SZ_4K);
++
+ 		rzg3s_pcie_set_inbound_window(host, cpu_addr, pci_addr,
+ 					      size - 1, id);
+ 
+ 		pci_addr += size;
+ 		cpu_addr += size;
+-		size_id = size;
+ 		id++;
+ 	}
+ 	*index = id;

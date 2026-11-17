@@ -1,0 +1,36 @@
+From c1e4c7ed00af885e3c5ad02aedd694bb6e4aadd3 Mon Sep 17 00:00:00 2001
+From: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Date: Thu, 8 Jan 2026 10:30:14 +0100
+Subject: [PATCH 680/838] i3c: document i3c_xfers
+
+commit e01a8baf60af43f6f87a5850dee29cf31377ec25 upstream.
+
+i3c_xfers was left undocumented, document it.
+
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Link: https://patch.msgid.link/20251202153804.2640623-2-alexandre.belloni@bootlin.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ include/linux/i3c/master.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index c52a82dd79a6..b8dde3ad3e2b 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -418,7 +418,11 @@ struct i3c_bus {
+  * @send_ccc_cmd: send a CCC command
+  *		  This method is mandatory.
+  * @priv_xfers: do one or several private I3C SDR transfers
+- *		This method is mandatory.
++ *		This method is mandatory when i3c_xfers is not implemented. It
++ *		is deprecated.
++ * @i3c_xfers: do one or several I3C SDR or HDR transfers
++ *	       This method is mandatory when priv_xfers is not implemented but
++ *	       should be implemented instead of priv_xfers.
+  * @attach_i2c_dev: called every time an I2C device is attached to the bus.
+  *		    This is a good place to attach master controller specific
+  *		    data to I2C devices.

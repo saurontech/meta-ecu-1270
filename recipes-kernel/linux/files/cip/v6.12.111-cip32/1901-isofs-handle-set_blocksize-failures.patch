@@ -1,0 +1,36 @@
+From 9c97e3b1152d3092581745189f5d2f04c6404ef9 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Mon, 11 May 2026 09:16:52 +0200
+Subject: [PATCH 1901/2868] isofs: handle set_blocksize failures
+
+[ Upstream commit 25ef4c4d9f0e96fb89c0ae0d7127c3f12a31bc32 ]
+
+isofs uses buffer_heads, which don't handle block size > PAGE_SIZE well.
+Without this, mounting we will hit the
+
+        BUG_ON(offset >= folio_size(folio));
+
+in folio_set_bh on the first __bread_gfp call.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Link: https://patch.msgid.link/20260511071701.2456211-8-hch@lst.de
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/isofs/inode.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/isofs/inode.c b/fs/isofs/inode.c
+index 2b1f56fdde24..f49c4ecd8950 100644
+--- a/fs/isofs/inode.c
++++ b/fs/isofs/inode.c
+@@ -818,7 +818,8 @@ static int isofs_fill_super(struct super_block *s, struct fs_context *fc)
+ 	 * entries.  By forcing the blocksize in this way, we ensure
+ 	 * that we will never be required to do this.
+ 	 */
+-	sb_set_blocksize(s, orig_zonesize);
++	if (!sb_set_blocksize(s, orig_zonesize))
++		goto out_freesbi;
+ 
+ 	sbi->s_nls_iocharset = NULL;
+ 

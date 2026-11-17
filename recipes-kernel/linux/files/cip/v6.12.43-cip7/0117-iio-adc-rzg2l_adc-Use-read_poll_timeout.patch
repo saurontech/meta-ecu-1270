@@ -1,0 +1,90 @@
+From dfc2c6637a1fe0dac17ea6844fcefc61ac4c5d3b Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:04 +0300
+Subject: [PATCH 117/246] iio: adc: rzg2l_adc: Use read_poll_timeout()
+
+commit b7549624af04eb52cb28df57bee2bcc88be1adc0 upstream.
+
+Replace the driver-specific implementation with the read_poll_timeout()
+function. This change simplifies the code and improves maintainability by
+leveraging the standardized helper.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20241206111337.726244-7-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/iio/adc/rzg2l_adc.c | 29 ++++++++++-------------------
+ 1 file changed, 10 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/iio/adc/rzg2l_adc.c b/drivers/iio/adc/rzg2l_adc.c
+index 46493fadab48..ae8a7a02bffc 100644
+--- a/drivers/iio/adc/rzg2l_adc.c
++++ b/drivers/iio/adc/rzg2l_adc.c
+@@ -13,6 +13,7 @@
+ #include <linux/iio/iio.h>
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
++#include <linux/iopoll.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+@@ -112,7 +113,7 @@ static void rzg2l_adc_pwr(struct rzg2l_adc *adc, bool on)
+ 
+ static void rzg2l_adc_start_stop(struct rzg2l_adc *adc, bool start)
+ {
+-	int timeout = 5;
++	int ret;
+ 	u32 reg;
+ 
+ 	reg = rzg2l_adc_readl(adc, RZG2L_ADM(0));
+@@ -125,15 +126,10 @@ static void rzg2l_adc_start_stop(struct rzg2l_adc *adc, bool start)
+ 	if (start)
+ 		return;
+ 
+-	do {
+-		usleep_range(100, 200);
+-		reg = rzg2l_adc_readl(adc, RZG2L_ADM(0));
+-		timeout--;
+-		if (!timeout) {
+-			pr_err("%s stopping ADC timed out\n", __func__);
+-			break;
+-		}
+-	} while (((reg & RZG2L_ADM0_ADBSY) || (reg & RZG2L_ADM0_ADCE)));
++	ret = read_poll_timeout(rzg2l_adc_readl, reg, !(reg & (RZG2L_ADM0_ADBSY | RZG2L_ADM0_ADCE)),
++				200, 1000, true, adc, RZG2L_ADM(0));
++	if (ret)
++		pr_err("%s stopping ADC timed out\n", __func__);
+ }
+ 
+ static void rzg2l_set_trigger(struct rzg2l_adc *adc)
+@@ -339,7 +335,6 @@ static int rzg2l_adc_parse_properties(struct platform_device *pdev, struct rzg2l
+ 
+ static int rzg2l_adc_hw_init(struct device *dev, struct rzg2l_adc *adc)
+ {
+-	int timeout = 5;
+ 	u32 reg;
+ 	int ret;
+ 
+@@ -352,14 +347,10 @@ static int rzg2l_adc_hw_init(struct device *dev, struct rzg2l_adc *adc)
+ 	reg |= RZG2L_ADM0_SRESB;
+ 	rzg2l_adc_writel(adc, RZG2L_ADM(0), reg);
+ 
+-	while (!(rzg2l_adc_readl(adc, RZG2L_ADM(0)) & RZG2L_ADM0_SRESB)) {
+-		if (!timeout) {
+-			ret = -EBUSY;
+-			goto exit_hw_init;
+-		}
+-		timeout--;
+-		usleep_range(100, 200);
+-	}
++	ret = read_poll_timeout(rzg2l_adc_readl, reg, reg & RZG2L_ADM0_SRESB,
++				200, 1000, false, adc, RZG2L_ADM(0));
++	if (ret)
++		goto exit_hw_init;
+ 
+ 	/* Only division by 4 can be set */
+ 	reg = rzg2l_adc_readl(adc, RZG2L_ADIVC);

@@ -1,0 +1,98 @@
+From b08d6b7df1d660a0cec173c139402440bf19b439 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:30 +0300
+Subject: [PATCH 1224/1853] usb: host: ohci-platform: Call reset
+ assert/deassert on suspend/resume
+
+commit e4d9da32bf6059cb485caac4c9c0a2e36cdd5573 upstream.
+
+The Renesas RZ/G3S SoC supports a power-saving mode in which power to most
+of the SoC components is turned off, including the USB blocks. On the
+resume path, the reset signal must be de-asserted before applying any
+settings to the USB registers. To handle this properly, call
+reset_control_assert() and reset_control_deassert() during suspend and
+resume, respectively.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20251106143625.3050119-4-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+[claudiu.beznea: execute the code based on the
+ ohci_platform_reset_control_allowed() return value]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/usb/host/ohci-platform.c | 38 ++++++++++++++++++++++++++++++--
+ 1 file changed, 36 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/host/ohci-platform.c b/drivers/usb/host/ohci-platform.c
+index c5eae986f6ab..aa0848d366da 100644
+--- a/drivers/usb/host/ohci-platform.c
++++ b/drivers/usb/host/ohci-platform.c
+@@ -265,11 +265,22 @@ static void ohci_platform_remove(struct platform_device *dev)
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
++static bool ohci_platform_reset_control_allowed(void)
++{
++	static const char * const reset_control_allow_list[] = {
++		"renesas,r9a08g045", /* Renesas RZ/G3S */
++		NULL
++	};
++
++	return of_machine_compatible_match(reset_control_allow_list);
++}
++
+ static int ohci_platform_suspend(struct device *dev)
+ {
+ 	struct usb_hcd *hcd = dev_get_drvdata(dev);
+ 	struct usb_ohci_pdata *pdata = dev->platform_data;
+ 	struct platform_device *pdev = to_platform_device(dev);
++	struct ohci_platform_priv *priv = hcd_to_ohci_priv(hcd);
+ 	bool do_wakeup = device_may_wakeup(dev);
+ 	int ret;
+ 
+@@ -280,6 +291,17 @@ static int ohci_platform_suspend(struct device *dev)
+ 	if (pdata->power_suspend)
+ 		pdata->power_suspend(pdev);
+ 
++	if (!ohci_platform_reset_control_allowed())
++		return ret;
++
++	ret = reset_control_assert(priv->resets);
++	if (ret) {
++		if (pdata->power_on)
++			pdata->power_on(pdev);
++
++		ohci_resume(hcd, false);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -288,11 +310,23 @@ static int ohci_platform_resume_common(struct device *dev, bool hibernated)
+ 	struct usb_hcd *hcd = dev_get_drvdata(dev);
+ 	struct usb_ohci_pdata *pdata = dev_get_platdata(dev);
+ 	struct platform_device *pdev = to_platform_device(dev);
++	struct ohci_platform_priv *priv = hcd_to_ohci_priv(hcd);
++	bool reset_control_allowed = ohci_platform_reset_control_allowed();
++	int err;
++
++	if (reset_control_allowed) {
++		err = reset_control_deassert(priv->resets);
++		if (err)
++			return err;
++	}
+ 
+ 	if (pdata->power_on) {
+-		int err = pdata->power_on(pdev);
+-		if (err < 0)
++		err = pdata->power_on(pdev);
++		if (err < 0) {
++			if (reset_control_allowed)
++				reset_control_assert(priv->resets);
+ 			return err;
++		}
+ 	}
+ 
+ 	ohci_resume(hcd, hibernated);

@@ -1,0 +1,68 @@
+From 18886d64371c17fd140617ea0afad7830eb79662 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:38 +0100
+Subject: [PATCH 278/286] irqchip/renesas-rzg2l: Drop IRQC_IRQ_COUNT macro
+
+[ Upstream commit f9544cad3600f251a7d24c2fb77e7f2abdceb42e ]
+
+The total number of external interrupts in RZ/G2L and RZ/G3L SoC are
+different. The RZ/G3L has 16 external interrupts whereas RZ/G2L has only 8
+external interrupts. Add irq_count variable in struct rzg2l_hw_info to
+handle these differences and drop the macro IRQC_IRQ_COUNT.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-15-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 73f6e86b57d6..86e79f1484c2 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -22,7 +22,6 @@
+ #include <linux/syscore_ops.h>
+ 
+ #define IRQC_IRQ_START			1
+-#define IRQC_IRQ_COUNT			8
+ #define IRQC_TINT_COUNT			32
+ 
+ #define ISCR				0x10
+@@ -69,10 +68,12 @@ struct rzg2l_irqc_reg_cache {
+ 
+ /**
+  * struct rzg2l_hw_info - Interrupt Control Unit controller hardware info structure.
++ * @irq_count:		Number of IRQC interrupts
+  * @tint_start:		Start of TINT interrupts
+  * @num_irq:		Total Number of interrupts
+  */
+ struct rzg2l_hw_info {
++	unsigned int	irq_count;
+ 	unsigned int	tint_start;
+ 	unsigned int	num_irq;
+ };
+@@ -570,7 +571,7 @@ static int rzg2l_irqc_alloc(struct irq_domain *domain, unsigned int virq,
+ 	 * from 16-31 bits. TINT from the pinctrl driver needs to be programmed
+ 	 * in IRQC registers to enable a given gpio pin as interrupt.
+ 	 */
+-	if (hwirq > IRQC_IRQ_COUNT) {
++	if (hwirq > priv->info.irq_count) {
+ 		tint = TINT_EXTRACT_GPIOINT(hwirq);
+ 		hwirq = TINT_EXTRACT_HWIRQ(hwirq);
+ 		chip = priv->tint_chip;
+@@ -693,8 +694,9 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ }
+ 
+ static const struct rzg2l_hw_info rzg2l_hw_params = {
+-	.tint_start	= IRQC_IRQ_START + IRQC_IRQ_COUNT,
+-	.num_irq	= IRQC_IRQ_START + IRQC_IRQ_COUNT + IRQC_TINT_COUNT,
++	.irq_count	= 8,
++	.tint_start	= IRQC_IRQ_START + 8,
++	.num_irq	= IRQC_IRQ_START + 8 + IRQC_TINT_COUNT,
+ };
+ 
+ static int rzg2l_irqc_init(struct device_node *node, struct device_node *parent)

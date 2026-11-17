@@ -1,0 +1,32 @@
+From 0d776297e611ceab7b047fdc881d6c2609c532c0 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:38:56 +0000
+Subject: [PATCH 007/838] clk: renesas: r9a09g077: Remove stray blank line
+
+commit 3b32a07584a8fc940129cfd384e180bdd758b8ed upstream.
+
+Remove an unnecessary blank line at the end of
+r9a09g077_cpg_div_clk_register() to tidy up the code.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251028165127.991351-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index c3ee2c7d3a69..b1b4c66c12bb 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -184,7 +184,6 @@ r9a09g077_cpg_div_clk_register(struct device *dev,
+ 		return ERR_CAST(clk_hw);
+ 
+ 	return clk_hw->clk;
+-
+ }
+ 
+ static struct clk * __init

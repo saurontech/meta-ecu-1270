@@ -1,0 +1,66 @@
+From 704e11c6e1939d76a6bee9715b69e20cbd24513f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:47 +0100
+Subject: [PATCH 1251/1853] arm64: dts: renesas: rzg3l-smarc-som: Enable Versa
+ clock generator
+
+[ Upstream commit 80e32321c3df7bec3029725c526935493939f34c ]
+
+The RZ/G3L SMARC SoM has a Versa 5P35023B clock generator to generate
+the following clocks:
+  - ref: Not connected,
+  - se1: AUDIO_MCK (11.2896 or 12.2880 MHz),
+  - se2: RZ_AUDIO_CLK_B (11.2896 MHz),
+  - se3: RZ_AUDIO_CLK_C (12.2880 MHz),
+  - diff{1,1B}: ET{0,1}_PHY_CLK (25 MHz),
+  - diff2{2,2B}: Not connected.
+
+Enable the Vversa 5P35023B clock generator on the RZ/G3L SoM DTSI.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260528074615.91110-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/rzg3l-smarc-som.dtsi      | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+index 17bf44778398..5e58e08e7fad 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+@@ -40,6 +40,12 @@ memory@48000000 {
+ 		/* First 128MiB is reserved for secure area. */
+ 		reg = <0x0 0x48000000 0x0 0x78000000>;
+ 	};
++
++	x2_clk: x2-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <24000000>;
++	};
+ };
+ 
+ &eth0 {
+@@ -75,6 +81,18 @@ &extal_clk {
+ &i2c0 {
+ 	pinctrl-0 = <&i2c0_pins>;
+ 	pinctrl-names = "default";
++
++	versa3: clock-generator@68 {
++		compatible = "renesas,5p35023";
++		reg = <0x68>;
++		#clock-cells = <1>;
++		clocks = <&x2_clk>;
++
++		assigned-clocks = <&versa3 1>, <&versa3 2>,
++				  <&versa3 3>, <&versa3 4>;
++		assigned-clock-rates = <12288000>, <11289600>,
++				       <12288000>, <25000000>;
++	};
+ };
+ 
+ &mdio0 {

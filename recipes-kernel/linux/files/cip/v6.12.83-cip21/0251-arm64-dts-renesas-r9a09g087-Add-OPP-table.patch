@@ -1,0 +1,78 @@
+From 9840499051353d74f60f0418628af8b89424fe24 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 10 Apr 2026 20:02:14 +0300
+Subject: [PATCH 251/497] arm64: dts: renesas: r9a09g087: Add OPP table
+
+commit ffcc240e3680e77d36c99026f5da81553d559246 upstream.
+
+Add OPP table for RZ/N2H SoC.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251126130356.2768625-8-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g087.dtsi | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+index 15fb09d96347..de9e23becb12 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+@@ -13,6 +13,17 @@ / {
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
+ 
++	cluster0_opp: opp-table-0 {
++		compatible = "operating-points-v2";
++
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++		};
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++		};
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -23,6 +34,8 @@ cpu0: cpu@0 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_CA55C0>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		cpu1: cpu@100 {
+@@ -31,6 +44,8 @@ cpu1: cpu@100 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_CA55C1>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		cpu2: cpu@200 {
+@@ -39,6 +54,8 @@ cpu2: cpu@200 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_CA55C2>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		cpu3: cpu@300 {
+@@ -47,6 +64,8 @@ cpu3: cpu@300 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A09G087_CLK_CA55C3>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		L3_CA55: cache-controller-0 {

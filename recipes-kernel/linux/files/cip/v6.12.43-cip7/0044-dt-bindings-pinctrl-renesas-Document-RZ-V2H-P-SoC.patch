@@ -1,0 +1,86 @@
+From 8649512685dc6f976d08ce9f748f239503f94a99 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 31 Mar 2025 13:06:48 +0200
+Subject: [PATCH 044/246] dt-bindings: pinctrl: renesas: Document RZ/V2H(P) SoC
+
+commit fb73d663b31398aea8528fb231e660c4958b29ff upstream.
+
+Add documentation for the pin controller found on the Renesas RZ/V2H(P)
+(R9A09G057) SoC.  The RZ/V2H PFC varies slightly compared to the RZ/G2L
+family:
+  - Additional bits need to be set during pinmuxing,
+  - The GPIO pin count is different.
+
+Hence, a SoC-specific compatible string, 'renesas,r9a09g057-pinctrl', is
+added for the RZ/V2H(P) SoC.
+
+Also, add the 'renesas,output-impedance' property.  The drive strength
+settings on RZ/V2H(P) depend on the different power rails coming out from
+the PMIC (connected via I2C).  These power rails (required for drive
+strength) can be 1.2V, 1.8V, or 3.3V.
+
+Pins are grouped into 4 groups:
+
+Group 1: Impedance
+  - 150/75/38/25 ohms (at 3.3V)
+  - 130/65/33/22 ohms (at 1.8V)
+
+Group 2: Impedance
+  - 50/40/33/25 ohms (at 1.8V)
+
+Group 3: Impedance
+  - 150/75/37.5/25 ohms (at 3.3V)
+  - 130/65/33/22 ohms (at 1.8V)
+
+Group 4: Impedance
+  - 110/55/30/20 ohms (at 1.8V)
+  - 150/75/38/25 ohms (at 1.2V)
+
+The 'renesas,output-impedance' property, as documented, can be
+[0, 1, 2, 3], these correspond to register bit values that can
+be set in the PFC_IOLH_mn register, which adjusts the drive
+strength value and is pin-dependent.
+
+As power rail information may not be available very early in the boot
+process, the 'renesas,output-impedance' property is added instead of
+reusing the 'output-impedance-ohms' property.
+
+Also, allow bias-disable, bias-pull-down and bias-pull-up properties
+as these can be used to configure the pins.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20240606085133.632307-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/pinctrl/renesas,rzg2l-pinctrl.yaml    | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
+index 56d90c8e1fa3..dda91d0a5cb9 100644
+--- a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
+@@ -148,6 +148,20 @@ allOf:
+         resets:
+           minItems: 3
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g057-pinctrl
++    then:
++      properties:
++        resets:
++          maxItems: 2
++    else:
++      properties:
++        resets:
++          minItems: 3
++
+ required:
+   - compatible
+   - reg

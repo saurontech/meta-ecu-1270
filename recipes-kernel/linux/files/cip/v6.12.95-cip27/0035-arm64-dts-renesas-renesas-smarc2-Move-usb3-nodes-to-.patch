@@ -1,0 +1,57 @@
+From f2225b5581399a5afdf6654890415e840422079e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:54 +0100
+Subject: [PATCH 035/286] arm64: dts: renesas: renesas-smarc2: Move usb3 nodes
+ to board DTS
+
+[ Upstream commit 7eeed6cd6a419f2f412aab29344a129e1c5c37f7 ]
+
+The SMARC2 board DTSI is common to multiple SoCs.  Move the USB3 nodes
+to the board DTS, as some SoCs (e.g. RZ/G3[SL]) do not support USB3.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260324114329.268249-11-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 6 ++++++
+ arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi    | 8 --------
+ 2 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 9be57785d9d5..6372f582a7c4 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -280,7 +280,13 @@ &sdhi1 {
+ 	vqmmc-supply = <&vqmmc_sd1_pvdd>;
+ };
+ 
++&usb3_phy {
++	status = "okay";
++};
++
+ &xhci {
+ 	pinctrl-0 = <&usb3_pins>;
+ 	pinctrl-names = "default";
++
++	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index e2a34577a1a1..696a933af808 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -111,11 +111,3 @@ &sdhi1 {
+ 
+ 	status = "okay";
+ };
+-
+-&usb3_phy {
+-	status = "okay";
+-};
+-
+-&xhci {
+-	status = "okay";
+-};

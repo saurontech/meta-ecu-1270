@@ -1,0 +1,67 @@
+From 04608fddf14419fb8f48ea84e7bfdfcfbf4bdac9 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 14 Jan 2026 12:53:56 +0000
+Subject: [PATCH 684/838] clk: renesas: r9a09g056: Add clock and reset entries
+ for RIIC controllers
+
+commit d3c25dd1612da7ddf5857190e92b0c36d803c4d9 upstream.
+
+Add module clock and reset definitions for RIIC controllers 0-8, which
+are available on the RZ/V2N (R9A09G056) SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250513154635.273664-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a09g056-cpg.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g056-cpg.c b/drivers/clk/renesas/r9a09g056-cpg.c
+index 6ac4b62a5e56..7e34c4259a6c 100644
+--- a/drivers/clk/renesas/r9a09g056-cpg.c
++++ b/drivers/clk/renesas/r9a09g056-cpg.c
+@@ -170,6 +170,24 @@ static const struct rzv2h_mod_clk r9a09g056_mod_clks[] __initconst = {
+ 						BUS_MSTOP(5, BIT(13))),
+ 	DEF_MOD("scif_0_clk_pck",		CLK_PLLCM33_DIV16, 8, 15, 4, 15,
+ 						BUS_MSTOP(3, BIT(14))),
++	DEF_MOD("riic_8_ckm",			CLK_PLLCM33_DIV16, 9, 3, 4, 19,
++						BUS_MSTOP(3, BIT(13))),
++	DEF_MOD("riic_0_ckm",			CLK_PLLCLN_DIV16, 9, 4, 4, 20,
++						BUS_MSTOP(1, BIT(1))),
++	DEF_MOD("riic_1_ckm",			CLK_PLLCLN_DIV16, 9, 5, 4, 21,
++						BUS_MSTOP(1, BIT(2))),
++	DEF_MOD("riic_2_ckm",			CLK_PLLCLN_DIV16, 9, 6, 4, 22,
++						BUS_MSTOP(1, BIT(3))),
++	DEF_MOD("riic_3_ckm",			CLK_PLLCLN_DIV16, 9, 7, 4, 23,
++						BUS_MSTOP(1, BIT(4))),
++	DEF_MOD("riic_4_ckm",			CLK_PLLCLN_DIV16, 9, 8, 4, 24,
++						BUS_MSTOP(1, BIT(5))),
++	DEF_MOD("riic_5_ckm",			CLK_PLLCLN_DIV16, 9, 9, 4, 25,
++						BUS_MSTOP(1, BIT(6))),
++	DEF_MOD("riic_6_ckm",			CLK_PLLCLN_DIV16, 9, 10, 4, 26,
++						BUS_MSTOP(1, BIT(7))),
++	DEF_MOD("riic_7_ckm",			CLK_PLLCLN_DIV16, 9, 11, 4, 27,
++						BUS_MSTOP(1, BIT(8))),
+ 	DEF_MOD("sdhi_0_imclk",			CLK_PLLCLN_DIV8, 10, 3, 5, 3,
+ 						BUS_MSTOP(8, BIT(2))),
+ 	DEF_MOD("sdhi_0_imclk2",		CLK_PLLCLN_DIV8, 10, 4, 5, 4,
+@@ -237,6 +255,15 @@ static const struct rzv2h_reset r9a09g056_resets[] __initconst = {
+ 	DEF_RST(7, 7, 3, 8),		/* WDT_2_RESET */
+ 	DEF_RST(7, 8, 3, 9),		/* WDT_3_RESET */
+ 	DEF_RST(9, 5, 4, 6),		/* SCIF_0_RST_SYSTEM_N */
++	DEF_RST(9, 8, 4, 9),		/* RIIC_0_MRST */
++	DEF_RST(9, 9, 4, 10),		/* RIIC_1_MRST */
++	DEF_RST(9, 10, 4, 11),		/* RIIC_2_MRST */
++	DEF_RST(9, 11, 4, 12),		/* RIIC_3_MRST */
++	DEF_RST(9, 12, 4, 13),		/* RIIC_4_MRST */
++	DEF_RST(9, 13, 4, 14),		/* RIIC_5_MRST */
++	DEF_RST(9, 14, 4, 15),		/* RIIC_6_MRST */
++	DEF_RST(9, 15, 4, 16),		/* RIIC_7_MRST */
++	DEF_RST(10, 0, 4, 17),		/* RIIC_8_MRST */
+ 	DEF_RST(10, 7, 4, 24),		/* SDHI_0_IXRST */
+ 	DEF_RST(10, 8, 4, 25),		/* SDHI_1_IXRST */
+ 	DEF_RST(10, 9, 4, 26),		/* SDHI_2_IXRST */

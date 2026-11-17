@@ -1,0 +1,103 @@
+From aaee40de650d0409717f64554b10774a6389e29e Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:18 +0200
+Subject: [PATCH 041/851] arm64: dts: renesas: r9a09g077: Add SPI nodes
+
+commit fb8f11c7975ad6096437e6a6757c98c9c9475551 upstream.
+
+Add support for the four SPI controllers on the Renesas RZ/T2H Soc.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251119161434.595677-13-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[cosmin.tanislav: resolve merge conflict]
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 72 ++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index 342e1470928a..78436a486ffe 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -90,6 +90,78 @@ sci0: serial@80005000 {
+ 			status = "disabled";
+ 		};
+ 
++		rspi0: spi@80007000 {
++			compatible = "renesas,r9a09g077-rspi";
++			reg = <0x0 0x80007000 0x0 0x400>;
++			interrupts = <GIC_SPI 636 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 637 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 638 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 634 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 635 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKM>,
++				 <&cpg CPG_MOD 104>;
++			clock-names = "pclk", "pclkspi";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		rspi1: spi@80007400 {
++			compatible = "renesas,r9a09g077-rspi";
++			reg = <0x0 0x80007400 0x0 0x400>;
++			interrupts = <GIC_SPI 641 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 642 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 643 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 639 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 640 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKM>,
++				 <&cpg CPG_MOD 105>;
++			clock-names = "pclk", "pclkspi";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		rspi2: spi@80007800 {
++			compatible = "renesas,r9a09g077-rspi";
++			reg = <0x0 0x80007800 0x0 0x400>;
++			interrupts = <GIC_SPI 646 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 647 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 648 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 644 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 645 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKM>,
++				 <&cpg CPG_MOD 106>;
++			clock-names = "pclk", "pclkspi";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		rspi3: spi@81007000 {
++			compatible = "renesas,r9a09g077-rspi";
++			reg = <0x0 0x81007000 0x0 0x400>;
++			interrupts = <GIC_SPI 651 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 652 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 653 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 649 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 650 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKM>,
++				 <&cpg CPG_MOD 602>;
++			clock-names = "pclk", "pclkspi";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		wdt0: watchdog@80082000 {
+ 			compatible = "renesas,r9a09g077-wdt";
+ 			reg = <0 0x80082000 0 0x400>,

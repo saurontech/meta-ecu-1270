@@ -1,0 +1,123 @@
+From 17b37ce4afe952fe2eac47e23fcb23e6001f3e4e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:34 +0100
+Subject: [PATCH 015/286] clk: renesas: rzg2l: Add support for critical resets
+
+[ Upstream commit 3d700746d76bedb9f3de505494994cd3f2afb59f ]
+
+Some reset lines must remain deasserted at all times after boot, as
+asserting them would disable critical system functionality with no
+owning driver to restore them.  This mirrors the existing crit_mod_clks
+mechanism which protects critical module clocks from being disabled.
+
+On RZ/G2L family SoCs, the DMA reset must be remain deasserted for
+routing some peripheral interrupts to CPU.
+
+Add crit_resets and num_crit_resets fields to struct rzg2l_cpg_info to
+allow SoC-specific data tables to declare reset IDs that must never be
+asserted.
+
+Introduce rzg2l_cpg_deassert_crit_resets() to iterate over all critical
+resets and deassert them.  Call it both at probe time and during resume
+to ensure critical peripherals are held out of reset after power-on and
+suspend/resume cycles.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260324114329.268249-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 30 ++++++++++++++++++++++++++++++
+ drivers/clk/renesas/rzg2l-cpg.h |  7 +++++++
+ 2 files changed, 37 insertions(+)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index a7189c32849e..da211010d2ba 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1766,6 +1766,13 @@ static int __rzg2l_cpg_assert(struct reset_controller_dev *rcdev,
+ 	dev_dbg(rcdev->dev, "%s id:%ld offset:0x%x\n",
+ 		assert ? "assert" : "deassert", id, CLK_RST_R(reg));
+ 
++	if (assert) {
++		for (unsigned int i = 0; i < priv->info->num_crit_resets; i++) {
++			if (id == priv->info->crit_resets[i])
++				return 0;
++		}
++	}
++
+ 	if (!assert)
+ 		value |= mask;
+ 	writel(value, priv->base + CLK_RST_R(reg));
+@@ -1803,6 +1810,20 @@ static int rzg2l_cpg_deassert(struct reset_controller_dev *rcdev,
+ 	return __rzg2l_cpg_assert(rcdev, id, false);
+ }
+ 
++static int rzg2l_cpg_deassert_crit_resets(struct reset_controller_dev *rcdev,
++					  const struct rzg2l_cpg_info *info)
++{
++	int ret;
++
++	for (unsigned int i = 0; i < info->num_crit_resets; i++) {
++		ret = rzg2l_cpg_deassert(rcdev, info->crit_resets[i]);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
+ static int rzg2l_cpg_reset(struct reset_controller_dev *rcdev,
+ 			   unsigned long id)
+ {
+@@ -2052,6 +2073,10 @@ static int __init rzg2l_cpg_probe(struct platform_device *pdev)
+ 	if (error)
+ 		return error;
+ 
++	error = rzg2l_cpg_deassert_crit_resets(&priv->rcdev, info);
++	if (error)
++		return error;
++
+ 	debugfs_create_file("mstop", 0444, NULL, priv, &rzg2l_mod_clock_mstop_fops);
+ 	return 0;
+ }
+@@ -2059,6 +2084,11 @@ static int __init rzg2l_cpg_probe(struct platform_device *pdev)
+ static int rzg2l_cpg_resume(struct device *dev)
+ {
+ 	struct rzg2l_cpg_priv *priv = dev_get_drvdata(dev);
++	int ret;
++
++	ret = rzg2l_cpg_deassert_crit_resets(&priv->rcdev, priv->info);
++	if (ret)
++		return ret;
+ 
+ 	rzg2l_mod_clock_init_mstop(priv);
+ 
+diff --git a/drivers/clk/renesas/rzg2l-cpg.h b/drivers/clk/renesas/rzg2l-cpg.h
+index 55e815be16c8..af0a003d93f7 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.h
++++ b/drivers/clk/renesas/rzg2l-cpg.h
+@@ -276,6 +276,9 @@ struct rzg2l_reset {
+  * @crit_mod_clks: Array with Module Clock IDs of critical clocks that
+  *                 should not be disabled without a knowledgeable driver
+  * @num_crit_mod_clks: Number of entries in crit_mod_clks[]
++ * @crit_resets: Array with Reset IDs of critical resets that should not be
++ *               asserted without a knowledgeable driver
++ * @num_crit_resets: Number of entries in crit_resets[]
+  * @has_clk_mon_regs: Flag indicating whether the SoC has CLK_MON registers
+  */
+ struct rzg2l_cpg_info {
+@@ -302,6 +305,10 @@ struct rzg2l_cpg_info {
+ 	const unsigned int *crit_mod_clks;
+ 	unsigned int num_crit_mod_clks;
+ 
++	/* Critical Resets that should not be asserted */
++	const unsigned int *crit_resets;
++	unsigned int num_crit_resets;
++
+ 	bool has_clk_mon_regs;
+ };
+ 

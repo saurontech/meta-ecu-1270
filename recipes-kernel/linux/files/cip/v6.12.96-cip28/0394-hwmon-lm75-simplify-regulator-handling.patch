@@ -1,0 +1,77 @@
+From 639a719641a88f037daa5663a3956ecad33da788 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 17 Jul 2026 15:14:58 +0200
+Subject: [PATCH 394/399] hwmon: (lm75) simplify regulator handling
+
+commit 2b64c6f652b0f5435b293d33f7d231132e987fb2 upstream.
+
+devm_regulator_get_enable() was introduced exactly to avoid open coding
+regulator handling like in this driver. Make use of this helper.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20241219225522.3490-9-wsa+renesas@sang-engineering.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/lm75.c | 25 +++----------------------
+ 1 file changed, 3 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/hwmon/lm75.c b/drivers/hwmon/lm75.c
+index b03e760cf3a1..4d0fd1c93c63 100644
+--- a/drivers/hwmon/lm75.c
++++ b/drivers/hwmon/lm75.c
+@@ -109,7 +109,6 @@ static const unsigned short normal_i2c[] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c,
+ struct lm75_data {
+ 	struct i2c_client		*client;
+ 	struct regmap			*regmap;
+-	struct regulator		*vs;
+ 	u16				orig_conf;
+ 	u8				resolution;	/* In bits, 9 to 16 */
+ 	unsigned int			sample_time;	/* In ms */
+@@ -621,13 +620,6 @@ static const struct regmap_bus lm75_i2c_regmap_bus = {
+ 	.reg_write = lm75_i2c_reg_write,
+ };
+ 
+-static void lm75_disable_regulator(void *data)
+-{
+-	struct lm75_data *lm75 = data;
+-
+-	regulator_disable(lm75->vs);
+-}
+-
+ static void lm75_remove(void *data)
+ {
+ 	struct lm75_data *lm75 = data;
+@@ -656,9 +648,9 @@ static int lm75_probe(struct i2c_client *client)
+ 	data->client = client;
+ 	data->kind = (uintptr_t)i2c_get_match_data(client);
+ 
+-	data->vs = devm_regulator_get(dev, "vs");
+-	if (IS_ERR(data->vs))
+-		return PTR_ERR(data->vs);
++	err = devm_regulator_get_enable(dev, "vs");
++	if (err)
++		return err;
+ 
+ 	data->regmap = devm_regmap_init(dev, &lm75_i2c_regmap_bus, data,
+ 					&lm75_regmap_config);
+@@ -675,17 +667,6 @@ static int lm75_probe(struct i2c_client *client)
+ 	data->sample_time = data->params->default_sample_time;
+ 	data->resolution = data->params->default_resolution;
+ 
+-	/* Enable the power */
+-	err = regulator_enable(data->vs);
+-	if (err) {
+-		dev_err(dev, "failed to enable regulator: %d\n", err);
+-		return err;
+-	}
+-
+-	err = devm_add_action_or_reset(dev, lm75_disable_regulator, data);
+-	if (err)
+-		return err;
+-
+ 	/* Cache original configuration */
+ 	err = regmap_read(data->regmap, LM75_REG_CONF, &status);
+ 	if (err)

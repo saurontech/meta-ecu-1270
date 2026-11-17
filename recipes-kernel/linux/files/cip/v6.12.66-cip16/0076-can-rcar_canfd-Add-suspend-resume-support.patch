@@ -1,0 +1,102 @@
+From 78832b2e866d1a01fe023902252ffa28a10ecf2c Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:46 +0000
+Subject: [PATCH 076/838] can: rcar_canfd: Add suspend/resume support
+
+[ Upstream commit 3a34330f6339641b7f5b76b066385f56c114490f ]
+
+On R-Car Gen3 using PSCI, s2ram powers down the SoC.  After resume, the
+CAN-FD interface no longer works.  Trying to bring it up again fails:
+
+    # ip link set can0 up
+    RTNETLINK answers: Connection timed out
+
+    # dmesg
+    ...
+    channel 0 communication state failed
+
+Fix this by populating the (currently empty) suspend and resume
+callbacks, to stop/start the individual CAN-FD channels, and
+(de)initialize the CAN-FD controller.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Tested-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251124102837.106973-8-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 53 +++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index f6bc3f1cbd63..1cd4835a4742 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -2266,11 +2266,64 @@ static void rcar_canfd_remove(struct platform_device *pdev)
+ 
+ static int rcar_canfd_suspend(struct device *dev)
+ {
++	struct rcar_canfd_global *gpriv = dev_get_drvdata(dev);
++	int err;
++	u32 ch;
++
++	for_each_set_bit(ch, &gpriv->channels_mask, gpriv->info->max_channels) {
++		struct rcar_canfd_channel *priv = gpriv->ch[ch];
++		struct net_device *ndev = priv->ndev;
++
++		if (!netif_running(ndev))
++			continue;
++
++		netif_device_detach(ndev);
++
++		err = rcar_canfd_close(ndev);
++		if (err) {
++			netdev_err(ndev, "rcar_canfd_close() failed %pe\n",
++				   ERR_PTR(err));
++			return err;
++		}
++
++		priv->can.state = CAN_STATE_SLEEPING;
++	}
++
++	/* TODO Skip if wake-up (which is not yet supported) is enabled */
++	rcar_canfd_global_deinit(gpriv, false);
++
+ 	return 0;
+ }
+ 
+ static int rcar_canfd_resume(struct device *dev)
+ {
++	struct rcar_canfd_global *gpriv = dev_get_drvdata(dev);
++	int err;
++	u32 ch;
++
++	err = rcar_canfd_global_init(gpriv);
++	if (err) {
++		dev_err(dev, "rcar_canfd_global_init() failed %pe\n", ERR_PTR(err));
++		return err;
++	}
++
++	for_each_set_bit(ch, &gpriv->channels_mask, gpriv->info->max_channels) {
++		struct rcar_canfd_channel *priv = gpriv->ch[ch];
++		struct net_device *ndev = priv->ndev;
++
++		if (!netif_running(ndev))
++			continue;
++
++		err = rcar_canfd_open(ndev);
++		if (err) {
++			netdev_err(ndev, "rcar_canfd_open() failed %pe\n",
++				   ERR_PTR(err));
++			return err;
++		}
++
++		netif_device_attach(ndev);
++	}
++
+ 	return 0;
+ }
+ 

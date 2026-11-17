@@ -1,0 +1,32 @@
+From 8f187036a3e656b54493cdd46f50bd25bee9dc00 Mon Sep 17 00:00:00 2001
+From: Kenneth Feng <kenneth.feng@amd.com>
+Date: Tue, 31 Mar 2026 17:38:59 -0700
+Subject: [PATCH 226/497] drm/amd/amdgpu: decouple ASPM with pcie dpm
+
+[ Upstream commit df0e722fbdbedb6f2b682dc2fad9e0c221e3622d ]
+
+ASPM doesn't need to be disabled if pcie dpm is disabled.
+So ASPM can be independantly enabled.
+
+Signed-off-by: Kenneth Feng <kenneth.feng@amd.com>
+Reviewed-by: Yang Wang <kevinyang.wang@amd.com>
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index d5e6d5ec69c8..dbee43c58741 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -1782,8 +1782,6 @@ bool amdgpu_device_should_use_aspm(struct amdgpu_device *adev)
+ 	}
+ 	if (adev->flags & AMD_IS_APU)
+ 		return false;
+-	if (!(adev->pm.pp_feature & PP_PCIE_DPM_MASK))
+-		return false;
+ 	return pcie_aspm_enabled(adev->pdev);
+ }
+ 

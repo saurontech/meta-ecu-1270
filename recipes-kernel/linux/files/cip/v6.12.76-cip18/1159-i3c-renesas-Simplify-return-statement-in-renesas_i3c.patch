@@ -1,0 +1,36 @@
+From 461102544825425a9d79fbcbcb58d13f1865d7c9 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Tue, 3 Mar 2026 10:22:55 +0100
+Subject: [PATCH 1159/1190] i3c: renesas: Simplify return statement in
+ 'renesas_i3c_daa'
+
+commit bc7dd24c114e37c67061f4651bbbbbc57106c617 upstream.
+
+There was already a bail out for 'ret < 0', so we can always return
+success at the end of the function.
+
+Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Closes: https://lore.kernel.org/r/aIyzJ7HOENL1qp1l@stanley.mountain
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250803211256.18513-2-wsa+renesas@sang-engineering.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i3c/master/renesas-i3c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i3c/master/renesas-i3c.c b/drivers/i3c/master/renesas-i3c.c
+index 174d3dc5d276..275f7b924288 100644
+--- a/drivers/i3c/master/renesas-i3c.c
++++ b/drivers/i3c/master/renesas-i3c.c
+@@ -679,7 +679,7 @@ static int renesas_i3c_daa(struct i3c_master_controller *m)
+ 			i3c_master_add_i3c_dev_locked(m, i3c->addrs[pos]);
+ 	}
+ 
+-	return ret < 0 ? ret : 0;
++	return 0;
+ }
+ 
+ static bool renesas_i3c_supports_ccc_cmd(struct i3c_master_controller *m,

@@ -1,0 +1,53 @@
+From 52eca2cad81780c5cf8c3af54b99910545866383 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 13:06:32 +0200
+Subject: [PATCH 019/283] arm64: dts: renesas: rzg3s-smarc: Enable PCIe
+
+commit 73b73af99a49fd7bf0515741734660973fa2002a upstream.
+
+The RZ Smarc Carrier-II board has PCIe headers mounted on it. Enable PCIe
+support.
+
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Link: https://patch.msgid.link/20251119143523.977085-6-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[claudiu.beznea: fixed conflict by dropping I2C1 and USB nodes as these
+ are not present in v6.12 CIP]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi
+index db05c28a8f6c..d90f65a7d79b 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi
+@@ -122,6 +122,12 @@ da7212: codec@1a {
+ 	};
+ };
+ 
++&pcie {
++	pinctrl-0 = <&pcie_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &pinctrl {
+ 	audio_clock_pins: audio-clock {
+ 		pins = "AUDIO_CLK1", "AUDIO_CLK2";
+@@ -149,6 +155,11 @@ key-3-gpio-hog {
+ 		line-name = "key-3-gpio-irq";
+ 	};
+ 
++	pcie_pins: pcie {
++		pinmux = <RZG2L_PORT_PINMUX(13, 2, 2)>, /* PCIE_RST_OUT_B */
++			 <RZG2L_PORT_PINMUX(13, 3, 2)>; /* PCIE_CLKREQ_B */
++	};
++
+ 	scif0_pins: scif0 {
+ 		pinmux = <RZG2L_PORT_PINMUX(6, 3, 1)>, /* RXD */
+ 			 <RZG2L_PORT_PINMUX(6, 4, 1)>; /* TXD */

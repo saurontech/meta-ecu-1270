@@ -1,0 +1,40 @@
+From 0b5fff20eccfc4015d2d3de074ff1b2c72a821a2 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 1 Nov 2024 11:57:20 +0200
+Subject: [PATCH] arm64: defconfig: Enable VBATTB clock and Renesas RTCA-3
+
+Commit c520bbb523304ba98de9ffeeb0ef289921434125 upstream.
+
+Enable the Renesas VBATTB clock and RTCA-3 RTC drivers.  These are
+available on the Renesas RZ/G3S SoC.  VBATTB is the clock provider for
+the RTC counter.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20241101095720.2247815-10-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/configs/defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 590be2f19bf3..effe53c6fdeb 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1308,6 +1308,7 @@ CONFIG_RTC_DRV_IMX_SC=m
+ CONFIG_RTC_DRV_MT6397=m
+ CONFIG_RTC_DRV_XGENE=y
+ CONFIG_RTC_DRV_TI_K3=m
++CONFIG_RTC_DRV_RENESAS_RTCA3=m
+ CONFIG_DMADEVICES=y
+ CONFIG_DMA_BCM2835=y
+ CONFIG_DMA_SUN6I=m
+@@ -1458,6 +1459,7 @@ CONFIG_SM_VIDEOCC_8250=y
+ CONFIG_QCOM_HFPLL=y
+ CONFIG_CLK_GFM_LPASS_SM8250=m
+ CONFIG_CLK_RCAR_USB2_CLOCK_SEL=y
++CONFIG_CLK_RENESAS_VBATTB=m
+ CONFIG_HWSPINLOCK=y
+ CONFIG_HWSPINLOCK_OMAP=m
+ CONFIG_HWSPINLOCK_QCOM=y

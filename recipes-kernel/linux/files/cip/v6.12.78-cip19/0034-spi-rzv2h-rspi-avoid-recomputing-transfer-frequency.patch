@@ -1,0 +1,54 @@
+From 7bda2e5339eecc3862a1a5dec7dcc922807a8b52 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:11 +0200
+Subject: [PATCH 034/851] spi: rzv2h-rspi: avoid recomputing transfer frequency
+
+commit 88782493204512fcf4e020e2385bca3e3c5bd4c0 upstream.
+
+Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs have a more
+complicated algorithm for calculating the optimal SPI transfer frequency
+compared to RZ/V2H, as the clock from which the SPI frequency is
+generated supports multiple dividers.
+
+Cache the requested transfer frequency and skip calling
+rzv2h_rspi_setup_clock() if it matches the last used one to prepare for
+adding support for variable clock frequency handling.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251119161434.595677-6-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index f02f25b98ec6..d7719f3c7b13 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -81,6 +81,7 @@ struct rzv2h_rspi_priv {
+ 	struct clk *tclk;
+ 	wait_queue_head_t wait;
+ 	unsigned int bytes_per_word;
++	u32 last_speed_hz;
+ 	u32 freq;
+ 	u16 status;
+ 	u8 spr;
+@@ -298,9 +299,13 @@ static int rzv2h_rspi_prepare_message(struct spi_controller *ctlr,
+ 
+ 	rspi->bytes_per_word = roundup_pow_of_two(BITS_TO_BYTES(bits_per_word));
+ 
+-	rspi->freq = rzv2h_rspi_setup_clock(rspi, speed_hz);
+-	if (!rspi->freq)
+-		return -EINVAL;
++	if (speed_hz != rspi->last_speed_hz) {
++		rspi->freq = rzv2h_rspi_setup_clock(rspi, speed_hz);
++		if (!rspi->freq)
++			return -EINVAL;
++
++		rspi->last_speed_hz = speed_hz;
++	}
+ 
+ 	writeb(rspi->spr, rspi->base + RSPI_SPBR);
+ 

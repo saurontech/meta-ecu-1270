@@ -1,0 +1,76 @@
+From a07b00f4b23d0d743f20ba3e27434936f94201f3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:58:49 +0000
+Subject: [PATCH 826/851] dt-bindings: usb: renesas,usbhs: Add RZ/T2H and
+ RZ/N2H support
+
+commit e58ebd14a5f15eccf3dd45edf4bc900b346096bf upstream.
+
+Document the USBHS controller for the Renesas RZ/T2H (r9a09g077) and
+RZ/N2H (r9a09g087) SoCs. While the USBHS block is similar to the one found
+on the RZ/G2L SoC, it differs slightly in terms of interrupt configuration,
+clock/reset requirements, and register bit definitions. Due to these
+differences, a new compatible string `renesas,usbhs-r9a09g077` is
+introduced for the RZ/T2H SoC.
+
+The USBHS controller on the RZ/N2H (r9a09g087) SoC is identical to that on
+the RZ/T2H, so it uses the `renesas,usbhs-r9a09g077` compatible string as
+a fallback.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://lore.kernel.org/r/20250805114730.2491238-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/usb/renesas,usbhs.yaml           | 28 +++++++++++++++++--
+ 1 file changed, 25 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+index 533b40f8aaae..4ad5362987b1 100644
+--- a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
++++ b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+@@ -58,6 +58,12 @@ properties:
+               - renesas,usbhs-r8a77995 # R-Car D3
+           - const: renesas,rcar-gen3-usbhs
+ 
++      - const: renesas,usbhs-r9a09g077 # RZ/T2H
++
++      - items:
++          - const: renesas,usbhs-r9a09g087 # RZ/N2H
++          - const: renesas,usbhs-r9a09g077 # RZ/T2H
++
+   reg:
+     maxItems: 1
+ 
+@@ -136,9 +142,25 @@ allOf:
+       required:
+         - resets
+     else:
+-      properties:
+-        interrupts:
+-          maxItems: 1
++      if:
++        properties:
++          compatible:
++            contains:
++              const: renesas,usbhs-r9a09g077
++      then:
++        properties:
++          resets: false
++          clocks:
++            maxItems: 1
++          interrupts:
++            items:
++              - description: USB function interrupt USB_FI
++              - description: USB function DMA0 transmit completion interrupt USB_FDMA0
++              - description: USB function DMA1 transmit completion interrupt USB_FDMA1
++      else:
++        properties:
++          interrupts:
++            maxItems: 1
+ 
+ additionalProperties: false
+ 

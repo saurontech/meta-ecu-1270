@@ -1,0 +1,36 @@
+From ad0cf751277224bbe62894d17ce9ce21d0208d15 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 13:06:25 +0200
+Subject: [PATCH 012/283] PCI: rzg3s-host: Initialize MSI status bitmap before
+ use
+
+commit 94bf74830a977a027042f685c7231c5e07cc3372 upstream.
+
+Initialize rzg3s_pcie_msi_irq() MSI status bitmap before use.
+
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/all/202512070218.XVMUQCl7-lkp@intel.com
+Closes: https://lore.kernel.org/all/202512061812.Xbqmd2Gn-lkp@intel.com
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://patch.msgid.link/20251209125122.304129-1-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 66b6a09498b7..81f8ddcdef79 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -478,7 +478,7 @@ static void rzg3s_pcie_intx_irq_handler(struct irq_desc *desc)
+ static irqreturn_t rzg3s_pcie_msi_irq(int irq, void *data)
+ {
+ 	u8 regs = RZG3S_PCI_MSI_INT_NR / RZG3S_PCI_MSI_INT_PER_REG;
+-	DECLARE_BITMAP(bitmap, RZG3S_PCI_MSI_INT_NR);
++	DECLARE_BITMAP(bitmap, RZG3S_PCI_MSI_INT_NR) = {0};
+ 	struct rzg3s_pcie_host *host = data;
+ 	struct rzg3s_pcie_msi *msi = &host->msi;
+ 	unsigned long bit;

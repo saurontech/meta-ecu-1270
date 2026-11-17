@@ -1,0 +1,164 @@
+From fb4d8ff12d0241bf82a39dc3bb5a18c877f5ba37 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:29 +0100
+Subject: [PATCH 269/286] irqchip/renesas-rzg2l: Replace single irq_chip with
+ per-region irq_chip instances
+
+[ Upstream commit 4b11d14cac6ae198ea855b871c73dc208a177a0e ]
+
+The driver uses a single irq_chip instance shared across all interrupt
+types, relying on dispatcher callbacks to differentiate between IRQ and
+TINT regions at runtime.
+
+Replace the per-SoC irq_chip and its dispatcher callbacks with dedicated
+irq_chip instances for each interrupt region: IRQ and TINT. Subsequent
+patches will add per-region callbacks for IRQ and TINT from the common
+code.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-6-biju.das.jz@bp.renesas.com
+[Biju: Retained rzg2l_irqc_common_init() ]
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 61 ++++++++++++++++++++++++-----
+ 1 file changed, 51 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 122d744afdf9..4a4b6624ecb6 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -72,14 +72,16 @@ struct rzg2l_irqc_reg_cache {
+ /**
+  * struct rzg2l_irqc_priv - IRQ controller private data structure
+  * @base:	Controller's base address
+- * @irqchip:	Pointer to struct irq_chip
++ * @irq_chip:	Pointer to struct irq_chip for irq
++ * @tint_chip:	Pointer to struct irq_chip for tint
+  * @fwspec:	IRQ firmware specific data
+  * @lock:	Lock to serialize access to hardware registers
+  * @cache:	Registers cache for suspend/resume
+  */
+ static struct rzg2l_irqc_priv {
+ 	void __iomem			*base;
+-	const struct irq_chip		*irqchip;
++	const struct irq_chip		*irq_chip;
++	const struct irq_chip		*tint_chip;
+ 	struct irq_fwspec		fwspec[IRQC_NUM_IRQ];
+ 	raw_spinlock_t			lock;
+ 	struct rzg2l_irqc_reg_cache	cache;
+@@ -431,7 +433,7 @@ static struct syscore_ops rzg2l_irqc_syscore_ops = {
+ 	.resume		= rzg2l_irqc_irq_resume,
+ };
+ 
+-static const struct irq_chip rzg2l_irqc_chip = {
++static const struct irq_chip rzg2l_irqc_irq_chip = {
+ 	.name			= "rzg2l-irqc",
+ 	.irq_eoi		= rzg2l_irqc_eoi,
+ 	.irq_mask		= irq_chip_mask_parent,
+@@ -448,7 +450,41 @@ static const struct irq_chip rzg2l_irqc_chip = {
+ 				  IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-static const struct irq_chip rzfive_irqc_chip = {
++static const struct irq_chip rzg2l_irqc_tint_chip = {
++	.name			= "rzg2l-irqc",
++	.irq_eoi		= rzg2l_irqc_eoi,
++	.irq_mask		= irq_chip_mask_parent,
++	.irq_unmask		= irq_chip_unmask_parent,
++	.irq_disable		= rzg2l_irqc_irq_disable,
++	.irq_enable		= rzg2l_irqc_irq_enable,
++	.irq_get_irqchip_state	= irq_chip_get_parent_state,
++	.irq_set_irqchip_state	= irq_chip_set_parent_state,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_set_type		= rzg2l_irqc_set_type,
++	.irq_set_affinity	= irq_chip_set_affinity_parent,
++	.flags			= IRQCHIP_MASK_ON_SUSPEND |
++				  IRQCHIP_SET_TYPE_MASKED |
++				  IRQCHIP_SKIP_SET_WAKE,
++};
++
++static const struct irq_chip rzfive_irqc_irq_chip = {
++	.name			= "rzfive-irqc",
++	.irq_eoi		= rzg2l_irqc_eoi,
++	.irq_mask		= rzfive_irqc_mask,
++	.irq_unmask		= rzfive_irqc_unmask,
++	.irq_disable		= rzfive_irqc_irq_disable,
++	.irq_enable		= rzfive_irqc_irq_enable,
++	.irq_get_irqchip_state	= irq_chip_get_parent_state,
++	.irq_set_irqchip_state	= irq_chip_set_parent_state,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_set_type		= rzg2l_irqc_set_type,
++	.irq_set_affinity	= irq_chip_set_affinity_parent,
++	.flags			= IRQCHIP_MASK_ON_SUSPEND |
++				  IRQCHIP_SET_TYPE_MASKED |
++				  IRQCHIP_SKIP_SET_WAKE,
++};
++
++static const struct irq_chip rzfive_irqc_tint_chip = {
+ 	.name			= "rzfive-irqc",
+ 	.irq_eoi		= rzg2l_irqc_eoi,
+ 	.irq_mask		= rzfive_irqc_mask,
+@@ -469,6 +505,7 @@ static int rzg2l_irqc_alloc(struct irq_domain *domain, unsigned int virq,
+ 			    unsigned int nr_irqs, void *arg)
+ {
+ 	struct rzg2l_irqc_priv *priv = domain->host_data;
++	const struct irq_chip *chip;
+ 	unsigned long tint = 0;
+ 	irq_hw_number_t hwirq;
+ 	unsigned int type;
+@@ -488,13 +525,15 @@ static int rzg2l_irqc_alloc(struct irq_domain *domain, unsigned int virq,
+ 	if (hwirq > IRQC_IRQ_COUNT) {
+ 		tint = TINT_EXTRACT_GPIOINT(hwirq);
+ 		hwirq = TINT_EXTRACT_HWIRQ(hwirq);
++		chip = priv->tint_chip;
++	} else {
++		chip = priv->irq_chip;
+ 	}
+ 
+ 	if (hwirq > (IRQC_NUM_IRQ - 1))
+ 		return -EINVAL;
+ 
+-	ret = irq_domain_set_hwirq_and_chip(domain, virq, hwirq, priv->irqchip,
+-					    (void *)(uintptr_t)tint);
++	ret = irq_domain_set_hwirq_and_chip(domain, virq, hwirq, chip, (void *)(uintptr_t)tint);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -526,7 +565,8 @@ static int rzg2l_irqc_parse_interrupts(struct rzg2l_irqc_priv *priv,
+ }
+ 
+ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *parent,
+-				  const struct irq_chip *irq_chip)
++				  const struct irq_chip *irq_chip,
++				  const struct irq_chip *tint_chip)
+ {
+ 	struct platform_device *pdev = of_find_device_by_node(node);
+ 	struct device *dev __free(put_device) = pdev ? &pdev->dev : NULL;
+@@ -545,7 +585,8 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 	if (!rzg2l_irqc_data)
+ 		return -ENOMEM;
+ 
+-	rzg2l_irqc_data->irqchip = irq_chip;
++	rzg2l_irqc_data->irq_chip = irq_chip;
++	rzg2l_irqc_data->tint_chip = tint_chip;
+ 
+ 	rzg2l_irqc_data->base = devm_of_iomap(dev, dev->of_node, 0, NULL);
+ 	if (IS_ERR(rzg2l_irqc_data->base))
+@@ -597,12 +638,12 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 
+ static int rzg2l_irqc_init(struct device_node *node, struct device_node *parent)
+ {
+-	return rzg2l_irqc_common_init(node, parent, &rzg2l_irqc_chip);
++	return rzg2l_irqc_common_init(node, parent, &rzg2l_irqc_irq_chip, &rzg2l_irqc_tint_chip);
+ }
+ 
+ static int rzfive_irqc_init(struct device_node *node, struct device_node *parent)
+ {
+-	return rzg2l_irqc_common_init(node, parent, &rzfive_irqc_chip);
++	return rzg2l_irqc_common_init(node, parent, &rzfive_irqc_irq_chip, &rzfive_irqc_tint_chip);
+ }
+ 
+ IRQCHIP_PLATFORM_DRIVER_BEGIN(rzg2l_irqc)

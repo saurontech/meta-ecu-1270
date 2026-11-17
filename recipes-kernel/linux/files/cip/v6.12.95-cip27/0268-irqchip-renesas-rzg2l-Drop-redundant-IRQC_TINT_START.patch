@@ -1,0 +1,41 @@
+From de9a2733fed6fb0adb2072d7f4ba8450e1d6b7ca Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:28 +0100
+Subject: [PATCH 268/286] irqchip/renesas-rzg2l: Drop redundant IRQC_TINT_START
+ check in rzg2l_irqc_alloc()
+
+[ Upstream commit 0109d24b4cdc2cdbc127f86cbede83adae2187d7 ]
+
+The check `hwirq < IRQC_TINT_START` in rzg2l_irqc_alloc() is unnecessary as
+the condition is already guaranteed to be false at that point in the code.
+
+The outer `if (hwirq > IRQC_IRQ_COUNT)` block ensures that hwirq is always
+above IRQC_IRQ_COUNT before reaching this check, and since IRQC_TINT_START
+<= IRQC_IRQ_COUNT, the guard can never trigger.
+
+Remove the dead code to simplify the allocation path.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 5f67013227c4..122d744afdf9 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -488,9 +488,6 @@ static int rzg2l_irqc_alloc(struct irq_domain *domain, unsigned int virq,
+ 	if (hwirq > IRQC_IRQ_COUNT) {
+ 		tint = TINT_EXTRACT_GPIOINT(hwirq);
+ 		hwirq = TINT_EXTRACT_HWIRQ(hwirq);
+-
+-		if (hwirq < IRQC_TINT_START)
+-			return -EINVAL;
+ 	}
+ 
+ 	if (hwirq > (IRQC_NUM_IRQ - 1))

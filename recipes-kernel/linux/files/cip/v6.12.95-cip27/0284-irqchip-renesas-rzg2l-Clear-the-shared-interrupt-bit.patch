@@ -1,0 +1,57 @@
+From f226383484a78f175a8a0a733a29471bfe596ef2 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:44 +0100
+Subject: [PATCH 284/286] irqchip/renesas-rzg2l: Clear the shared interrupt bit
+ in rzg2l_irqc_free()
+
+[ Upstream commit d3689cd02c5de52ff5f3044169c482aee0dd5a78 ]
+
+rzg2l_irqc_free() invokes irq_domain_free_irqs_common(), which internally
+calls irq_domain_reset_irq_data(). That explicitly sets irq_data->hwirq to
+0. Consequently, irqd_to_hwirq(d) returns 0 when called after it.
+
+Since 0 falls outside the valid shared IRQ ranges,
+rzg2l_irqc_is_shared_and_get_irq_num() evaluates to false, completely
+bypassing the test_and_clear_bit() operation.
+
+This leaves the bit set in priv->used_irqs, causing future allocations to
+fail with -EBUSY.
+
+Fix this by retrieving irq_data and caching hwirq before calling
+irq_domain_free_irqs_common().
+
+Fixes: e0fcae27ff57 ("irqchip/renesas-rzg2l: Add shared interrupt support")
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260328103324.134131-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index cece433dc1fb..93510bcd79c2 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -695,15 +695,14 @@ static int rzg2l_irqc_alloc(struct irq_domain *domain, unsigned int virq,
+ 
+ static void rzg2l_irqc_free(struct irq_domain *domain, unsigned int virq, unsigned int nr_irqs)
+ {
++	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+ 	struct rzg2l_irqc_priv *priv = domain->host_data;
++	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 
+ 	irq_domain_free_irqs_common(domain, virq, nr_irqs);
+ 
+-	if (priv->info.shared_irq_cnt) {
+-		struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+-
+-		rzg2l_irqc_shared_irq_free(priv, irqd_to_hwirq(d));
+-	}
++	if (priv->info.shared_irq_cnt)
++		rzg2l_irqc_shared_irq_free(priv, hwirq);
+ }
+ 
+ static const struct irq_domain_ops rzg2l_irqc_domain_ops = {

@@ -1,0 +1,200 @@
+From 68ac2fbf35abb40c76ad1df1293dd8aba7ff5553 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Wed, 23 Apr 2025 19:13:55 +0100
+Subject: [PATCH 063/246] soc: renesas: rz-sysc: Add support for RZ/G3E family
+
+commit d07470cff53b3cfc68a3653c36fbf8ffd1ddaf3c upstream.
+
+Add SoC detection support for the RZ/G3E SoC.  Also add support for
+detecting the number of cores and the ETHOS-U55 NPU, and also detect PLL
+mismatch for SW settings other than 1.7GHz.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250128031342.52675-4-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/soc/renesas/Kconfig         |  5 +++
+ drivers/soc/renesas/Makefile        |  1 +
+ drivers/soc/renesas/r9a09g047-sys.c | 67 +++++++++++++++++++++++++++++
+ drivers/soc/renesas/rz-sysc.c       | 12 +++++-
+ drivers/soc/renesas/rz-sysc.h       |  6 +++
+ 5 files changed, 89 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/soc/renesas/r9a09g047-sys.c
+
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index 026d8c675734..f1f1f5c46f39 100644
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -348,6 +348,7 @@ config ARCH_R9A09G011
+ 
+ config ARCH_R9A09G047
+ 	bool "ARM64 Platform support for RZ/G3E"
++	select SYS_R9A09G047
+ 	help
+ 	  This enables support for the Renesas RZ/G3E SoC variants.
+ 
+@@ -390,4 +391,8 @@ config SYSC_R9A08G045
+ 	bool "Renesas RZ/G3S System controller support" if COMPILE_TEST
+ 	select SYSC_RZ
+ 
++config SYS_R9A09G047
++	bool "Renesas RZ/G3E System controller support" if COMPILE_TEST
++	select SYSC_RZ
++
+ endif # SOC_RENESAS
+diff --git a/drivers/soc/renesas/Makefile b/drivers/soc/renesas/Makefile
+index 8cd139b3dd0a..17b86d3ae478 100644
+--- a/drivers/soc/renesas/Makefile
++++ b/drivers/soc/renesas/Makefile
+@@ -7,6 +7,7 @@ ifdef CONFIG_SMP
+ obj-$(CONFIG_ARCH_R9A06G032)	+= r9a06g032-smp.o
+ endif
+ obj-$(CONFIG_SYSC_R9A08G045)	+= r9a08g045-sysc.o
++obj-$(CONFIG_SYS_R9A09G047)	+= r9a09g047-sys.o
+ 
+ # Family
+ obj-$(CONFIG_PWC_RZV2M)		+= pwc-rzv2m.o
+diff --git a/drivers/soc/renesas/r9a09g047-sys.c b/drivers/soc/renesas/r9a09g047-sys.c
+new file mode 100644
+index 000000000000..cd2eb7782cfe
+--- /dev/null
++++ b/drivers/soc/renesas/r9a09g047-sys.c
+@@ -0,0 +1,67 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * RZ/G3E System controller (SYS) driver
++ *
++ * Copyright (C) 2025 Renesas Electronics Corp.
++ */
++
++#include <linux/bitfield.h>
++#include <linux/bits.h>
++#include <linux/device.h>
++#include <linux/init.h>
++#include <linux/io.h>
++
++#include "rz-sysc.h"
++
++/* Register Offsets */
++#define SYS_LSI_MODE		0x300
++/*
++ * BOOTPLLCA[1:0]
++ *	    [0,0] => 1.1GHZ
++ *	    [0,1] => 1.5GHZ
++ *	    [1,0] => 1.6GHZ
++ *	    [1,1] => 1.7GHZ
++ */
++#define SYS_LSI_MODE_STAT_BOOTPLLCA55	GENMASK(12, 11)
++#define SYS_LSI_MODE_CA55_1_7GHZ	0x3
++
++#define SYS_LSI_PRR			0x308
++#define SYS_LSI_PRR_CA55_DIS		BIT(8)
++#define SYS_LSI_PRR_NPU_DIS		BIT(1)
++
++static void rzg3e_sys_print_id(struct device *dev,
++				void __iomem *sysc_base,
++				struct soc_device_attribute *soc_dev_attr)
++{
++	bool is_quad_core, npu_enabled;
++	u32 prr_val, mode_val;
++
++	prr_val = readl(sysc_base + SYS_LSI_PRR);
++	mode_val = readl(sysc_base + SYS_LSI_MODE);
++
++	/* Check CPU and NPU configuration */
++	is_quad_core = !(prr_val & SYS_LSI_PRR_CA55_DIS);
++	npu_enabled = !(prr_val & SYS_LSI_PRR_NPU_DIS);
++
++	dev_info(dev, "Detected Renesas %s Core %s %s Rev %s%s\n",
++		 is_quad_core ? "Quad" : "Dual", soc_dev_attr->family,
++		 soc_dev_attr->soc_id, soc_dev_attr->revision,
++		 npu_enabled ? " with Ethos-U55" : "");
++
++	/* Check CA55 PLL configuration */
++	if (FIELD_GET(SYS_LSI_MODE_STAT_BOOTPLLCA55, mode_val) != SYS_LSI_MODE_CA55_1_7GHZ)
++		dev_warn(dev, "CA55 PLL is not set to 1.7GHz\n");
++}
++
++static const struct rz_sysc_soc_id_init_data rzg3e_sys_soc_id_init_data __initconst = {
++	.family = "RZ/G3E",
++	.id = 0x8679447,
++	.devid_offset = 0x304,
++	.revision_mask = GENMASK(31, 28),
++	.specific_id_mask = GENMASK(27, 0),
++	.print_id = rzg3e_sys_print_id,
++};
++
++const struct rz_sysc_init_data rzg3e_sys_init_data = {
++	.soc_id_init_data = &rzg3e_sys_soc_id_init_data,
++};
+diff --git a/drivers/soc/renesas/rz-sysc.c b/drivers/soc/renesas/rz-sysc.c
+index de603cea4fab..70a0f1931633 100644
+--- a/drivers/soc/renesas/rz-sysc.c
++++ b/drivers/soc/renesas/rz-sysc.c
+@@ -66,8 +66,13 @@ static int rz_sysc_soc_init(struct rz_sysc *sysc, const struct of_device_id *mat
+ 		return -ENODEV;
+ 	}
+ 
+-	dev_info(sysc->dev, "Detected Renesas %s %s Rev %s\n", soc_dev_attr->family,
+-		 soc_dev_attr->soc_id, soc_dev_attr->revision);
++	/* Try to call SoC-specific device identification */
++	if (soc_data->print_id) {
++		soc_data->print_id(sysc->dev, sysc->base, soc_dev_attr);
++	} else {
++		dev_info(sysc->dev, "Detected Renesas %s %s Rev %s\n",
++			 soc_dev_attr->family, soc_dev_attr->soc_id, soc_dev_attr->revision);
++	}
+ 
+ 	soc_dev = soc_device_register(soc_dev_attr);
+ 	if (IS_ERR(soc_dev))
+@@ -79,6 +84,9 @@ static int rz_sysc_soc_init(struct rz_sysc *sysc, const struct of_device_id *mat
+ static const struct of_device_id rz_sysc_match[] = {
+ #ifdef CONFIG_SYSC_R9A08G045
+ 	{ .compatible = "renesas,r9a08g045-sysc", .data = &rzg3s_sysc_init_data },
++#endif
++#ifdef CONFIG_SYS_R9A09G047
++	{ .compatible = "renesas,r9a09g047-sys", .data = &rzg3e_sys_init_data },
+ #endif
+ 	{ }
+ };
+diff --git a/drivers/soc/renesas/rz-sysc.h b/drivers/soc/renesas/rz-sysc.h
+index 908f09fa4fc9..4e70b77433a3 100644
+--- a/drivers/soc/renesas/rz-sysc.h
++++ b/drivers/soc/renesas/rz-sysc.h
+@@ -8,6 +8,8 @@
+ #ifndef __SOC_RENESAS_RZ_SYSC_H__
+ #define __SOC_RENESAS_RZ_SYSC_H__
+ 
++#include <linux/device.h>
++#include <linux/sys_soc.h>
+ #include <linux/types.h>
+ 
+ /**
+@@ -17,6 +19,7 @@
+  * @devid_offset: SYSC SoC ID register offset
+  * @revision_mask: SYSC SoC ID revision mask
+  * @specific_id_mask: SYSC SoC ID specific ID mask
++ * @print_id: print SoC-specific extended device identification
+  */
+ struct rz_sysc_soc_id_init_data {
+ 	const char * const family;
+@@ -24,6 +27,8 @@ struct rz_sysc_soc_id_init_data {
+ 	u32 devid_offset;
+ 	u32 revision_mask;
+ 	u32 specific_id_mask;
++	void (*print_id)(struct device *dev, void __iomem *sysc_base,
++			 struct soc_device_attribute *soc_dev_attr);
+ };
+ 
+ /**
+@@ -34,6 +39,7 @@ struct rz_sysc_init_data {
+ 	const struct rz_sysc_soc_id_init_data *soc_id_init_data;
+ };
+ 
++extern const struct rz_sysc_init_data rzg3e_sys_init_data;
+ extern const struct rz_sysc_init_data rzg3s_sysc_init_data;
+ 
+ #endif /* __SOC_RENESAS_RZ_SYSC_H__ */

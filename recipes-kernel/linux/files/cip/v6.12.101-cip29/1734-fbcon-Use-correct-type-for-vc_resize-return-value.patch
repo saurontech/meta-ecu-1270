@@ -1,0 +1,43 @@
+From 72e51d07ba1a75b35c13c719aded6b4551046b62 Mon Sep 17 00:00:00 2001
+From: Jiacheng Yu <yujiacheng3@huawei.com>
+Date: Wed, 22 Jul 2026 10:48:42 -0400
+Subject: [PATCH 1734/1853] fbcon: Use correct type for vc_resize() return
+ value
+
+[ Upstream commit 84202754fb1727dc3ee87f47104e4162ecc8ba3a ]
+
+The return value of vc_resize() is int, but fbcon_set_disp() stores it
+in an unsigned long variable. While the !ret check happens to work
+correctly by coincidence (negative values become large positive values),
+the types should match. Use int instead.
+
+Eliminates the following W=3 warning:
+
+  drivers/video/fbdev/core/fbcon.c: In function 'fbcon_set_disp':
+  drivers/video/fbdev/core/fbcon.c:1494:14: warning: implicit conversion from 'int' to 'unsigned long' [-Wconversion]
+
+Fixes: af0db3c1f898 ("fbdev: Fix vmalloc out-of-bounds write in fast_imageblit")
+Cc: stable@vger.kernel.org # v6.17+
+Signed-off-by: Jiacheng Yu <yujiacheng3@huawei.com>
+Reviewed-by: Thomas Zimmermann <tzimmermann@suse.de>
+Signed-off-by: Helge Deller <deller@gmx.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/video/fbdev/core/fbcon.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/video/fbdev/core/fbcon.c b/drivers/video/fbdev/core/fbcon.c
+index 95c69bca90b6..01b6a03b80b0 100644
+--- a/drivers/video/fbdev/core/fbcon.c
++++ b/drivers/video/fbdev/core/fbcon.c
+@@ -1366,8 +1366,7 @@ static void fbcon_set_disp(struct fb_info *info, struct fb_var_screeninfo *var,
+ 	struct vc_data **default_mode, *vc;
+ 	struct vc_data *svc;
+ 	struct fbcon_par *par = info->fbcon_par;
+-	int rows, cols;
+-	unsigned long ret = 0;
++	int rows, cols, ret;
+ 
+ 	p = &fb_display[unit];
+ 

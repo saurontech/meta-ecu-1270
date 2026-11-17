@@ -1,0 +1,38 @@
+From 99b3784633a40b28ff78dc0248d1fea75ef609a5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 3 Dec 2025 15:40:53 +0000
+Subject: [PATCH 124/724] dt-bindings: mmc: renesas,sdhi: Document RZ/V2N
+ support
+
+commit 8e127dbbf6c363e6b4bb486d631d936fd6d1646d upstream.
+
+Add SDHI bindings for the Renesas RZ/V2N (a.k.a R9A09G056) SoC. Use
+`renesas,sdhi-r9a09g057` as a fallback since the SD/MMC block on
+RZ/V2N is identical to the one on RZ/V2H(P), allowing reuse of the
+existing driver without modifications.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250326143945.82142-8-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml b/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
+index 773baa6c2656..7563623876fc 100644
+--- a/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
++++ b/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
+@@ -69,7 +69,9 @@ properties:
+               - renesas,sdhi-r9a09g011 # RZ/V2M
+           - const: renesas,rzg2l-sdhi
+       - items:
+-          - const: renesas,sdhi-r9a09g047 # RZ/G3E
++          - enum:
++              - renesas,sdhi-r9a09g047 # RZ/G3E
++              - renesas,sdhi-r9a09g056 # RZ/V2N
+           - const: renesas,sdhi-r9a09g057 # RZ/V2H(P)
+ 
+   reg:

@@ -1,0 +1,50 @@
+From ee910b45f54ee9b231b2a4b23c2748bb94dee7a3 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:40 +0100
+Subject: [PATCH 1244/1853] arm64: dts: renesas: r9a08g046: Add wdt device node
+
+[ Upstream commit 8e46bc6370d08a21cc43bb747aef8ffae45df7d7 ]
+
+The RZ/G3L SOC has 3 watchdog timer channels:
+  - channel0 (wdt0) for Cortex-A55-CPU Non-Secure,
+  - channel1 (wdt1) for Cortex-A55 CPU Secure,
+  - channel2 (wdt2) for Cortex-M33 CPU.
+
+Add wdt0 node to RZ/G3L ("R9A08G046") SoC DTSI.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260505125921.149682-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g046.dtsi | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+index 7a7c11ab4903..19f2c9f29f5c 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+@@ -667,6 +667,20 @@ gic: interrupt-controller@12400000 {
+ 			interrupt-controller;
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW>;
+ 		};
++
++		wdt0: watchdog@12800800 {
++			compatible = "renesas,r9a08g046-wdt", "renesas,rzg2l-wdt";
++			reg = <0 0x12800800 0 0x400>;
++			clocks = <&cpg CPG_MOD R9A08G046_WDT0_PCLK>,
++				 <&cpg CPG_MOD R9A08G046_WDT0_CLK>;
++			clock-names = "pclk", "oscclk";
++			interrupts = <GIC_SPI 53 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "wdt", "perrout";
++			resets = <&cpg R9A08G046_WDT0_PRESETN>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	stmmac_axi_setup: stmmac-axi-config {

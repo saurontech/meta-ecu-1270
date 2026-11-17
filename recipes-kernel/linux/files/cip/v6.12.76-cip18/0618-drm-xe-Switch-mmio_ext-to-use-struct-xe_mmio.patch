@@ -1,0 +1,53 @@
+From 74bff541ec88bb984084787d12a293a98d0be9ad Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Tue, 10 Sep 2024 16:47:26 -0700
+Subject: [PATCH 0618/1190] drm/xe: Switch mmio_ext to use 'struct xe_mmio'
+
+[ Upstream commit 960a83799f5bb8634755f0593c591c53ff4acee8 ]
+
+The mmio_ext stuff is completely unused right now, but it isn't
+providing any functionality that couldn't be treated as a regular mmio
+space.
+
+Reviewed-by: Lucas De Marchi <lucas.demarchi@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20240910234719.3335472-51-matthew.d.roper@intel.com
+Stable-dep-of: 4a9b4e1fa52a ("drm/xe/mmio: Avoid double-adjust in 64-bit reads")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/gpu/drm/xe/xe_device_types.h | 8 +-------
+ drivers/gpu/drm/xe/xe_mmio.c         | 2 +-
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
+index 2291ac1fa96e..56630dabb85f 100644
+--- a/drivers/gpu/drm/xe/xe_device_types.h
++++ b/drivers/gpu/drm/xe/xe_device_types.h
+@@ -182,13 +182,7 @@ struct xe_tile {
+ 	 *
+ 	 * Each tile has its own additional 256MB (28-bit) MMIO-extension space.
+ 	 */
+-	struct {
+-		/** @mmio_ext.size: size of tile's additional MMIO-extension space */
+-		size_t size;
+-
+-		/** @mmio_ext.regs: pointer to tile's additional MMIO-extension space */
+-		void __iomem *regs;
+-	} mmio_ext;
++	struct xe_mmio mmio_ext;
+ 
+ 	/** @mem: memory management info for tile */
+ 	struct {
+diff --git a/drivers/gpu/drm/xe/xe_mmio.c b/drivers/gpu/drm/xe/xe_mmio.c
+index f210e7470eae..2f72516e0132 100644
+--- a/drivers/gpu/drm/xe/xe_mmio.c
++++ b/drivers/gpu/drm/xe/xe_mmio.c
+@@ -132,7 +132,7 @@ static void mmio_extension_setup(struct xe_device *xe, size_t tile_mmio_size,
+ 
+ 	regs = xe->mmio.regs + tile_mmio_size * xe->info.tile_count;
+ 	for_each_tile(tile, xe, id) {
+-		tile->mmio_ext.size = tile_mmio_ext_size;
++		tile->mmio_ext.regs_size = tile_mmio_ext_size;
+ 		tile->mmio_ext.regs = regs;
+ 		regs += tile_mmio_ext_size;
+ 	}

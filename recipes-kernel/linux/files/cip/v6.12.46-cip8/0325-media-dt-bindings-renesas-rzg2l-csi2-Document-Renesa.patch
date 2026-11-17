@@ -1,0 +1,41 @@
+From cbcbbbd7f472c41db8983198ef9ccfd1ae7c4289 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:03 +0200
+Subject: [PATCH 325/643] media: dt-bindings: renesas,rzg2l-csi2: Document
+ Renesas RZ/G3E CSI-2 block
+
+commit f1c83d2f2841e99f884104e912aa20fcc32b9c2d upstream.
+
+Document the CSI-2 block which is part of CRU found in Renesas RZ/G3E
+SoC.
+
+The CSI-2 block on the RZ/G3E SoC is identical to one found on the
+RZ/V2H(P) SoC.
+
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-3-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/media/renesas,rzg2l-csi2.yaml          | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml b/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml
+index 1f9ee37584b3..c5c511c9f0db 100644
+--- a/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml
++++ b/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml
+@@ -24,6 +24,9 @@ properties:
+               - renesas,r9a07g044-csi2 # RZ/G2{L,LC}
+               - renesas,r9a07g054-csi2 # RZ/V2L
+           - const: renesas,rzg2l-csi2
++      - items:
++          - const: renesas,r9a09g047-csi2 # RZ/G3E
++          - const: renesas,r9a09g057-csi2
+       - const: renesas,r9a09g057-csi2 # RZ/V2H(P)
+ 
+   reg:

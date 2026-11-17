@@ -1,0 +1,133 @@
+From 76e9d9dabe57e80e27850e14c8ae9f7b34e8bcb6 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:39 +0200
+Subject: [PATCH 361/643] media: rzg2l-cru: Pass resolution limits via OF data
+
+commit 5f5ed645b31b3e0bbd1a1597cdb41c467f3c7776 upstream.
+
+Pass `max_width` and `max_height` as part of the OF data to facilitate the
+addition of support for RZ/G3E and RZ/V2H(P) SoCs. These SoCs have a
+maximum resolution of 4096x4096 as compared to 2800x4095 on RZ/G2L SoC.
+This change prepares the driver for easier integration of these SoCs by
+defining the resolution limits in the `rzg2l_cru_info` structure.
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-13-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../media/platform/renesas/rzg2l-cru/rzg2l-core.c   |  2 ++
+ .../media/platform/renesas/rzg2l-cru/rzg2l-cru.h    |  4 ++--
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c | 13 +++++++++----
+ .../media/platform/renesas/rzg2l-cru/rzg2l-video.c  |  5 +++--
+ 4 files changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index e84def4f6e3b..6c3e6c20ac6a 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -352,6 +352,8 @@ static const u16 rzg2l_cru_regs[] = {
+ };
+ 
+ static const struct rzg2l_cru_info rzgl2_cru_info = {
++	.max_width = 2800,
++	.max_height = 4095,
+ 	.regs = rzg2l_cru_regs,
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 00c3f7458e20..6a621073948a 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -27,9 +27,7 @@
+ #define RZG2L_CRU_CSI2_VCHANNEL		4
+ 
+ #define RZG2L_CRU_MIN_INPUT_WIDTH	320
+-#define RZG2L_CRU_MAX_INPUT_WIDTH	2800
+ #define RZG2L_CRU_MIN_INPUT_HEIGHT	240
+-#define RZG2L_CRU_MAX_INPUT_HEIGHT	4095
+ 
+ enum rzg2l_csi2_pads {
+ 	RZG2L_CRU_IP_SINK = 0,
+@@ -81,6 +79,8 @@ struct rzg2l_cru_ip_format {
+ };
+ 
+ struct rzg2l_cru_info {
++	unsigned int max_width;
++	unsigned int max_height;
+ 	const u16 *regs;
+ };
+ 
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index 76a2b451f1da..7836c7cd53dc 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -148,6 +148,8 @@ static int rzg2l_cru_ip_set_format(struct v4l2_subdev *sd,
+ 				   struct v4l2_subdev_state *state,
+ 				   struct v4l2_subdev_format *fmt)
+ {
++	struct rzg2l_cru_dev *cru = v4l2_get_subdevdata(sd);
++	const struct rzg2l_cru_info *info = cru->info;
+ 	struct v4l2_mbus_framefmt *src_format;
+ 	struct v4l2_mbus_framefmt *sink_format;
+ 
+@@ -170,9 +172,9 @@ static int rzg2l_cru_ip_set_format(struct v4l2_subdev *sd,
+ 	sink_format->ycbcr_enc = fmt->format.ycbcr_enc;
+ 	sink_format->quantization = fmt->format.quantization;
+ 	sink_format->width = clamp_t(u32, fmt->format.width,
+-				     RZG2L_CRU_MIN_INPUT_WIDTH, RZG2L_CRU_MAX_INPUT_WIDTH);
++				     RZG2L_CRU_MIN_INPUT_WIDTH, info->max_width);
+ 	sink_format->height = clamp_t(u32, fmt->format.height,
+-				      RZG2L_CRU_MIN_INPUT_HEIGHT, RZG2L_CRU_MAX_INPUT_HEIGHT);
++				      RZG2L_CRU_MIN_INPUT_HEIGHT, info->max_height);
+ 
+ 	fmt->format = *sink_format;
+ 
+@@ -197,6 +199,9 @@ static int rzg2l_cru_ip_enum_frame_size(struct v4l2_subdev *sd,
+ 					struct v4l2_subdev_state *state,
+ 					struct v4l2_subdev_frame_size_enum *fse)
+ {
++	struct rzg2l_cru_dev *cru = v4l2_get_subdevdata(sd);
++	const struct rzg2l_cru_info *info = cru->info;
++
+ 	if (fse->index != 0)
+ 		return -EINVAL;
+ 
+@@ -205,8 +210,8 @@ static int rzg2l_cru_ip_enum_frame_size(struct v4l2_subdev *sd,
+ 
+ 	fse->min_width = RZG2L_CRU_MIN_INPUT_WIDTH;
+ 	fse->min_height = RZG2L_CRU_MIN_INPUT_HEIGHT;
+-	fse->max_width = RZG2L_CRU_MAX_INPUT_WIDTH;
+-	fse->max_height = RZG2L_CRU_MAX_INPUT_HEIGHT;
++	fse->max_width = info->max_width;
++	fse->max_height = info->max_height;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 826ca25ef6e6..83e8af1d7ef2 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -738,6 +738,7 @@ int rzg2l_cru_dma_register(struct rzg2l_cru_dev *cru)
+ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 				   struct v4l2_pix_format *pix)
+ {
++	const struct rzg2l_cru_info *info = cru->info;
+ 	const struct rzg2l_cru_ip_format *fmt;
+ 
+ 	fmt = rzg2l_cru_ip_format_to_fmt(pix->pixelformat);
+@@ -760,8 +761,8 @@ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 	}
+ 
+ 	/* Limit to CRU capabilities */
+-	v4l_bound_align_image(&pix->width, 320, RZG2L_CRU_MAX_INPUT_WIDTH, 1,
+-			      &pix->height, 240, RZG2L_CRU_MAX_INPUT_HEIGHT, 2, 0);
++	v4l_bound_align_image(&pix->width, 320, info->max_width, 1,
++			      &pix->height, 240, info->max_height, 2, 0);
+ 
+ 	pix->bytesperline = pix->width * fmt->bpp;
+ 	pix->sizeimage = pix->bytesperline * pix->height;

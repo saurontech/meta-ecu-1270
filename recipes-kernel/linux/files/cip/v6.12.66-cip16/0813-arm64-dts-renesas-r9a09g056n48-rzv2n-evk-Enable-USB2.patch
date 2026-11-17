@@ -1,0 +1,97 @@
+From 2585169f514ea86db936a0f49edb0d1bb813fdf7 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 19 Jan 2026 12:51:47 +0000
+Subject: [PATCH 813/838] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable
+ USB2.0 support
+
+commit 4f6780c14fea09bc56c4991d6bf8f2a594bfb51f upstream.
+
+Enable USB2.0 support on the RZ/V2N EVK board, CN2 connector on the EVK
+supports host/function operation.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250528140453.181851-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g056n48-rzv2n-evk.dts    | 36 +++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index 55a023b70d3b..c3b09050899b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -72,6 +72,11 @@ &audio_extal_clk {
+ 	clock-frequency = <22579200>;
+ };
+ 
++&ehci0 {
++	dr_mode = "otg";
++	status = "okay";
++};
++
+ &eth0 {
+ 	pinctrl-0 = <&eth0_pins>;
+ 	pinctrl-names = "default";
+@@ -88,6 +93,11 @@ &eth1 {
+ 	status = "okay";
+ };
+ 
++&hsusb {
++	dr_mode = "otg";
++	status = "okay";
++};
++
+ &i2c0 {
+ 	pinctrl-0 = <&i2c0_pins>;
+ 	pinctrl-names = "default";
+@@ -175,6 +185,11 @@ phy1: ethernet-phy@1 {
+ 	};
+ };
+ 
++&ohci0 {
++	dr_mode = "otg";
++	status = "okay";
++};
++
+ &ostm0 {
+ 	status = "okay";
+ };
+@@ -287,6 +302,16 @@ sd1-dat-cmd {
+ 			slew-rate = <0>;
+ 		};
+ 	};
++
++	usb20_pins: usb20 {
++		ovc {
++			pinmux =  <RZV2N_PORT_PINMUX(9, 6, 14)>; /* OVC */
++		};
++
++		vbus {
++			pinmux = <RZV2N_PORT_PINMUX(9, 5, 14)>; /* VBUS */
++		};
++	};
+ };
+ 
+ &qextal_clk {
+@@ -315,6 +340,17 @@ &sdhi1 {
+ 	status = "okay";
+ };
+ 
++&usb20phyrst {
++	status = "okay";
++};
++
++&usb2_phy0 {
++	pinctrl-0 = <&usb20_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
+ &wdt1 {
+ 	status = "okay";
+ };

@@ -1,0 +1,88 @@
+From 178753bcce5fe5989769f4da90af818c120d0a26 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Wed, 23 Apr 2025 19:13:57 +0100
+Subject: [PATCH 065/246] soc: renesas: r9a09g057-sys: Add a callback to print
+ SoC-specific extra features
+
+commit 25a5246b0e564d238e917b5a3684171718c950fd upstream.
+
+Some RZ/V2H SoC variants feature a Mali-G31 (GPU) and/or a Mali-C55
+(ISP) IP(s).  Detect and inform about their presence during SoC
+identification.  Also detect PLL frequency and warn in case of mismatch.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Link: https://lore.kernel.org/20250128031342.52675-6-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/soc/renesas/r9a09g057-sys.c | 42 +++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/drivers/soc/renesas/r9a09g057-sys.c b/drivers/soc/renesas/r9a09g057-sys.c
+index 49a92de581b4..4c21cc29edbc 100644
+--- a/drivers/soc/renesas/r9a09g057-sys.c
++++ b/drivers/soc/renesas/r9a09g057-sys.c
+@@ -5,6 +5,7 @@
+  * Copyright (C) 2025 Renesas Electronics Corp.
+  */
+ 
++#include <linux/bitfield.h>
+ #include <linux/bits.h>
+ #include <linux/device.h>
+ #include <linux/init.h>
+@@ -12,12 +13,53 @@
+ 
+ #include "rz-sysc.h"
+ 
++/* Register Offsets */
++#define SYS_LSI_MODE		0x300
++/*
++ * BOOTPLLCA[1:0]
++ *	    [0,0] => 1.1GHZ
++ *	    [0,1] => 1.5GHZ
++ *	    [1,0] => 1.6GHZ
++ *	    [1,1] => 1.7GHZ
++ */
++#define SYS_LSI_MODE_STAT_BOOTPLLCA55	GENMASK(12, 11)
++#define SYS_LSI_MODE_CA55_1_7GHZ	0x3
++
++#define SYS_LSI_PRR			0x308
++#define SYS_LSI_PRR_GPU_DIS		BIT(0)
++#define SYS_LSI_PRR_ISP_DIS		BIT(4)
++
++static void rzv2h_sys_print_id(struct device *dev,
++				void __iomem *sysc_base,
++				struct soc_device_attribute *soc_dev_attr)
++{
++	bool gpu_enabled, isp_enabled;
++	u32 prr_val, mode_val;
++
++	prr_val = readl(sysc_base + SYS_LSI_PRR);
++	mode_val = readl(sysc_base + SYS_LSI_MODE);
++
++	/* Check GPU and ISP configuration */
++	gpu_enabled = !(prr_val & SYS_LSI_PRR_GPU_DIS);
++	isp_enabled = !(prr_val & SYS_LSI_PRR_ISP_DIS);
++
++	dev_info(dev, "Detected Renesas %s %s Rev %s%s%s\n",
++		 soc_dev_attr->family, soc_dev_attr->soc_id, soc_dev_attr->revision,
++		 gpu_enabled ? " with GE3D (Mali-G31)" : "",
++		 isp_enabled ? " with ISP (Mali-C55)" : "");
++
++	/* Check CA55 PLL configuration */
++	if (FIELD_GET(SYS_LSI_MODE_STAT_BOOTPLLCA55, mode_val) != SYS_LSI_MODE_CA55_1_7GHZ)
++		dev_warn(dev, "CA55 PLL is not set to 1.7GHz\n");
++}
++
+ static const struct rz_sysc_soc_id_init_data rzv2h_sys_soc_id_init_data __initconst = {
+ 	.family = "RZ/V2H",
+ 	.id = 0x847a447,
+ 	.devid_offset = 0x304,
+ 	.revision_mask = GENMASK(31, 28),
+ 	.specific_id_mask = GENMASK(27, 0),
++	.print_id = rzv2h_sys_print_id,
+ };
+ 
+ const struct rz_sysc_init_data rzv2h_sys_init_data = {

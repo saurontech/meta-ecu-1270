@@ -1,0 +1,57 @@
+From a51d67b900609a34d7eb7d341cedbffba80187a6 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:34 +0200
+Subject: [PATCH 356/643] media: rzg2l-cru: rzg2l-core: Use
+ devm_pm_runtime_enable()
+
+commit 2fc8cfe06e7628de825d53128fd38b3f0e19c989 upstream.
+
+Use newly added devm_pm_runtime_enable() into rzg2l_cru_probe() and
+drop unnecessary pm_runtime_disable() from rzg2l_cru_probe() and
+rzg2l_csi2_remove().
+
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-8-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index ca8b266e3eb6..4049d3f5a88e 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -287,7 +287,9 @@ static int rzg2l_cru_probe(struct platform_device *pdev)
+ 
+ 	cru->num_buf = RZG2L_CRU_HW_BUFFER_DEFAULT;
+ 	pm_suspend_ignore_children(dev, true);
+-	pm_runtime_enable(dev);
++	ret = devm_pm_runtime_enable(dev);
++	if (ret)
++		goto error_dma_unregister;
+ 
+ 	ret = rzg2l_cru_media_init(cru);
+ 	if (ret)
+@@ -297,7 +299,6 @@ static int rzg2l_cru_probe(struct platform_device *pdev)
+ 
+ error_dma_unregister:
+ 	rzg2l_cru_dma_unregister(cru);
+-	pm_runtime_disable(dev);
+ 
+ 	return ret;
+ }
+@@ -306,8 +307,6 @@ static void rzg2l_cru_remove(struct platform_device *pdev)
+ {
+ 	struct rzg2l_cru_dev *cru = platform_get_drvdata(pdev);
+ 
+-	pm_runtime_disable(&pdev->dev);
+-
+ 	v4l2_async_nf_unregister(&cru->notifier);
+ 	v4l2_async_nf_cleanup(&cru->notifier);
+ 

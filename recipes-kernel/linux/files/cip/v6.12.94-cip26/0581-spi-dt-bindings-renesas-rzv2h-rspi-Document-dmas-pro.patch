@@ -1,0 +1,37 @@
+From 0701e9ad730cbdcaac9d66de163541a8fe1bef6b Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 17 Jun 2026 10:34:44 +0200
+Subject: [PATCH 581/600] spi: dt-bindings: renesas,rzv2h-rspi: Document dmas
+ property
+
+commit c2edd7841f58cf228347b91256f0d9efcc1a1f50 upstream.
+
+Document the dmas property to state it must be specified as TX/RX DMA
+specifier pairs.
+This clarifies the expected ordering and improves binding readability
+without changing behavior.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/ea6ed3b82c5a326732adfc0fcdb2922bfcad2591.1771344527.git.tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+index cf8b733b766d..d6a5338d6521 100644
+--- a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
++++ b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+@@ -60,6 +60,9 @@ properties:
+   dmas:
+     minItems: 2
+     maxItems: 10
++    description:
++      Must contain a list of pairs of references to DMA specifiers, one for
++      transmission, and one for reception.
+ 
+   dma-names:
+     minItems: 2

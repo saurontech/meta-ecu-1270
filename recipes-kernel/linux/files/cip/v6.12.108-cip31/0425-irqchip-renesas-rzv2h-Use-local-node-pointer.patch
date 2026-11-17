@@ -1,0 +1,33 @@
+From e7e358185d20d2c7faa25c446fad4ab421a4f9b5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 2 Sep 2026 09:26:53 +0000
+Subject: [PATCH 425/435] irqchip/renesas-rzv2h: Use local node pointer
+
+commit 9fcd9ffe94da4a34a451e4cc0e3e007b4ed7f114 upstream.
+
+Avoid dereferencing pdev->dev.of_node again in rzv2h_icu_probe_common().
+Reuse the already available local node pointer when mapping the ICU
+register space.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260304113317.129339-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 684e03fd5b6e..ba40cb51afb5 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -582,7 +582,7 @@ static int rzv2h_icu_init_common(struct device_node *node, struct device_node *p
+ 
+ 	platform_set_drvdata(pdev, rzv2h_icu_data);
+ 
+-	rzv2h_icu_data->base = devm_of_iomap(&pdev->dev, pdev->dev.of_node, 0, NULL);
++	rzv2h_icu_data->base = devm_of_iomap(&pdev->dev, node, 0, NULL);
+ 	if (IS_ERR(rzv2h_icu_data->base))
+ 		return PTR_ERR(rzv2h_icu_data->base);
+ 

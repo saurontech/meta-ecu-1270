@@ -1,0 +1,96 @@
+From d3a5c3d46c1e334dd5413f2517df3d40697345e0 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:32 +0300
+Subject: [PATCH 1226/1853] usb: renesas_usbhs: Assert/de-assert reset signals
+ on suspend/resume
+
+commit 3578b1cde59496efc4625ba3fbd14eb2918807a2 upstream.
+
+The Renesas RZ/G3S SoC supports a power-saving mode in which power to most
+SoC components is turned off, including the USB subsystem.
+
+To properly restore from such a state, the reset signal needs to be
+asserted/de-asserted during suspend/resume. Add reset assert/de-assert on
+suspend/resume.
+
+The resume code has been moved into a separate function to allow reusing
+it in case reset_control_assert() from suspend fails.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20251106143625.3050119-5-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+[claudiu.beznea:
+ - fixed conflict by keeping usbhsc_restore() function introduced by
+   commit 3578b1cde59496efc4625ba3fbd14eb2918807a2
+ - kept __maybe_unused on suspend/resume functions]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/usb/renesas_usbhs/common.c | 35 ++++++++++++++++++++++--------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/usb/renesas_usbhs/common.c b/drivers/usb/renesas_usbhs/common.c
+index f4a58686bf1e..c0976265b8e6 100644
+--- a/drivers/usb/renesas_usbhs/common.c
++++ b/drivers/usb/renesas_usbhs/common.c
+@@ -836,10 +836,26 @@ static void usbhs_remove(struct platform_device *pdev)
+ 	pm_runtime_disable(&pdev->dev);
+ }
+ 
++static void usbhsc_restore(struct device *dev)
++{
++	struct usbhs_priv *priv = dev_get_drvdata(dev);
++	struct platform_device *pdev = usbhs_priv_to_pdev(priv);
++
++	if (!usbhs_get_dparam(priv, runtime_pwctrl)) {
++		usbhsc_power_ctrl(priv, 1);
++		usbhs_mod_autonomy_mode(priv);
++	}
++
++	usbhs_platform_call(priv, phy_reset, pdev);
++
++	usbhsc_schedule_notify_hotplug(pdev);
++}
++
+ static __maybe_unused int usbhsc_suspend(struct device *dev)
+ {
+ 	struct usbhs_priv *priv = dev_get_drvdata(dev);
+ 	struct usbhs_mod *mod = usbhs_mod_get_current(priv);
++	int ret;
+ 
+ 	if (mod) {
+ 		usbhs_mod_call(priv, stop, priv);
+@@ -849,22 +865,23 @@ static __maybe_unused int usbhsc_suspend(struct device *dev)
+ 	if (mod || !usbhs_get_dparam(priv, runtime_pwctrl))
+ 		usbhsc_power_ctrl(priv, 0);
+ 
+-	return 0;
++	ret = reset_control_assert(priv->rsts);
++	if (ret)
++		usbhsc_restore(dev);
++
++	return ret;
+ }
+ 
+ static __maybe_unused int usbhsc_resume(struct device *dev)
+ {
+ 	struct usbhs_priv *priv = dev_get_drvdata(dev);
+-	struct platform_device *pdev = usbhs_priv_to_pdev(priv);
+-
+-	if (!usbhs_get_dparam(priv, runtime_pwctrl)) {
+-		usbhsc_power_ctrl(priv, 1);
+-		usbhs_mod_autonomy_mode(priv);
+-	}
++	int ret;
+ 
+-	usbhs_platform_call(priv, phy_reset, pdev);
++	ret = reset_control_deassert(priv->rsts);
++	if (ret)
++		return ret;
+ 
+-	usbhsc_schedule_notify_hotplug(pdev);
++	usbhsc_restore(dev);
+ 
+ 	return 0;
+ }

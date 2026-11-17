@@ -1,0 +1,64 @@
+From f2db372a66b08f741141d8e4b12c136ae4692d0a Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:58:43 +0000
+Subject: [PATCH 820/851] dt-bindings: phy: renesas,usb2-phy: Add RZ/T2H and
+ RZ/N2H support
+
+commit ab9c8aeb2d208381a7c948ea2f753cbe8a451502 upstream.
+
+Document the USB2 PHY controller for the Renesas RZ/T2H (r9a09g077) and
+RZ/N2H (r9a09g087) SoCs. These SoCs share the same PHY block, which is
+similar to the one on RZ/G2L but differs in clocks, resets, and register
+bits. To account for these differences, a new compatible string
+`renesas,usb2-phy-r9a09g077` is introduced.
+
+The RZ/N2H SoC uses the same PHY as RZ/T2H, so it reuses the RZ/T2H
+compatible string as a fallback.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250808215209.3692744-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/phy/renesas,usb2-phy.yaml          | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+index f45c5f039ae8..179cb4bfc424 100644
+--- a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+@@ -44,6 +44,12 @@ properties:
+           - const: renesas,usb2-phy-r9a09g056 # RZ/V2N
+           - const: renesas,usb2-phy-r9a09g057
+ 
++      - const: renesas,usb2-phy-r9a09g077 # RZ/T2H
++
++      - items:
++          - const: renesas,usb2-phy-r9a09g087 # RZ/N2H
++          - const: renesas,usb2-phy-r9a09g077
++
+   reg:
+     maxItems: 1
+ 
+@@ -120,6 +126,17 @@ allOf:
+       required:
+         - resets
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,usb2-phy-r9a09g077
++    then:
++      properties:
++        clocks:
++          minItems: 2
++        resets: false
++
+ additionalProperties: false
+ 
+ examples:

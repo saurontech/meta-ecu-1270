@@ -1,0 +1,43 @@
+From 9d15d6884ad4f2ddce9dafbde87bf72f9ebdc2ac Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Thu, 14 May 2026 09:39:28 +0000
+Subject: [PATCH 155/163] PCI: rzg3s-host: Make configuration reset lines
+ optional
+
+[ Upstream commit 4ec4ccdaace40397638c305c0a36b423d2142a93 ]
+
+Some SoC variants such as RZ/G3E handle configuration reset control through
+PCIe AXI registers instead of dedicated reset lines. Make cfg_resets
+optional by using devm_reset_control_bulk_get_optional_exclusive() to allow
+SoCs to use alternative or complementary reset control mechanisms.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N EVK
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20260306143423.19562-9-john.madieu.xa@bp.renesas.com
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index e4102744aab4..8620d8d31137 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1210,9 +1210,9 @@ static int rzg3s_pcie_resets_prepare_and_get(struct rzg3s_pcie_host *host)
+ 	if (ret)
+ 		return ret;
+ 
+-	return devm_reset_control_bulk_get_exclusive(host->dev,
+-						     data->num_cfg_resets,
+-						     host->cfg_resets);
++	return devm_reset_control_bulk_get_optional_exclusive(host->dev,
++							      data->num_cfg_resets,
++							      host->cfg_resets);
+ }
+ 
+ static int rzg3s_pcie_host_parse_port(struct rzg3s_pcie_host *host)

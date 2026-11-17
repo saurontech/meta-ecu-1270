@@ -1,0 +1,45 @@
+From c1eed985e3416b08772a67fba1017acfcdfd61c3 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 23 Feb 2026 10:27:54 +0000
+Subject: [PATCH 0193/1190] dt-bindings: gpu: mali-bifrost: Add compatible for
+ RZ/V2N SoC
+
+commit a92b9efaf2cff15a28723f592ee21df0561e58c3 upstream.
+
+Add a compatible string for the Renesas RZ/V2N SoC variants that include a
+Mali-G31 GPU. These variants share the same restrictions on interrupts,
+clocks, and power domains as the RZ/G2L SoC, so extend the existing schema
+validation accordingly.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250502162540.165962-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+index 3090e2ab6bd1..3bb9cac178fe 100644
+--- a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
++++ b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+@@ -25,6 +25,7 @@ properties:
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
+               - renesas,r9a09g047-mali
++              - renesas,r9a09g056-mali
+               - renesas,r9a09g057-mali
+               - rockchip,px30-mali
+               - rockchip,rk3568-mali
+@@ -144,6 +145,7 @@ allOf:
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
+               - renesas,r9a09g047-mali
++              - renesas,r9a09g056-mali
+               - renesas,r9a09g057-mali
+     then:
+       properties:

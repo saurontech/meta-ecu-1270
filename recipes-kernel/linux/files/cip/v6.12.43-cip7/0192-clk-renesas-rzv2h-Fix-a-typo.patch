@@ -1,0 +1,33 @@
+From 59f0f880a280ec399295092bf0eac79e1c2222dd Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:09 +0100
+Subject: [PATCH 192/246] clk: renesas: rzv2h: Fix a typo
+
+commit 506f96095ec2d7d1279fb49e78ae27b2abd915de upstream.
+
+Fix a typo montor->monitor in kernel-doc comment.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250320093107.36784-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 8d58fb57a548..0ca8e31685b0 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -117,7 +117,7 @@ struct pll_clk {
+  * @on_index: register offset
+  * @on_bit: ON/MON bit
+  * @mon_index: monitor register offset
+- * @mon_bit: montor bit
++ * @mon_bit: monitor bit
+  */
+ struct mod_clock {
+ 	struct rzv2h_cpg_priv *priv;

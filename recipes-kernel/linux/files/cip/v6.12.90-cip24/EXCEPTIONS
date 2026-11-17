@@ -1,0 +1,4 @@
+# action commit patch reason
+refresh 0d11fd9a2995 0008-media-chips-media-wave5-add-missing-spinlock-protect.patch Context changed by TI; merged by git 3-way
+refresh 375d86db95ff 0095-arm64-dts-ti-k3-am62a7-sk-Fix-pin-name-in-comment-fr.patch Context changed by TI; merged by git 3-way
+adapt 6073cb5067a5 0009-media-chips-media-wave5-add-missing-spinlock-protect.patch Conflict only in the local declarations of initialize_sequence(): TI's base resets inst->time_stamp right after 'int ret = 0;', where the patch adds 'unsigned long flags;'. Keep both, the declaration first. The spin_lock_irqsave()/spin_unlock_irqrestore() around handle_dynamic_resolution_change() is applied as upstream; TI's handle_dynamic_resolution_change() also has lockdep_assert_held(&inst->state_spinlock). ti-linux-6.18.y takes the lock at the same place.

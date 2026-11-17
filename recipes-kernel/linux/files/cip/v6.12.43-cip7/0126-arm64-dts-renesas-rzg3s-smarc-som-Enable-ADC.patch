@@ -1,0 +1,35 @@
+From e61708b8bcf23afa28dfb88d2bf8fec304e188ac Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:13 +0300
+Subject: [PATCH 126/246] arm64: dts: renesas: rzg3s-smarc-som: Enable ADC
+
+commit 8cbf69bc74e1f365b0ef8caf5dd2ac994ce965e0 upstream.
+
+Enable ADC.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241206111337.726244-16-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index 6f25ab617982..39845faec894 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -84,6 +84,10 @@ x3_clk: x3-clock {
+ 	};
+ };
+ 
++&adc {
++	status = "okay";
++};
++
+ #if SW_CONFIG3 == SW_ON
+ &eth0 {
+ 	pinctrl-0 = <&eth0_pins>;

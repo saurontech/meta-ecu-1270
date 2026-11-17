@@ -1,0 +1,140 @@
+From 03074911fb6f02d124f051a2c0ab2c6c02b0e13f Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:41 +0200
+Subject: [PATCH 363/643] media: rzg2l-cru: Add IRQ handler to OF data
+
+commit 2d9e3eb740b7d256d0ee53a6a242f0ffc60b0c9b upstream.
+
+Add `irq_handler` to the `rzg2l_cru_info` structure and pass it as part of
+the OF data. This prepares for supporting RZ/G3E and RZ/V2H(P) SoCs, which
+require a different IRQ handler. Update the IRQ request code to use the
+handler from the OF data.
+
+Add `enable_interrupts` and `disable_interrupts` function pointers to the
+`rzg2l_cru_info` structure and pass them as part of the OF data. This
+prepares for supporting RZ/G3E and RZ/V2H(P) SoCs, which require different
+interrupt configurations.
+
+Implement `rzg2l_cru_enable_interrupts()` and
+`rzg2l_cru_disable_interrupts()` functions and update the code to use them
+instead of directly writing to interrupt registers.
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-15-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-core.c   |  5 ++++-
+ .../platform/renesas/rzg2l-cru/rzg2l-cru.h    |  8 ++++++++
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c  | 19 ++++++++++++++-----
+ 3 files changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index 254afe5e594a..1522c3b10c73 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -275,7 +275,7 @@ static int rzg2l_cru_probe(struct platform_device *pdev)
+ 	if (irq < 0)
+ 		return irq;
+ 
+-	ret = devm_request_irq(dev, irq, rzg2l_cru_irq, 0,
++	ret = devm_request_irq(dev, irq, cru->info->irq_handler, 0,
+ 			       KBUILD_MODNAME, cru);
+ 	if (ret)
+ 		return dev_err_probe(dev, ret, "failed to request irq\n");
+@@ -356,6 +356,9 @@ static const struct rzg2l_cru_info rzgl2_cru_info = {
+ 	.max_height = 4095,
+ 	.image_conv = ICnMC,
+ 	.regs = rzg2l_cru_regs,
++	.irq_handler = rzg2l_cru_irq,
++	.enable_interrupts = rzg2l_cru_enable_interrupts,
++	.disable_interrupts = rzg2l_cru_disable_interrupts,
+ };
+ 
+ static const struct of_device_id rzg2l_cru_of_id_table[] = {
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index ca156772b949..3f694044d8cd 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -34,6 +34,8 @@ enum rzg2l_csi2_pads {
+ 	RZG2L_CRU_IP_SOURCE,
+ };
+ 
++struct rzg2l_cru_dev;
++
+ /**
+  * enum rzg2l_cru_dma_state - DMA states
+  * @RZG2L_CRU_DMA_STOPPED:   No operation in progress
+@@ -83,6 +85,9 @@ struct rzg2l_cru_info {
+ 	unsigned int max_height;
+ 	u16 image_conv;
+ 	const u16 *regs;
++	irqreturn_t (*irq_handler)(int irq, void *data);
++	void (*enable_interrupts)(struct rzg2l_cru_dev *cru);
++	void (*disable_interrupts)(struct rzg2l_cru_dev *cru);
+ };
+ 
+ /**
+@@ -177,4 +182,7 @@ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code);
+ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_format_to_fmt(u32 format);
+ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_index_to_fmt(u32 index);
+ 
++void rzg2l_cru_enable_interrupts(struct rzg2l_cru_dev *cru);
++void rzg2l_cru_disable_interrupts(struct rzg2l_cru_dev *cru);
++
+ #endif
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index d9135e2825fe..d5a9149baeca 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -300,8 +300,7 @@ void rzg2l_cru_stop_image_processing(struct rzg2l_cru_dev *cru)
+ 	spin_lock_irqsave(&cru->qlock, flags);
+ 
+ 	/* Disable and clear the interrupt */
+-	rzg2l_cru_write(cru, CRUnIE, 0);
+-	rzg2l_cru_write(cru, CRUnINTS, 0x001F0F0F);
++	cru->info->disable_interrupts(cru);
+ 
+ 	/* Stop the operation of image conversion */
+ 	rzg2l_cru_write(cru, ICnEN, 0);
+@@ -393,6 +392,17 @@ static int rzg2l_cru_get_virtual_channel(struct rzg2l_cru_dev *cru)
+ 	return fd.entry[0].bus.csi2.vc;
+ }
+ 
++void rzg2l_cru_enable_interrupts(struct rzg2l_cru_dev *cru)
++{
++	rzg2l_cru_write(cru, CRUnIE, CRUnIE_EFE);
++}
++
++void rzg2l_cru_disable_interrupts(struct rzg2l_cru_dev *cru)
++{
++	rzg2l_cru_write(cru, CRUnIE, 0);
++	rzg2l_cru_write(cru, CRUnINTS, 0x001f000f);
++}
++
+ int rzg2l_cru_start_image_processing(struct rzg2l_cru_dev *cru)
+ {
+ 	struct v4l2_mbus_framefmt *fmt = rzg2l_cru_ip_get_src_fmt(cru);
+@@ -414,8 +424,7 @@ int rzg2l_cru_start_image_processing(struct rzg2l_cru_dev *cru)
+ 	rzg2l_cru_write(cru, CRUnRST, CRUnRST_VRESETN);
+ 
+ 	/* Disable and clear the interrupt before using */
+-	rzg2l_cru_write(cru, CRUnIE, 0);
+-	rzg2l_cru_write(cru, CRUnINTS, 0x001f000f);
++	cru->info->disable_interrupts(cru);
+ 
+ 	/* Initialize the AXI master */
+ 	rzg2l_cru_initialize_axi(cru);
+@@ -428,7 +437,7 @@ int rzg2l_cru_start_image_processing(struct rzg2l_cru_dev *cru)
+ 	}
+ 
+ 	/* Enable interrupt */
+-	rzg2l_cru_write(cru, CRUnIE, CRUnIE_EFE);
++	cru->info->enable_interrupts(cru);
+ 
+ 	/* Enable image processing reception */
+ 	rzg2l_cru_write(cru, ICnEN, ICnEN_ICEN);

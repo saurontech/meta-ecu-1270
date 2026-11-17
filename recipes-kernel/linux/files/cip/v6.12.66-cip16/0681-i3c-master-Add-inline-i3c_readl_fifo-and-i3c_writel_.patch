@@ -1,0 +1,73 @@
+From b5b40888ae32c7fbd65cb93b9de2718368fcc220 Mon Sep 17 00:00:00 2001
+From: Jorge Marques <jorge.marques@analog.com>
+Date: Thu, 8 Jan 2026 10:30:15 +0100
+Subject: [PATCH 681/838] i3c: master: Add inline i3c_readl_fifo() and
+ i3c_writel_fifo()
+
+commit 733b439375b494e8a6950ab47d18a4b615b73cb3 upstream.
+
+The I3C abstraction expects u8 buffers, but some controllers operate with
+a 32-bit bus width FIFO and cannot flag valid bytes individually. To avoid
+reading or writing outside the buffer bounds, use 32-bit accesses where
+possible and apply memcpy for any remaining bytes
+
+Signed-off-by: Jorge Marques <jorge.marques@analog.com>
+Suggested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Link: https://lore.kernel.org/r/20250624-i3c-writesl-readsl-v3-1-63ccf0870f01@analog.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i3c/internals.h | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/i3c/internals.h b/drivers/i3c/internals.h
+index ce04aa4f269e..0d857cc68cc5 100644
+--- a/drivers/i3c/internals.h
++++ b/drivers/i3c/internals.h
+@@ -23,4 +23,41 @@ int i3c_dev_enable_ibi_locked(struct i3c_dev_desc *dev);
+ int i3c_dev_request_ibi_locked(struct i3c_dev_desc *dev,
+ 			       const struct i3c_ibi_setup *req);
+ void i3c_dev_free_ibi_locked(struct i3c_dev_desc *dev);
++
++/**
++ * i3c_writel_fifo - Write data buffer to 32bit FIFO
++ * @addr: FIFO Address to write to
++ * @buf: Pointer to the data bytes to write
++ * @nbytes: Number of bytes to write
++ */
++static inline void i3c_writel_fifo(void __iomem *addr, const void *buf,
++				   int nbytes)
++{
++	writesl(addr, buf, nbytes / 4);
++	if (nbytes & 3) {
++		u32 tmp = 0;
++
++		memcpy(&tmp, buf + (nbytes & ~3), nbytes & 3);
++		writel(tmp, addr);
++	}
++}
++
++/**
++ * i3c_readl_fifo - Read data buffer from 32bit FIFO
++ * @addr: FIFO Address to read from
++ * @buf: Pointer to the buffer to store read bytes
++ * @nbytes: Number of bytes to read
++ */
++static inline void i3c_readl_fifo(const void __iomem *addr, void *buf,
++				  int nbytes)
++{
++	readsl(addr, buf, nbytes / 4);
++	if (nbytes & 3) {
++		u32 tmp;
++
++		tmp = readl(addr);
++		memcpy(buf + (nbytes & ~3), &tmp, nbytes & 3);
++	}
++}
++
+ #endif /* I3C_INTERNAL_H */

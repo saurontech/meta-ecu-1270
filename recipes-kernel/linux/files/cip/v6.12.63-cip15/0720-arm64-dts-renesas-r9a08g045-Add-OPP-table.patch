@@ -1,0 +1,66 @@
+From 1b586069a6b95f3c5a45c821eab18115fc435b8f Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 17 Dec 2025 12:32:20 +0200
+Subject: [PATCH 720/724] arm64: dts: renesas: r9a08g045: Add OPP table
+
+commit b6f4b126b2471211f35720d8e976b65044e13020 upstream.
+
+Add OPP table for the Renesas RZ/G3S SoC.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250128145616.2691841-1-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 28 ++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index d1e228b439df..0364f89776e6 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -28,6 +28,33 @@ audio_clk2: audio2-clk {
+ 		clock-frequency = <0>;
+ 	};
+ 
++	cluster0_opp: opp-table-0 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		opp-137500000 {
++			opp-hz = /bits/ 64 <137500000>;
++			opp-microvolt = <940000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-275000000 {
++			opp-hz = /bits/ 64 <275000000>;
++			opp-microvolt = <940000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-550000000 {
++			opp-hz = /bits/ 64 <550000000>;
++			opp-microvolt = <940000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-1100000000 {
++			opp-hz = /bits/ 64 <1100000000>;
++			opp-microvolt = <940000>;
++			clock-latency-ns = <300000>;
++			opp-suspend;
++		};
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -40,6 +67,7 @@ cpu0: cpu@0 {
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
+ 			clocks = <&cpg CPG_CORE R9A08G045_CLK_I>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		L3_CA55: cache-controller-0 {

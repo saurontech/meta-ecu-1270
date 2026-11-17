@@ -1,0 +1,101 @@
+From 1efabdba8f6425a22974b2236d17a4d3a5ba6cb3 Mon Sep 17 00:00:00 2001
+From: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
+Date: Mon, 3 Nov 2025 12:38:00 +0100
+Subject: [PATCH 176/192] net: stmmac: provide set_clk_tx_rate() hook
+
+[ Upstream commit dea5c8ec20be7603e4a56b9d6571321f330626c1 ]
+
+Several stmmac sub-drivers which support RGMII follow the same pattern.
+They calculate the transmit clock rate, and then call clk_set_rate().
+
+Analysis of several implementation documents suggests that the platform
+is responsible for providing the transmit clock to the DWMAC core's
+clk_tx_i. The expected rates are:
+
+	10Mbps	100Mbps	1Gbps
+MII	2.5MHz	25MHz
+RMII	2.5MHz	25MHz
+GMII			125MHz
+RGMI	2.5MHz	25MHz	125MHz
+
+It seems some platforms require this clock to be manually configured,
+but there are outputs from the MAC core that indicate the speed, so a
+platform may use these to automatically configure the clock. Thus, we
+can't just provide one solution to configure this clock rate.
+
+Moreover, the clock may need to be derived from one of several sources
+depending on the interface mode.
+
+Provide a platform hook that is passed the transmit clock, interface
+mode and speed.
+
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Link: https://patch.msgid.link/E1tna0F-0052sS-Lr@rmk-PC.armlinux.org.uk
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c | 11 +++++++++++
+ include/linux/stmmac.h                            |  4 ++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 40d56ff66b6a..2c2ba1dba80d 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -1023,6 +1023,7 @@ static void stmmac_mac_link_up(struct phylink_config *config,
+ {
+ 	struct stmmac_priv *priv = netdev_priv(to_net_dev(config->dev));
+ 	u32 old_ctrl, ctrl;
++	int ret;
+ 
+ 	if ((priv->plat->flags & STMMAC_FLAG_SERDES_UP_AFTER_PHY_LINKUP) &&
+ 	    priv->plat->serdes_powerup)
+@@ -1115,6 +1116,16 @@ static void stmmac_mac_link_up(struct phylink_config *config,
+ 	if (ctrl != old_ctrl)
+ 		writel(ctrl, priv->ioaddr + MAC_CTRL_REG);
+ 
++	if (priv->plat->set_clk_tx_rate) {
++		ret = priv->plat->set_clk_tx_rate(priv->plat->bsp_priv,
++						priv->plat->clk_tx_i,
++						interface, speed);
++		if (ret < 0)
++			netdev_err(priv->dev,
++				   "failed to configure transmit clock for %dMbps: %pe\n",
++				   speed, ERR_PTR(ret));
++	}
++
+ 	stmmac_mac_set(priv, priv->ioaddr, true);
+ 	if (phy && priv->dma_cap.eee) {
+ 		priv->eee_active =
+diff --git a/include/linux/stmmac.h b/include/linux/stmmac.h
+index d79ff252cfdc..dadf861138e3 100644
+--- a/include/linux/stmmac.h
++++ b/include/linux/stmmac.h
+@@ -76,6 +76,7 @@
+ 			| DMA_AXI_BLEN_32 | DMA_AXI_BLEN_64 \
+ 			| DMA_AXI_BLEN_128 | DMA_AXI_BLEN_256)
+ 
++struct clk;
+ struct stmmac_priv;
+ 
+ /* Platfrom data for platform device structure's platform_data field */
+@@ -229,6 +230,8 @@ struct plat_stmmacenet_data {
+ 	u8 tx_sched_algorithm;
+ 	struct stmmac_rxq_cfg rx_queues_cfg[MTL_MAX_RX_QUEUES];
+ 	struct stmmac_txq_cfg tx_queues_cfg[MTL_MAX_TX_QUEUES];
++	int (*set_clk_tx_rate)(void *priv, struct clk *clk_tx_i,
++			       phy_interface_t interface, int speed);
+ 	void (*fix_mac_speed)(void *priv, unsigned int speed, unsigned int mode);
+ 	int (*fix_soc_reset)(void *priv, void __iomem *ioaddr);
+ 	int (*serdes_powerup)(struct net_device *ndev, void *priv);
+@@ -250,6 +253,7 @@ struct plat_stmmacenet_data {
+ 	struct clk *stmmac_clk;
+ 	struct clk *pclk;
+ 	struct clk *clk_ptp_ref;
++	struct clk *clk_tx_i;		/* clk_tx_i to MAC core */
+ 	unsigned int clk_ptp_rate;
+ 	unsigned int clk_ref_rate;
+ 	unsigned int mult_fact_100ns;

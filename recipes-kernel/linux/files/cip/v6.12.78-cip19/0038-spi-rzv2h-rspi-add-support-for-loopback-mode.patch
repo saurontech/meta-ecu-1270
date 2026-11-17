@@ -1,0 +1,70 @@
+From 30d546ccddf8d7cc7ab3a3368e5087fd84fc5ec2 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:15 +0200
+Subject: [PATCH 038/851] spi: rzv2h-rspi: add support for loopback mode
+
+commit bc4f0b1e39035b9bb3d5d9692074702110f5e2b1 uptream.
+
+Add support for loopback mode for debugging purposes, allowing us to
+test the SPI controller at the maximum SPI transfer clock without being
+limited by external wiring.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251119161434.595677-10-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index be45269e8853..da110efba971 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -24,6 +24,7 @@
+ /* Registers */
+ #define RSPI_SPDR		0x00
+ #define RSPI_SPCR		0x08
++#define RSPI_SPPCR		0x0e
+ #define RSPI_SSLP		0x10
+ #define RSPI_SPBR		0x11
+ #define RSPI_SPSCR		0x13
+@@ -40,6 +41,9 @@
+ #define RSPI_SPCR_SCKASE	BIT(12)
+ #define RSPI_SPCR_SPE		BIT(0)
+ 
++/* Register SPPCR */
++#define RSPI_SPPCR_SPLP2	BIT(1)
++
+ /* Register SPBR */
+ #define RSPI_SPBR_SPR_MIN	0
+ #define RSPI_SPBR_SPR_PCLK_MIN	1
+@@ -345,6 +349,7 @@ static int rzv2h_rspi_prepare_message(struct spi_controller *ctlr,
+ 	u8 bits_per_word;
+ 	u32 conf32;
+ 	u16 conf16;
++	u8 conf8;
+ 
+ 	/* Make sure SPCR.SPE is 0 before amending the configuration */
+ 	rzv2h_rspi_spe_disable(rspi);
+@@ -389,6 +394,10 @@ static int rzv2h_rspi_prepare_message(struct spi_controller *ctlr,
+ 	/* Use SPCMD0 only */
+ 	writeb(0x0, rspi->base + RSPI_SPSCR);
+ 
++	/* Setup loopback */
++	conf8 = FIELD_PREP(RSPI_SPPCR_SPLP2, !!(spi->mode & SPI_LOOP));
++	writeb(conf8, rspi->base + RSPI_SPPCR);
++
+ 	/* Setup mode */
+ 	conf32 = FIELD_PREP(RSPI_SPCMD_CPOL, !!(spi->mode & SPI_CPOL));
+ 	conf32 |= FIELD_PREP(RSPI_SPCMD_CPHA, !!(spi->mode & SPI_CPHA));
+@@ -490,7 +499,7 @@ static int rzv2h_rspi_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	controller->mode_bits = SPI_CPHA | SPI_CPOL | SPI_CS_HIGH |
+-				SPI_LSB_FIRST;
++				SPI_LSB_FIRST | SPI_LOOP;
+ 	controller->bits_per_word_mask = SPI_BPW_RANGE_MASK(4, 32);
+ 	controller->prepare_message = rzv2h_rspi_prepare_message;
+ 	controller->unprepare_message = rzv2h_rspi_unprepare_message;

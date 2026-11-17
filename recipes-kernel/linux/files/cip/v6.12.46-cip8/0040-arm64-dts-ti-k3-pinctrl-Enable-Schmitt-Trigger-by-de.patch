@@ -1,0 +1,44 @@
+From 1e20a92593a76102d0e55b403b4266017feb62f4 Mon Sep 17 00:00:00 2001
+From: Alexander Sverdlin <alexander.sverdlin@siemens.com>
+Date: Tue, 1 Jul 2025 12:54:35 +0200
+Subject: [PATCH] arm64: dts: ti: k3-pinctrl: Enable Schmitt Trigger by default
+
+commit 5b272127884bded21576a6ddceca13725a351c63 upstream.
+
+Switch Schmitt Trigger functions for PIN_INPUT* macros by default. This is
+HW PoR configuration, the slew rate requirements without ST enabled are
+pretty tough for these devices. We've noticed spurious GPIO interrupts even
+with noise-free edges but not meeting slew rate requirements (3.3E+6 V/s
+for 3.3v LVCMOS).
+
+It's not obvious why one might want to disable the PoR-enabled ST on any
+pin. Just enable it by default. As it's not possible to provide OR-able
+macros to disable the ST, shall anyone require it, provide a set of
+new macros with _NOST suffix.
+
+Fixes: fe49f2d776f7 ("arm64: dts: ti: Use local header for pinctrl register values")
+Cc: stable@vger.kernel.org
+Signed-off-by: Alexander Sverdlin <alexander.sverdlin@siemens.com>
+Link: https://lore.kernel.org/r/20250701105437.3539924-1-alexander.sverdlin@siemens.com
+[vigneshr@ti.com: Add Fixes tag]
+Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/arm64/boot/dts/ti/k3-pinctrl.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/ti/k3-pinctrl.h b/arch/arm64/boot/dts/ti/k3-pinctrl.h
+index 4cdebdc018ef..0a3f8a74db39 100644
+--- a/arch/arm64/boot/dts/ti/k3-pinctrl.h
++++ b/arch/arm64/boot/dts/ti/k3-pinctrl.h
+@@ -25,6 +25,10 @@
+ #define ST_DISABLE		(0 << ST_EN_SHIFT)
+ #define ST_ENABLE		(1 << ST_EN_SHIFT)
+ 
++/* Schmitt trigger configuration */
++#define ST_DISABLE		(0 << ST_EN_SHIFT)
++#define ST_ENABLE		(1 << ST_EN_SHIFT)
++
+ #define PULL_DISABLE		(1 << PULLUDEN_SHIFT)
+ #define PULL_ENABLE		(0 << PULLUDEN_SHIFT)
+ 

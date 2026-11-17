@@ -1,0 +1,75 @@
+From b8375825acb461a2b8aad9f196cd36963bc781f8 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:37 +0100
+Subject: [PATCH 018/286] clk: renesas: rzg2l: Re-enable critical module clocks
+ during resume
+
+[ Upstream commit bf497e7babb5d14570b18b5d2c8a6bb14d4a733b ]
+
+After a suspend/resume cycle, critical module clocks (CLK_IS_CRITICAL)
+may be left disabled as there is no owning driver to restore them,
+unlike regular clocks.
+Add rzg2l_mod_enable_crit_clock_init_mstop() which walks all module
+clocks on resume, re-enables any critical clock found disabled, and then
+restores the MSTOP state for clocks that have one via the existing
+helper.  This replaces the direct call to rzg2l_mod_clock_init_mstop()
+in rzg2l_cpg_resume(), preserving the correct clock-before-MSTOP restore
+ordering.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260324114329.268249-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index 408e76c31424..3e41ed90a7eb 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1600,8 +1600,8 @@ static void rzg2l_mod_clock_init_mstop_helper(struct rzg2l_cpg_priv *priv,
+ {
+ 	/*
+ 	 * Out of reset all modules are enabled. Set module state in case
+-	 * associated clocks are disabled at probe. Otherwise module is in
+-	 * invalid HW state.
++	 * associated clocks are disabled at probe/resume. Otherwise module
++	 * is in invalid HW state.
+ 	 */
+ 	scoped_guard(spinlock_irqsave, &priv->rmw_lock) {
+ 		if (!rzg2l_mod_clock_is_enabled(&clk->hw))
+@@ -1609,6 +1609,21 @@ static void rzg2l_mod_clock_init_mstop_helper(struct rzg2l_cpg_priv *priv,
+ 	}
+ }
+ 
++static void rzg2l_mod_enable_crit_clock_init_mstop(struct rzg2l_cpg_priv *priv)
++{
++	struct mod_clock *clk;
++	struct clk_hw *hw;
++
++	for_each_mod_clock(clk, hw, priv) {
++		if ((clk_hw_get_flags(&clk->hw) & CLK_IS_CRITICAL) &&
++		    (!rzg2l_mod_clock_is_enabled(&clk->hw)))
++			rzg2l_mod_clock_endisable_helper(&clk->hw, true, false);
++
++		if (clk->mstop)
++			rzg2l_mod_clock_init_mstop_helper(priv, clk);
++	}
++}
++
+ static void rzg2l_mod_clock_init_mstop(struct rzg2l_cpg_priv *priv)
+ {
+ 	struct mod_clock *clk;
+@@ -2104,7 +2119,7 @@ static int rzg2l_cpg_resume(struct device *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	rzg2l_mod_clock_init_mstop(priv);
++	rzg2l_mod_enable_crit_clock_init_mstop(priv);
+ 
+ 	return 0;
+ }

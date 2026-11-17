@@ -1,0 +1,54 @@
+From 1d5bc9f3834cb540b40d904721c4642b44e2786a Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 17 Dec 2025 12:32:17 +0200
+Subject: [PATCH 717/724] clk: renesas: r9a08g045: Add clocks, resets and power
+ domain support for the TSU IP
+
+commit 5599c7c4b4df440aa4a470a5b72669081413981f upstream.
+
+Add clocks, resets and power domains for the TSU IP available on the
+Renesas RZ/G3S SoC.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250103163805.1775705-2-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[claudiu.beznea: fixed conflict by using RZG2L_PD_F_NONE instead of 0
+ for adc and tsu power domains]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a08g045-cpg.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a08g045-cpg.c b/drivers/clk/renesas/r9a08g045-cpg.c
+index 5156032f9fd9..7cdce3cd7dc0 100644
+--- a/drivers/clk/renesas/r9a08g045-cpg.c
++++ b/drivers/clk/renesas/r9a08g045-cpg.c
+@@ -241,6 +241,7 @@ static const struct rzg2l_mod_clk r9a08g045_mod_clks[] = {
+ 	DEF_MOD("gpio_hclk",		R9A08G045_GPIO_HCLK, R9A08G045_OSCCLK, 0x598, 0),
+ 	DEF_MOD("adc_adclk",		R9A08G045_ADC_ADCLK, R9A08G045_CLK_TSU, 0x5a8, 0),
+ 	DEF_MOD("adc_pclk",		R9A08G045_ADC_PCLK, R9A08G045_CLK_TSU, 0x5a8, 1),
++	DEF_MOD("tsu_pclk",		R9A08G045_TSU_PCLK, R9A08G045_CLK_TSU, 0x5ac, 0),
+ 	DEF_MOD("vbat_bclk",		R9A08G045_VBAT_BCLK, R9A08G045_OSCCLK, 0x614, 0),
+ };
+ 
+@@ -279,6 +280,7 @@ static const struct rzg2l_reset r9a08g045_resets[] = {
+ 	DEF_RST(R9A08G045_GPIO_SPARE_RESETN, 0x898, 2),
+ 	DEF_RST(R9A08G045_ADC_PRESETN, 0x8a8, 0),
+ 	DEF_RST(R9A08G045_ADC_ADRST_N, 0x8a8, 1),
++	DEF_RST(R9A08G045_TSU_PRESETN, 0x8ac, 0),
+ 	DEF_RST(R9A08G045_VBAT_BRESETN, 0x914, 0),
+ };
+ 
+@@ -376,6 +378,9 @@ static const struct rzg2l_cpg_pm_domain_init_data r9a08g045_pm_domains[] = {
+ 	DEF_PD("adc",		R9A08G045_PD_ADC,
+ 				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(14)),
+ 				RZG2L_PD_F_NONE),
++	DEF_PD("tsu",		R9A08G045_PD_TSU,
++				DEF_REG_CONF(CPG_BUS_MCPU2_MSTOP, BIT(15)),
++				RZG2L_PD_F_NONE),
+ 	DEF_PD("vbat",		R9A08G045_PD_VBAT,
+ 				DEF_REG_CONF(CPG_BUS_MCPU3_MSTOP, BIT(8)),
+ 				RZG2L_PD_F_ALWAYS_ON),

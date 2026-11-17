@@ -1,0 +1,48 @@
+From 5cfea5fb8aeebb9009d85d958deb6bc823fc42eb Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Wed, 8 Apr 2026 09:41:44 +0000
+Subject: [PATCH 276/283] dt-bindings: thermal: r9a09g047-tsu: Document RZ/V2H
+ TSU
+
+commit 30183a67a8a0e74adf92e2dc66b5674465d42025 upstream.
+
+The Renesas RZ/V2H SoC includes a Thermal Sensor Unit (TSU) block designed
+to measure the junction temperature. The device provides real-time
+temperature measurements for thermal management, utilizing two dedicated
+channels for temperature sensing.
+
+The Renesas RZ/V2H SoC is using the same TSU IP found on the RZ/G3E SoC,
+the only difference being that it has two channels instead of one.
+
+Add new compatible string "renesas,r9a09g057-tsu" for RZ/V2H and use
+"renesas,r9a09g047-tsu" as a fallback compatible to indicate hardware
+compatibility with the RZ/G3E implementation.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://patch.msgid.link/20251020143107.13974-3-ovidiu.panait.rb@renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml  | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml b/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+index 8d3f3c24f0f2..befdc8b7a082 100644
+--- a/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
++++ b/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+@@ -16,7 +16,11 @@ description:
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g047-tsu
++    oneOf:
++      - const: renesas,r9a09g047-tsu # RZ/G3E
++      - items:
++          - const: renesas,r9a09g057-tsu # RZ/V2H
++          - const: renesas,r9a09g047-tsu # RZ/G3E
+ 
+   reg:
+     maxItems: 1

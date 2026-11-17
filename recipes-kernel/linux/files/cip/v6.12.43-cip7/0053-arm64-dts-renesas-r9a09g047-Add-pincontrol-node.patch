@@ -1,0 +1,43 @@
+From 4795fea60f13c76aac7bd074e6205ca919962eb2 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 31 Mar 2025 13:06:58 +0200
+Subject: [PATCH 053/246] arm64: dts: renesas: r9a09g047: Add pincontrol node
+
+commit 987040d4601e98e32c53837ef76aad115c4966f7 upstream.
+
+Add pincontrol node to RZ/G3E ("R9A09G047") SoC DTSI.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/20241216195325.164212-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index 39a7cfb3095b..15711f9b6038 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -131,6 +131,19 @@ soc: soc {
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		pinctrl: pinctrl@10410000 {
++			compatible = "renesas,r9a09g047-pinctrl";
++			reg = <0 0x10410000 0 0x10000>;
++			clocks = <&cpg CPG_CORE R9A09G047_IOTOP_0_SHCLK>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pinctrl 0 0 232>;
++			#interrupt-cells = <2>;
++			interrupt-controller;
++			power-domains = <&cpg>;
++			resets = <&cpg 0xa5>, <&cpg 0xa6>;
++		};
++
+ 		cpg: clock-controller@10420000 {
+ 			compatible = "renesas,r9a09g047-cpg";
+ 			reg = <0 0x10420000 0 0x10000>;

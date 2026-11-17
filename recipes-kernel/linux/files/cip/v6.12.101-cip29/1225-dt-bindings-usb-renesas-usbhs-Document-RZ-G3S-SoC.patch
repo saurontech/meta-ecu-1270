@@ -1,0 +1,39 @@
+From 63c8ef44b09f3a015a19fc140506213d6cc93ea6 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:31 +0300
+Subject: [PATCH 1225/1853] dt-bindings: usb: renesas,usbhs: Document RZ/G3S
+ SoC
+
+commit 3b56774fa25d46bd2ff3707546e30829f52dde9e upstream.
+
+The USBHS IP block on RZ/G3S SoC is identitcal to the one found on the
+RZ/G2L device. Document the RZ/G3S USBHS IP block.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20241126092050.1825607-7-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+[claudiu.beznea:
+ - fixed conflict in compatible section by keping RZ/V2H, RZ/V2N along with
+   RZ/G3S; at the same time, sorted the compatible list by part number
+ - fixed conflict in allOf section by keeping the code from v6.1 CIP]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+index 4ad5362987b1..baec5de8e3e2 100644
+--- a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
++++ b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
+@@ -26,6 +26,7 @@ properties:
+               - renesas,usbhs-r9a07g043 # RZ/G2UL and RZ/Five
+               - renesas,usbhs-r9a07g044 # RZ/G2{L,LC}
+               - renesas,usbhs-r9a07g054 # RZ/V2L
++              - renesas,usbhs-r9a08g045 # RZ/G3S
+               - renesas,usbhs-r9a09g056 # RZ/V2N
+               - renesas,usbhs-r9a09g057 # RZ/V2H(P)
+           - const: renesas,rzg2l-usbhs

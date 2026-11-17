@@ -1,0 +1,45 @@
+From 3f77abf9f7971150969b37a6ad0ba2502fb50ec1 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:05 +0000
+Subject: [PATCH 016/838] i2c: riic: Move generic compatible string to end of
+ array
+
+commit 832b2f3e3986c8ea8c24a7823ca5189746644bc4 upstream.
+
+Reorder the entry in `riic_i2c_dt_ids` to place the generic compatible
+string `renesas,riic-rz` at the end of the array, following the
+convention used in other Renesas drivers.
+
+Also, drop the unnecessary comma after the sentinel entry, as it is
+not needed.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com> # on RZ/A1
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Andy Shevchenko <andy@kernel.org>
+Signed-off-by: Andi Shyti <andi.shyti@kernel.org>
+Link: https://lore.kernel.org/r/20250625104526.101004-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i2c/busses/i2c-riic.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index 0215e4a755a7..b8745d1d2807 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -693,10 +693,10 @@ static const struct dev_pm_ops riic_i2c_pm_ops = {
+ };
+ 
+ static const struct of_device_id riic_i2c_dt_ids[] = {
+-	{ .compatible = "renesas,riic-rz", .data = &riic_rz_a_info },
+ 	{ .compatible = "renesas,riic-r7s72100", .data =  &riic_rz_a1h_info, },
+ 	{ .compatible = "renesas,riic-r9a09g057", .data = &riic_rz_v2h_info },
+-	{ /* Sentinel */ },
++	{ .compatible = "renesas,riic-rz", .data = &riic_rz_a_info },
++	{ /* Sentinel */ }
+ };
+ 
+ static struct platform_driver riic_i2c_driver = {

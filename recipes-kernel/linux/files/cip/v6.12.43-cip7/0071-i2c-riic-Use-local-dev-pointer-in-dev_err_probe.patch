@@ -1,0 +1,43 @@
+From 12a94d592cef9de2a28a4916c769ca318af4f812 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 23 Apr 2025 22:04:53 +0100
+Subject: [PATCH 071/246] i2c: riic: Use local `dev` pointer in
+ `dev_err_probe()`
+
+commit 279c83db24552e83caa09347358473e633e56617 upstream.
+
+Update the `riic_init_hw()` function to use the local `dev` pointer in
+calls to `dev_err_probe()`. Previously, `riic_init_hw()` used
+`riic->adapter.dev` in error reporting. Since this function is invoked
+during the probe phase, the I2C adapter is not yet initialized, leading to
+`(null) ...` being printed in error messages. This patch fixes the issue
+by consistently using the local `dev` pointer, which points to
+`riic->adapter.dev.parent`.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Andy Shevchenko <andy@kernel.org>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/i2c/busses/i2c-riic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index 552ad6bb151b..0fcb0814846b 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -320,7 +320,7 @@ static int riic_init_hw(struct riic_dev *riic)
+ 				      : I2C_MAX_FAST_MODE_FREQ;
+ 
+ 	if (t->bus_freq_hz > max_freq)
+-		return dev_err_probe(&riic->adapter.dev, -EINVAL,
++		return dev_err_probe(dev, -EINVAL,
+ 				     "unsupported bus speed %uHz (%u max)\n",
+ 				     t->bus_freq_hz, max_freq);
+ 

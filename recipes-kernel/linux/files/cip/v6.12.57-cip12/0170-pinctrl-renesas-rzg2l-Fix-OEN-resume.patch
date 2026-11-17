@@ -1,0 +1,53 @@
+From 3d9dc37d2d9c5173b5d04b41936e46f376f0672b Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 3 Nov 2025 12:37:54 +0100
+Subject: [PATCH 170/192] pinctrl: renesas: rzg2l: Fix OEN resume
+
+[ Upstream commit 30247fc3254a4502465ab809d49e2167ace5a6f2 ]
+
+Writing to the PFC_OEN register is controlled by the write protect
+register (PWPR).  Currently the OEN register write in resume() is done
+without enabling write access in PWPR leading to incorrect operation.
+
+Fixes: cd39805be85b ("pinctrl: renesas: rzg2l: Unify OEN handling across RZ/{G2L,V2H,V2N}")
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[geert: Move spin_*lock*() calls inside if-statements]
+Link: https://lore.kernel.org/20250817143024.165471-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index 2a87d0352fc1..1ea2dc1608b3 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -3158,6 +3158,8 @@ static int rzg2l_pinctrl_resume_noirq(struct device *dev)
+ 	const struct rzg2l_hwcfg *hwcfg = pctrl->data->hwcfg;
+ 	const struct rzg2l_register_offsets *regs = &hwcfg->regs;
+ 	struct rzg2l_pinctrl_reg_cache *cache = pctrl->cache;
++	unsigned long flags;
++	u8 pwpr;
+ 	int ret;
+ 
+ 	if (!atomic_read(&pctrl->wakeup_path)) {
+@@ -3167,7 +3169,16 @@ static int rzg2l_pinctrl_resume_noirq(struct device *dev)
+ 	}
+ 
+ 	writeb(cache->qspi, pctrl->base + QSPI);
++	if (pctrl->data->hwcfg->oen_pwpr_lock) {
++		spin_lock_irqsave(&pctrl->lock, flags);
++		pwpr = readb(pctrl->base + regs->pwpr);
++		writeb(pwpr | PWPR_REGWE_B, pctrl->base + regs->pwpr);
++	}
+ 	writeb(cache->oen, pctrl->base + pctrl->data->hwcfg->regs.oen);
++	if (pctrl->data->hwcfg->oen_pwpr_lock) {
++		writeb(pwpr & ~PWPR_REGWE_B, pctrl->base + regs->pwpr);
++		spin_unlock_irqrestore(&pctrl->lock, flags);
++	}
+ 	for (u8 i = 0; i < 2; i++) {
+ 		if (regs->sd_ch)
+ 			writeb(cache->sd_ch[i], pctrl->base + SD_CH(regs->sd_ch, i));

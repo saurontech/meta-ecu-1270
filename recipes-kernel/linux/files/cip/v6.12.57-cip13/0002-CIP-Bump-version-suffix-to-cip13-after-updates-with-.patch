@@ -1,0 +1,18 @@
+From b3b7da3e4cc2c45898146ce9f79147f0ae820e4c Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Fri, 14 Nov 2025 17:08:30 +0900
+Subject: [PATCH 2/2] CIP: Bump version suffix to -cip13 after updates with
+ latest cip
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 4a6a5e8b1447..af4f7b6e9dab 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip12
++-cip13

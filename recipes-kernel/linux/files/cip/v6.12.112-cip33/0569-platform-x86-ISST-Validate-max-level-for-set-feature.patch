@@ -1,0 +1,40 @@
+From 3391e0b4bb93b563b105daf9c938ab9e5f3aee0f Mon Sep 17 00:00:00 2001
+From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Date: Wed, 9 Sep 2026 10:14:30 -0400
+Subject: [PATCH 569/854] platform/x86: ISST: Validate max level for set
+ feature
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit e45d6b8472861d3bac86bb37f8556a7c5aca3266 ]
+
+Validate the level before setting, so that it fails early instead of
+failing later when checking the bit mask for allowed levels.
+
+Fixes: ea009e4769fa3 ("platform/x86: ISST: Add SST-PP support via TPMI")
+Cc: stable@vger.kernel.org
+Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Link: https://patch.msgid.link/20260811221514.3905817-3-srinivas.pandruvada@linux.intel.com
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/platform/x86/intel/speed_select_if/isst_tpmi_core.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/platform/x86/intel/speed_select_if/isst_tpmi_core.c b/drivers/platform/x86/intel/speed_select_if/isst_tpmi_core.c
+index 3c8fda948b651..7f1885fb4a34b 100644
+--- a/drivers/platform/x86/intel/speed_select_if/isst_tpmi_core.c
++++ b/drivers/platform/x86/intel/speed_select_if/isst_tpmi_core.c
+@@ -969,6 +969,9 @@ static int isst_if_set_perf_level(void __user *argp)
+ 	if (!power_domain_info)
+ 		return -EINVAL;
+ 
++	if (perf_level.level > power_domain_info->max_level)
++		return -EINVAL;
++
+ 	if (power_domain_info->write_blocked || !capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 

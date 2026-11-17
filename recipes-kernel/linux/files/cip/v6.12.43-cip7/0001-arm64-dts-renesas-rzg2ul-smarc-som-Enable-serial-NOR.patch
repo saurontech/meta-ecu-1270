@@ -1,0 +1,102 @@
+From c8b3e5dd9604a81fd45a61c1c941b783db120317 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Oct 2024 18:32:31 +0100
+Subject: [PATCH 001/246] arm64: dts: renesas: rzg2ul-smarc-som: Enable serial
+ NOR flash
+
+Commit c0f2ec5683160a8604292516de9bb6edc7073226 upstream.
+
+Enable Renesas at25ql128a flash connected to QSPI0. Also disable
+the node from rzfive-smarc-som as it is untested.
+
+Tested the flash by flashing bootloaders:
+flash_erase /dev/mtd0  0 0
+flash_erase /dev/mtd1  0 0
+mtd_debug write /dev/mtd0 0 ${BL2_FILE_SIZE} ${BL2_IMAGE}
+mtd_debug write /dev/mtd1 512 ${FIP_FILE_SIZE} ${FIP_IMAGE}
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241004173235.74307-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../boot/dts/renesas/rzg2ul-smarc-som.dtsi    | 45 +++++++++++++++++++
+ .../boot/dts/renesas/rzfive-smarc-som.dtsi    |  4 ++
+ 2 files changed, 49 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2ul-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg2ul-smarc-som.dtsi
+index 1a6fd58bd368..cd4275d86935 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2ul-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2ul-smarc-som.dtsi
+@@ -199,6 +199,12 @@ irq {
+ 		};
+ 	};
+ 
++	qspi0_pins: qspi0 {
++		pins = "QSPI0_IO0", "QSPI0_IO1", "QSPI0_IO2", "QSPI0_IO3",
++		       "QSPI0_SPCLK", "QSPI0_SSL";
++		power-source = <1800>;
++	};
++
+ 	sdhi0_emmc_pins: sd0emmc {
+ 		sd0_emmc_data {
+ 			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3",
+@@ -250,6 +256,45 @@ sd0_mux_uhs {
+ 	};
+ };
+ 
++&sbc {
++	pinctrl-0 = <&qspi0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <50000000>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++
++		spi-cpol;
++		spi-cpha;
++		m25p,fast-read;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "bl2";
++				reg = <0x00000000 0x0001d000>;
++			};
++
++			partition@1d000 { /* fip is at offset 0x200 */
++				label = "fip";
++				reg = <0x0001d000 0x7e3000>;
++			};
++
++			partition@800000 {
++				label = "user";
++				reg = <0x800000 0x800000>;
++			};
++		};
++	};
++};
++
+ #if (SW_SW0_DEV_SEL)
+ &sdhi0 {
+ 	pinctrl-0 = <&sdhi0_emmc_pins>;
+diff --git a/arch/riscv/boot/dts/renesas/rzfive-smarc-som.dtsi b/arch/riscv/boot/dts/renesas/rzfive-smarc-som.dtsi
+index 5e808242649e..86b2f15375ec 100644
+--- a/arch/riscv/boot/dts/renesas/rzfive-smarc-som.dtsi
++++ b/arch/riscv/boot/dts/renesas/rzfive-smarc-som.dtsi
+@@ -6,3 +6,7 @@
+  */
+ 
+ #include <arm64/renesas/rzg2ul-smarc-som.dtsi>
++
++&sbc {
++	status = "disabled";
++};

@@ -3,6 +3,10 @@
 The goal of this project is to open source the Advantech ECU-1270 Linux project.
 We intend to release our changes as a yocto meta-layer on top of the standard TI Yocto project, so customizations would be more obvious.
 
+> [!NOTE]
+> Branch `scarthgap-cip-6.12`: the TI kernel with the CIP SLTS kernel patches applied on top, up to `v6.12.114-cip34` (kernel 6.12.114).
+> For the TI kernel without the CIP patches, use the `main` branch.
+
 ## Download standard TI Yocto project and setup environment
 
 ```sh

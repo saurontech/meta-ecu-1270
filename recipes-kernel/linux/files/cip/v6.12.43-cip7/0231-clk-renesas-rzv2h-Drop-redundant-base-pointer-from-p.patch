@@ -1,0 +1,51 @@
+From e2303bfc30d2f8d6ea52a7fea7c91ec813fd1fd8 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:45:55 +0100
+Subject: [PATCH 231/246] clk: renesas: rzv2h: Drop redundant base pointer from
+ pll_clk
+
+commit 8250a8a9b10f459a40460104e6d6064c98283d1e upstream.
+
+The base address can be accessed via the priv pointer already present in
+struct pll_clk, making the separate base field redundant. Remove the base
+member and its assignment.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250624153049.462535-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 47b1f1e0cae8..54330e6c526b 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -101,7 +101,6 @@ struct rzv2h_cpg_priv {
+ 
+ struct pll_clk {
+ 	struct rzv2h_cpg_priv *priv;
+-	void __iomem *base;
+ 	struct clk_hw hw;
+ 	struct pll pll;
+ };
+@@ -230,7 +229,6 @@ rzv2h_cpg_pll_clk_register(const struct cpg_core_clk *core,
+ 			   struct rzv2h_cpg_priv *priv,
+ 			   const struct clk_ops *ops)
+ {
+-	void __iomem *base = priv->base;
+ 	struct device *dev = priv->dev;
+ 	struct clk_init_data init;
+ 	const struct clk *parent;
+@@ -255,7 +253,6 @@ rzv2h_cpg_pll_clk_register(const struct cpg_core_clk *core,
+ 
+ 	pll_clk->hw.init = &init;
+ 	pll_clk->pll = core->cfg.pll;
+-	pll_clk->base = base;
+ 	pll_clk->priv = priv;
+ 
+ 	ret = devm_clk_hw_register(dev, &pll_clk->hw);

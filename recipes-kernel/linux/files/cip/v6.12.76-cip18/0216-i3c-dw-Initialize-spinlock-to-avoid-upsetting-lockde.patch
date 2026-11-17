@@ -1,0 +1,35 @@
+From 7ff9c410dd26fceb7c0613dbb13e2bbea8e6b31c Mon Sep 17 00:00:00 2001
+From: Fredrik Markstrom <fredrik.markstrom@est.tech>
+Date: Fri, 16 Jan 2026 15:29:42 +0100
+Subject: [PATCH 0216/1190] i3c: dw: Initialize spinlock to avoid upsetting
+ lockdep
+
+[ Upstream commit b58eaa4761ab02fc38c39d674a6bcdd55e00f388 ]
+
+The devs_lock spinlock introduced when adding support for ibi:s was
+never initialized.
+
+Fixes: e389b1d72a624 ("i3c: dw: Add support for in-band interrupts")
+Suggested-by: Jani Nurminen <jani.nurminen@windriver.com>
+Signed-off-by: Fredrik Markstrom <fredrik.markstrom@est.tech>
+Reviewed-by: Ivar Holmqvist <ivar.holmqvist@est.tech>
+Link: https://patch.msgid.link/20260116-i3c_dw_initialize_spinlock-v3-1-cf707b6ed75f@est.tech
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/i3c/master/dw-i3c-master.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/i3c/master/dw-i3c-master.c b/drivers/i3c/master/dw-i3c-master.c
+index dbcd3984f257..eca54cbc1c29 100644
+--- a/drivers/i3c/master/dw-i3c-master.c
++++ b/drivers/i3c/master/dw-i3c-master.c
+@@ -1575,6 +1575,8 @@ int dw_i3c_common_probe(struct dw_i3c_master *master,
+ 	spin_lock_init(&master->xferqueue.lock);
+ 	INIT_LIST_HEAD(&master->xferqueue.list);
+ 
++	spin_lock_init(&master->devs_lock);
++
+ 	writel(INTR_ALL, master->regs + INTR_STATUS);
+ 	irq = platform_get_irq(pdev, 0);
+ 	ret = devm_request_irq(&pdev->dev, irq,

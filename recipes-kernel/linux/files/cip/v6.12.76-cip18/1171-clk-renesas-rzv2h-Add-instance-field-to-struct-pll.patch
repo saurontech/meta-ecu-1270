@@ -1,0 +1,57 @@
+From 8878f6f72534534c1274876f407f1e02be75bf1a Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Feb 2026 12:12:14 +0000
+Subject: [PATCH 1171/1190] clk: renesas: rzv2h: Add instance field to struct
+ pll
+
+commit 36a23904b4def05bfbb589af9fab5bc06144d241 upstream.
+
+Add a two-bit "instance" member to struct pll and extend the PLL_PACK()
+macro to accept an instance parameter.  Initialize all existing PLL
+definitions with instance 0 to preserve legacy behavior. This change
+enables support for SoCs with multiple PLL instances (for example,
+RZ/G3E we have two PLL DSIs).
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251015192611.241920-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/rzv2h-cpg.h | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index 53f3b96cd85f..02920f169bf3 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -16,20 +16,23 @@
+  *
+  * @offset: STBY register offset
+  * @has_clkn: Flag to indicate if CLK1/2 are accessible or not
++ * @instance: PLL instance number
+  */
+ struct pll {
+ 	unsigned int offset:9;
+ 	unsigned int has_clkn:1;
++	unsigned int instance:2;
+ };
+ 
+-#define PLL_PACK(_offset, _has_clkn) \
++#define PLL_PACK(_offset, _has_clkn, _instance) \
+ 	((struct pll){ \
+ 		.offset = _offset, \
+-		.has_clkn = _has_clkn \
++		.has_clkn = _has_clkn, \
++		.instance = _instance \
+ 	})
+ 
+-#define PLLCA55		PLL_PACK(0x60, 1)
+-#define PLLGPU		PLL_PACK(0x120, 1)
++#define PLLCA55		PLL_PACK(0x60, 1, 0)
++#define PLLGPU		PLL_PACK(0x120, 1, 0)
+ 
+ /**
+  * struct ddiv - Structure for dynamic switching divider

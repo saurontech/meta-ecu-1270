@@ -1,0 +1,35 @@
+From 410c79735fb2dded3f01e8b7598e3c3b01815348 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 11 Jul 2025 16:56:27 +0100
+Subject: [PATCH 183/246] drm: renesas: rz-du: rzg2l_mipi_dsi: Update the
+ comment in rzg2l_mipi_dsi_start_video()
+
+commit b1d6a89d7b75435da9c541c5f9d4df8268291c6e upstream.
+
+Add missing space in the comment in rzg2l_mipi_dsi_start_video().
+
+Reported-by: Pavel Machek <pavel@denx.de>
+Closes: https://lore.kernel.org/all/ZPg7STHDn4LbLy7f@duo.ucw.cz/
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Link: https://lore.kernel.org/r/20250412061258.5447-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+index 6cec796dd463..1729245f4adc 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+@@ -479,7 +479,7 @@ static int rzg2l_mipi_dsi_start_video(struct rzg2l_mipi_dsi *dsi)
+ 	u32 status;
+ 	int ret;
+ 
+-	/* Configuration for Blanking sequence and start video input*/
++	/* Configuration for Blanking sequence and start video input */
+ 	vich1set0r = VICH1SET0R_HFPNOLP | VICH1SET0R_HBPNOLP |
+ 		     VICH1SET0R_HSANOLP | VICH1SET0R_VSTART;
+ 	rzg2l_mipi_dsi_link_write(dsi, VICH1SET0R, vich1set0r);

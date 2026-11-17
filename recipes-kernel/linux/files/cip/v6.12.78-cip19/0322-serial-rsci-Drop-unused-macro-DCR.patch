@@ -1,0 +1,41 @@
+From f70407e8e5008c91e1d1882e688112cf7abe2445 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:33 +0000
+Subject: [PATCH 322/851] serial: rsci: Drop unused macro DCR
+
+[ Upstream commit 36816a033dd41fda415ae0696931d6bfe87671a2 ]
+
+Drop unused macro DCR and its bit definition.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-8-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/rsci.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/tty/serial/rsci.c b/drivers/tty/serial/rsci.c
+index ca593665b551..0ca9d38fe8d2 100644
+--- a/drivers/tty/serial/rsci.c
++++ b/drivers/tty/serial/rsci.c
+@@ -24,7 +24,6 @@ MODULE_IMPORT_NS(SH_SCI);
+ #define CCR3	0x14
+ #define CCR4	0x18
+ #define FCR	0x24
+-#define DCR	0x30
+ #define CSR	0x48
+ #define FRSR	0x50
+ #define FTSR	0x54
+@@ -119,8 +118,6 @@ MODULE_IMPORT_NS(SH_SCI);
+ /* FFCLR (FIFO Flag CLear Register) */
+ #define FFCLR_DRC		BIT(0)	/* DR Clear */
+ 
+-#define DCR_DEPOL		BIT(0)
+-
+ static u32 rsci_serial_in(struct uart_port *p, int offset)
+ {
+ 	return readl(p->membase + offset);

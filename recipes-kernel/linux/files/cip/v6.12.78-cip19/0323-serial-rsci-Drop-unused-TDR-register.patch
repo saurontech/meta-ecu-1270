@@ -1,0 +1,37 @@
+From b652d390f2af734f665bb69cfe96512bf65b8175 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:34 +0000
+Subject: [PATCH 323/851] serial: rsci: Drop unused TDR register
+
+[ Upstream commit 507a7ba917cd7ae043ba05db02089b152ae0aaa8 ]
+
+Drop the unused TDR register-related macros.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-9-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/rsci.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/tty/serial/rsci.c b/drivers/tty/serial/rsci.c
+index 0ca9d38fe8d2..fb419f34f35d 100644
+--- a/drivers/tty/serial/rsci.c
++++ b/drivers/tty/serial/rsci.c
+@@ -35,12 +35,6 @@ MODULE_IMPORT_NS(SH_SCI);
+ #define RDR_FPER		BIT(11) /* FIFO Parity Error */
+ #define RDR_RDAT_MSK		GENMASK(8, 0)
+ 
+-/* TDR (Transmit Data Register) */
+-#define TDR_MPBT		BIT(9)	/* Multiprocessor Transfer */
+-#define TDR_TDAT_9BIT_LSHIFT	0
+-#define TDR_TDAT_9BIT_VAL	0x1FF
+-#define TDR_TDAT_9BIT_MSK	(TDR_TDAT_9BIT_VAL << TDR_TDAT_9BIT_LSHIFT)
+-
+ /* CCR0 (Common Control Register 0) */
+ #define CCR0_SSE		BIT(24)	/* SSn# Pin Function Enable */
+ #define CCR0_TEIE		BIT(21)	/* Transmit End Interrupt Enable */

@@ -1,0 +1,52 @@
+From c086de6235e7fd82aff30158e9777bfb18d65bef Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 19 Jan 2026 12:55:15 +0000
+Subject: [PATCH 817/838] arm64: dts: renesas: r9a09g056: Add XSPI node
+
+commit 3b443f01b3dda8d9f95e97c14c17b4c15273dab4 upstream.
+
+Add XSPI node to RZ/V2N ("R9A09G056") SoC DTSI.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250704140823.163572-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g056.dtsi | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+index e7cbeec3a4b9..d5f198760390 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+@@ -177,6 +177,27 @@ sys: system-controller@10430000 {
+ 			resets = <&cpg 0x30>;
+ 		};
+ 
++		xspi: spi@11030000 {
++			compatible = "renesas,r9a09g056-xspi", "renesas,r9a09g047-xspi";
++			reg = <0 0x11030000 0 0x10000>,
++			      <0 0x20000000 0 0x10000000>;
++			reg-names = "regs", "dirmap";
++			interrupts = <GIC_SPI 228 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 229 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "pulse", "err_pulse";
++			clocks = <&cpg CPG_MOD 0x9f>,
++				 <&cpg CPG_MOD 0xa0>,
++				 <&cpg CPG_CORE R9A09G056_SPI_CLK_SPI>,
++				 <&cpg CPG_MOD 0xa1>;
++			clock-names = "ahb", "axi", "spi", "spix2";
++			resets = <&cpg 0xa3>, <&cpg 0xa4>;
++			reset-names = "hresetn", "aresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		ostm0: timer@11800000 {
+ 			compatible = "renesas,r9a09g056-ostm", "renesas,ostm";
+ 			reg = <0x0 0x11800000 0x0 0x1000>;

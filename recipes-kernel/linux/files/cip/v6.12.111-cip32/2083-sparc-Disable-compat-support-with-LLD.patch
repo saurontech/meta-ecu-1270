@@ -1,0 +1,40 @@
+From 1317320cac00ce5bd3d2a6d5683487a544b17aeb Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Thu, 7 May 2026 17:08:34 -0700
+Subject: [PATCH 2083/2868] sparc: Disable compat support with LLD
+
+[ Upstream commit 852fed2e8bfe195351fb0078ba7245d41154e7a5 ]
+
+An LLVM=1 sparc64 allmodconfig enables COMPAT and then tries to
+build the 32-bit vDSO. That path cannot be linked with ld.lld:
+
+  ld.lld: error: unknown emulation: elf32_sparc
+
+ld.lld does not support the 32-bit SPARC ELF emulation used for
+the compat vDSO, so keep COMPAT disabled when LLD is the linker.
+This avoids selecting an unsupported build path while leaving the
+existing GNU ld configuration unchanged.
+
+Assisted-by: Codex:GPT-5.5
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Acked-by: Nathan Chancellor <nathan@kernel.org>
+Reviewed-by: Andreas Larsson <andreas@gaisler.com>
+Link: https://lore.kernel.org/r/20260508000834.834824-1-rosenp@gmail.com
+Signed-off-by: Andreas Larsson <andreas@gaisler.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/sparc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index dcfdb7f1dae9..24e6e5bd4591 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -486,6 +486,7 @@ endmenu
+ config COMPAT
+ 	bool
+ 	depends on SPARC64
++	depends on !LD_IS_LLD
+ 	default y
+ 	select HAVE_UID16
+ 	select ARCH_WANT_OLD_COMPAT_IPC

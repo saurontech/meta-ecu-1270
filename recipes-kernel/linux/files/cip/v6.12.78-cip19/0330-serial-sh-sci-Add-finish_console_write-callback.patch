@@ -1,0 +1,49 @@
+From a0195d321e2bc4a95735d3e57dea22cdc2e72412 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:41 +0000
+Subject: [PATCH 330/851] serial: sh-sci: Add finish_console_write() callback
+
+[ Upstream commit bbcd508c84d4884c620f4f4bb7d382539466b9a3 ]
+
+Add finish_console_write() callback as RZ/G3E RSCI IP needs special
+handling compared to other SoCs.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-16-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/sh-sci-common.h | 1 +
+ drivers/tty/serial/sh-sci.c        | 5 ++++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/sh-sci-common.h b/drivers/tty/serial/sh-sci-common.h
+index 976e394ab968..f363a659c46a 100644
+--- a/drivers/tty/serial/sh-sci-common.h
++++ b/drivers/tty/serial/sh-sci-common.h
+@@ -93,6 +93,7 @@ struct sci_port_ops {
+ 	void (*shutdown_complete)(struct uart_port *port);
+ 
+ 	void (*prepare_console_write)(struct uart_port *port, u32 ctrl);
++	void (*finish_console_write)(struct uart_port *port, u32 ctrl);
+ 	void (*console_save)(struct uart_port *port);
+ 	void (*console_restore)(struct uart_port *port);
+ 	size_t (*suspend_regs_size)(void);
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 781fc371a62c..588027a8068f 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3432,7 +3432,10 @@ static void serial_console_write(struct console *co, const char *s,
+ 		cpu_relax();
+ 
+ 	/* restore the SCSCR */
+-	sci_port->ops->write_reg(port, regs->control, ctrl);
++	if (sci_port->ops->finish_console_write)
++		sci_port->ops->finish_console_write(port, ctrl);
++	else
++		sci_port->ops->write_reg(port, regs->control, ctrl);
+ 
+ 	if (locked)
+ 		uart_port_unlock_irqrestore(port, flags);

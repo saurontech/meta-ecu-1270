@@ -1,0 +1,109 @@
+From e29ca51c7435f7efbed1f059c1f18ea86bbd26d0 Mon Sep 17 00:00:00 2001
+From: Mike Snitzer <snitzer@kernel.org>
+Date: Sat, 4 Jul 2026 23:11:47 -0400
+Subject: [PATCH 047/399] nfs_common: rename functions that invalidate LOCALIO
+ nfs_clients
+
+[ Upstream commit b49f049a22227df701bfbca083d6cc859496e615 ]
+
+Rename nfs_uuid_invalidate_one_client to nfs_localio_disable_client.
+Rename nfs_uuid_invalidate_clients to nfs_localio_invalidate_clients.
+
+Signed-off-by: Mike Snitzer <snitzer@kernel.org>
+Reviewed-by: NeilBrown <neilb@suse.de>
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
+Signed-off-by: Anna Schumaker <anna.schumaker@oracle.com>
+Stable-dep-of: 2c6bb3c40bc2 ("NFSv4/flexfiles: reject zero filehandle version count")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/nfs/localio.c           | 2 +-
+ fs/nfs_common/nfslocalio.c | 8 ++++----
+ fs/nfsd/nfsctl.c           | 4 ++--
+ include/linux/nfslocalio.h | 5 +++--
+ 4 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/fs/nfs/localio.c b/fs/nfs/localio.c
+index 84fe3ef21b6d..c59f205b5130 100644
+--- a/fs/nfs/localio.c
++++ b/fs/nfs/localio.c
+@@ -141,7 +141,7 @@ void nfs_local_disable(struct nfs_client *clp)
+ 	spin_lock(&clp->cl_localio_lock);
+ 	if (test_and_clear_bit(NFS_CS_LOCAL_IO, &clp->cl_flags)) {
+ 		trace_nfs_local_disable(clp);
+-		nfs_uuid_invalidate_one_client(&clp->cl_uuid);
++		nfs_localio_disable_client(&clp->cl_uuid);
+ 	}
+ 	spin_unlock(&clp->cl_localio_lock);
+ }
+diff --git a/fs/nfs_common/nfslocalio.c b/fs/nfs_common/nfslocalio.c
+index e6fbc45ec4f1..ae07ec165502 100644
+--- a/fs/nfs_common/nfslocalio.c
++++ b/fs/nfs_common/nfslocalio.c
+@@ -107,7 +107,7 @@ static void nfs_uuid_put_locked(nfs_uuid_t *nfs_uuid)
+ 	list_del_init(&nfs_uuid->list);
+ }
+ 
+-void nfs_uuid_invalidate_clients(struct list_head *list)
++void nfs_localio_invalidate_clients(struct list_head *list)
+ {
+ 	nfs_uuid_t *nfs_uuid, *tmp;
+ 
+@@ -116,9 +116,9 @@ void nfs_uuid_invalidate_clients(struct list_head *list)
+ 		nfs_uuid_put_locked(nfs_uuid);
+ 	spin_unlock(&nfs_uuid_lock);
+ }
+-EXPORT_SYMBOL_GPL(nfs_uuid_invalidate_clients);
++EXPORT_SYMBOL_GPL(nfs_localio_invalidate_clients);
+ 
+-void nfs_uuid_invalidate_one_client(nfs_uuid_t *nfs_uuid)
++void nfs_localio_disable_client(nfs_uuid_t *nfs_uuid)
+ {
+ 	if (nfs_uuid->net) {
+ 		spin_lock(&nfs_uuid_lock);
+@@ -126,7 +126,7 @@ void nfs_uuid_invalidate_one_client(nfs_uuid_t *nfs_uuid)
+ 		spin_unlock(&nfs_uuid_lock);
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(nfs_uuid_invalidate_one_client);
++EXPORT_SYMBOL_GPL(nfs_localio_disable_client);
+ 
+ /*
+  * Caller is responsible for calling nfsd_net_put and
+diff --git a/fs/nfsd/nfsctl.c b/fs/nfsd/nfsctl.c
+index 6b37d939a6ce..7b0a6beee96e 100644
+--- a/fs/nfsd/nfsctl.c
++++ b/fs/nfsd/nfsctl.c
+@@ -2296,14 +2296,14 @@ static __net_init int nfsd_net_init(struct net *net)
+  * nfsd_net_pre_exit - Disconnect localio clients from net namespace
+  * @net: a network namespace that is about to be destroyed
+  *
+- * This invalidated ->net pointers held by localio clients
++ * This invalidates ->net pointers held by localio clients
+  * while they can still safely access nn->counter.
+  */
+ static __net_exit void nfsd_net_pre_exit(struct net *net)
+ {
+ 	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
+ 
+-	nfs_uuid_invalidate_clients(&nn->local_clients);
++	nfs_localio_invalidate_clients(&nn->local_clients);
+ }
+ #endif
+ 
+diff --git a/include/linux/nfslocalio.h b/include/linux/nfslocalio.h
+index 7b2a86213d9e..6d87b7a78680 100644
+--- a/include/linux/nfslocalio.h
++++ b/include/linux/nfslocalio.h
+@@ -37,8 +37,9 @@ bool nfs_uuid_begin(nfs_uuid_t *);
+ void nfs_uuid_end(nfs_uuid_t *);
+ void nfs_uuid_is_local(const uuid_t *, struct list_head *,
+ 		       struct net *, struct auth_domain *, struct module *);
+-void nfs_uuid_invalidate_clients(struct list_head *list);
+-void nfs_uuid_invalidate_one_client(nfs_uuid_t *nfs_uuid);
++
++void nfs_localio_disable_client(nfs_uuid_t *nfs_uuid);
++void nfs_localio_invalidate_clients(struct list_head *list);
+ 
+ /* localio needs to map filehandle -> struct nfsd_file */
+ extern struct nfsd_file *

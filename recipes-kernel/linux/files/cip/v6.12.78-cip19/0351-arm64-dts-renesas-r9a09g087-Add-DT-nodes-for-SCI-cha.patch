@@ -1,0 +1,104 @@
+From 71da886152aabcaf252a8f3410c5ff40774bb634 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 12:36:38 +0000
+Subject: [PATCH 351/851] arm64: dts: renesas: r9a09g087: Add DT nodes for SCI
+ channels 1-5
+
+commit 41e194978510a9910be2ed7b4d8b4edb61671a90 upstream.
+
+The RZ/N2H SoC exposes six SCI controllers; sci0 was already present in
+the SoC DTSI. Add the remaining SCI nodes (sci1-sci5).
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250812200344.3253781-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[PL: manually fixed merge conflicts]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g087.dtsi | 70 ++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+index c056c476e0d7..47a9888e227d 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+@@ -90,6 +90,76 @@ sci0: serial@80005000 {
+ 			status = "disabled";
+ 		};
+ 
++		sci1: serial@80005400 {
++			compatible = "renesas,r9a09g087-rsci", "renesas,r9a09g077-rsci";
++			reg = <0 0x80005400 0 0x400>;
++			interrupts = <GIC_SPI 594 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 595 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 596 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 597 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 9>, <&cpg CPG_CORE R9A09G087_CLK_PCLKM>;
++			clock-names = "operation", "bus";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		sci2: serial@80005800 {
++			compatible = "renesas,r9a09g087-rsci", "renesas,r9a09g077-rsci";
++			reg = <0 0x80005800 0 0x400>;
++			interrupts = <GIC_SPI 598 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 599 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 600 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 601 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 10>, <&cpg CPG_CORE R9A09G087_CLK_PCLKM>;
++			clock-names = "operation", "bus";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		sci3: serial@80005c00 {
++			compatible = "renesas,r9a09g087-rsci", "renesas,r9a09g077-rsci";
++			reg = <0 0x80005c00 0 0x400>;
++			interrupts = <GIC_SPI 602 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 603 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 604 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 605 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 11>, <&cpg CPG_CORE R9A09G087_CLK_PCLKM>;
++			clock-names = "operation", "bus";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		sci4: serial@80006000 {
++			compatible = "renesas,r9a09g087-rsci", "renesas,r9a09g077-rsci";
++			reg = <0 0x80006000 0 0x400>;
++			interrupts = <GIC_SPI 606 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 607 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 608 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 609 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 12>, <&cpg CPG_CORE R9A09G087_CLK_PCLKM>;
++			clock-names = "operation", "bus";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		sci5: serial@81005000 {
++			compatible = "renesas,r9a09g087-rsci", "renesas,r9a09g077-rsci";
++			reg = <0 0x81005000 0 0x400>;
++			interrupts = <GIC_SPI 610 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 611 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 612 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 613 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 600>, <&cpg CPG_CORE R9A09G087_CLK_PCLKM>;
++			clock-names = "operation", "bus";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
+ 		rspi0: spi@80007000 {
+ 			compatible = "renesas,r9a09g087-rspi", "renesas,r9a09g077-rspi";
+ 			reg = <0x0 0x80007000 0x0 0x400>;

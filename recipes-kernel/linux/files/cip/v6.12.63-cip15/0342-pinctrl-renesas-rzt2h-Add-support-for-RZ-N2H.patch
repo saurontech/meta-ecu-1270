@@ -1,0 +1,77 @@
+From 9aab37e8e54d19d69a40db605f16aa3a6e50b483 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:46 +0000
+Subject: [PATCH 342/724] pinctrl: renesas: rzt2h: Add support for RZ/N2H
+
+commit d1d31e2739ff063da1e85cd9b44316ca5cccdba8 upstream.
+
+The Renesas RZ/N2H (R9A09G087) SoC shares a similar pin controller
+architecture with the RZ/T2H (R9A09G077) SoC, differing primarily in the
+number of supported pins: 576 on RZ/N2H versus 729 on RZ/T2H.
+
+Add the necessary pin configuration data and compatible string to enable
+support for the RZ/N2H SoC in the RZ/T2H pinctrl driver.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250808133017.2053637-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-27-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pinctrl/renesas/Kconfig         |  1 +
+ drivers/pinctrl/renesas/pinctrl-rzt2h.c | 16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/drivers/pinctrl/renesas/Kconfig b/drivers/pinctrl/renesas/Kconfig
+index 99f290ae77aa..27ddc5dc4619 100644
+--- a/drivers/pinctrl/renesas/Kconfig
++++ b/drivers/pinctrl/renesas/Kconfig
+@@ -45,6 +45,7 @@ config PINCTRL_RENESAS
+ 	select PINCTRL_RZG2L if ARCH_R9A09G056
+ 	select PINCTRL_RZG2L if ARCH_R9A09G057
+ 	select PINCTRL_RZT2H if ARCH_R9A09G077
++	select PINCTRL_RZT2H if ARCH_R9A09G087
+ 	select PINCTRL_PFC_SH7203 if CPU_SUBTYPE_SH7203
+ 	select PINCTRL_PFC_SH7264 if CPU_SUBTYPE_SH7264
+ 	select PINCTRL_PFC_SH7269 if CPU_SUBTYPE_SH7269
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzt2h.c b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+index 02dcd79247cd..d567612b3095 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzt2h.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+@@ -760,17 +760,33 @@ static const u8 r9a09g077_gpio_configs[] = {
+ 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
+ };
+ 
++static const u8 r9a09g087_gpio_configs[] = {
++	0x1f, 0xff, 0xff, 0x1f, 0x00, 0xfe, 0xff, 0x00, 0x7e, 0xf0, 0xff, 0x01,
++	0xff, 0xff, 0xff, 0x00, 0xe0, 0xff, 0xff, 0x00, 0xff, 0xff, 0xff, 0x01,
++	0xe0, 0xff, 0xff, 0x7f, 0x00, 0xfe, 0xff, 0x7f, 0x00, 0xfc, 0x7f,
++};
++
+ static struct rzt2h_pinctrl_data r9a09g077_data = {
+ 	.n_port_pins = ARRAY_SIZE(r9a09g077_gpio_configs) * RZT2H_PINS_PER_PORT,
+ 	.port_pin_configs = r9a09g077_gpio_configs,
+ 	.n_ports = ARRAY_SIZE(r9a09g077_gpio_configs),
+ };
+ 
++static struct rzt2h_pinctrl_data r9a09g087_data = {
++	.n_port_pins = ARRAY_SIZE(r9a09g087_gpio_configs) * RZT2H_PINS_PER_PORT,
++	.port_pin_configs = r9a09g087_gpio_configs,
++	.n_ports = ARRAY_SIZE(r9a09g087_gpio_configs),
++};
++
+ static const struct of_device_id rzt2h_pinctrl_of_table[] = {
+ 	{
+ 		.compatible = "renesas,r9a09g077-pinctrl",
+ 		.data = &r9a09g077_data,
+ 	},
++	{
++		.compatible = "renesas,r9a09g087-pinctrl",
++		.data = &r9a09g087_data,
++	},
+ 	{ /* sentinel */ }
+ };
+ 

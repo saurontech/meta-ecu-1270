@@ -1,0 +1,119 @@
+From 3c0ac00c6dcc645c4b1cf3d26d2fb05770382887 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:10 +0000
+Subject: [PATCH 023/838] dt-bindings: watchdog: renesas,wdt: Add support for
+ RZ/T2H and RZ/N2H
+
+commit 5cacd26436a66e24b1f0335a5d2b71eed4ab0d74 upstream.
+
+Extend the Renesas WDT device tree bindings to support the watchdog timer
+found on the RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs.
+
+The RZ/T2H WDT is mostly compatible with the one found on the RZ/V2H(P),
+but includes an additional register and differs in the clock division
+ratio settings for the WDTCR[CKS] field. To reflect these differences,
+introduce a new compatible string, "renesas,r9a09g077-wdt".
+
+The binding schema is updated accordingly. On RZ/T2H, the WDT does not
+require the "resets" property. It also requires two register regions and
+the presence of a "power-domains" property. The "clock-names" property is
+limited to a single entry, "pclk", for this SoC.
+
+The RZ/N2H SoC uses the same WDT IP as the RZ/T2H. It is supported by
+using "renesas,r9a09g087-wdt" as the primary compatible string, with
+"renesas,r9a09g077-wdt" listed as a fallback to describe the shared
+hardware features.
+
+Example:
+    wdt0: watchdog@80082000 {
+        compatible = "renesas,r9a09g077-wdt";
+        reg = <0 0x80082000 0 0x400>,
+              <0 0x81295100 0 0x04>;
+        clocks = <&cpg CPG_CORE R9A09G077_CLK_PCLKL>;
+        clock-names = "pclk";
+        power-domains = <&cpg>;
+        status = "disabled";
+    };
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Wim Van Sebroeck <wim@linux-watchdog.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/watchdog/renesas,wdt.yaml        | 36 +++++++++++++++++--
+ 1 file changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml b/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
+index 78874b90c88c..b6e60162c263 100644
+--- a/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
++++ b/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
+@@ -81,10 +81,17 @@ properties:
+               - renesas,r9a09g056-wdt # RZ/V2N
+           - const: renesas,r9a09g057-wdt # RZ/V2H(P)
+ 
+-      - const: renesas,r9a09g057-wdt       # RZ/V2H(P)
++      - enum:
++          - renesas,r9a09g057-wdt    # RZ/V2H(P)
++          - renesas,r9a09g077-wdt    # RZ/T2H
++
++      - items:
++          - const: renesas,r9a09g087-wdt # RZ/N2H
++          - const: renesas,r9a09g077-wdt # RZ/T2H
+ 
+   reg:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 2
+ 
+   interrupts:
+     minItems: 1
+@@ -132,6 +139,7 @@ allOf:
+           compatible:
+             contains:
+               enum:
++                - renesas,r9a09g077-wdt
+                 - renesas,rza-wdt
+                 - renesas,rzn1-wdt
+     then:
+@@ -183,7 +191,9 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            const: renesas,r9a09g057-wdt
++            enum:
++              - renesas,r9a09g057-wdt
++              - renesas,r9a09g077-wdt
+     then:
+       properties:
+         interrupts: false
+@@ -192,6 +202,26 @@ allOf:
+       required:
+         - interrupts
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g077-wdt
++    then:
++      properties:
++        resets: false
++        clock-names:
++          maxItems: 1
++        reg:
++          minItems: 2
++      required:
++        - clock-names
++        - power-domains
++    else:
++      properties:
++        reg:
++          maxItems: 1
++
+ additionalProperties: false
+ 
+ examples:

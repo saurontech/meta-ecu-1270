@@ -1,0 +1,29 @@
+From 327ceed09de53b364e49a5c4134cefe54e20ab57 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Tue, 3 Feb 2026 10:13:30 +0100
+Subject: [PATCH 330/420] PM: domains: Add RZ/G3E compatible to PM domain
+ detach list
+
+Add Renesas RZ/G3E compatible string to the PM domain detach list in
+dev_pm_domain_allow_detach_on_unbind_cleanup(). This avoid asynchronous
+aborts when unbinding the TSU device.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/base/power/common.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/base/power/common.c b/drivers/base/power/common.c
+index 5d6b6cd86579..536ce9be7395 100644
+--- a/drivers/base/power/common.c
++++ b/drivers/base/power/common.c
+@@ -450,6 +450,7 @@ bool dev_pm_domain_allow_detach_on_unbind_cleanup(void)
+ 		"renesas,r9a07g044", /* Renesas RZ/G2{L, LC} */
+ 		"renesas,r9a07g054", /* Renesas RZ/V2L */
+ 		"renesas,r9a08g045", /* Renesas RZ/G3S */
++		"renesas,r9a09g047", /* Renesas RZ/G3E */
+ 		"renesas,r9a09g057", /* Renesas RZ/V2H */
+ 		NULL
+ 	};

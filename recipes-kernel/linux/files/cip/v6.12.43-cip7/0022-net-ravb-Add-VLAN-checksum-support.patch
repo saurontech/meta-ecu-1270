@@ -1,0 +1,84 @@
+From 4807c93d099f877e770ba7f3cd6cd6b3ac6bfbb6 Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:34 +0100
+Subject: [PATCH 022/246] net: ravb: Add VLAN checksum support
+
+Commit 546875ccba938ba4f7b5c616a1a1e334c5f2903f upstream.
+
+The GbEth IP supports offloading checksum calculation for VLAN-tagged
+packets, provided that the EtherType is 0x8100 and only one VLAN tag is
+present.
+
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb.h      |  1 +
+ drivers/net/ethernet/renesas/ravb_main.c | 24 ++++++++++++++++++++----
+ 2 files changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index d7b3810ce21b..7b48060c250b 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -1055,6 +1055,7 @@ struct ravb_hw_info {
+ 	size_t gstrings_size;
+ 	netdev_features_t net_hw_features;
+ 	netdev_features_t net_features;
++	netdev_features_t vlan_features;
+ 	int stats_len;
+ 	u32 tccr_mask;
+ 	u32 tx_max_frame_size;
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 5c76e07c09b2..86e5a09162bd 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -2062,13 +2062,27 @@ static void ravb_tx_timeout_work(struct work_struct *work)
+ 
+ static bool ravb_can_tx_csum_gbeth(struct sk_buff *skb)
+ {
++	u16 net_protocol = ntohs(skb->protocol);
+ 	u8 inner_protocol;
+ 
+-	/* TODO: Need to add support for VLAN tag 802.1Q */
+-	if (skb_vlan_tag_present(skb))
+-		return false;
++	/* GbEth IP can calculate the checksum if:
++	 * - there are zero or one VLAN headers with TPID=0x8100
++	 * - the network protocol is IPv4 or IPv6
++	 * - the transport protocol is TCP, UDP or ICMP
++	 * - the packet is not fragmented
++	 */
++
++	if (net_protocol == ETH_P_8021Q) {
++		struct vlan_hdr vhdr, *vh;
++
++		vh = skb_header_pointer(skb, ETH_HLEN, sizeof(vhdr), &vhdr);
++		if (!vh)
++			return false;
++
++		net_protocol = ntohs(vh->h_vlan_encapsulated_proto);
++	}
+ 
+-	switch (ntohs(skb->protocol)) {
++	switch (net_protocol) {
+ 	case ETH_P_IP:
+ 		inner_protocol = ip_hdr(skb)->protocol;
+ 		break;
+@@ -2772,6 +2786,7 @@ static const struct ravb_hw_info gbeth_hw_info = {
+ 	.gstrings_size = sizeof(ravb_gstrings_stats_gbeth),
+ 	.net_hw_features = NETIF_F_RXCSUM | NETIF_F_HW_CSUM,
+ 	.net_features = NETIF_F_RXCSUM | NETIF_F_HW_CSUM,
++	.vlan_features = NETIF_F_RXCSUM | NETIF_F_HW_CSUM,
+ 	.stats_len = ARRAY_SIZE(ravb_gstrings_stats_gbeth),
+ 	.tccr_mask = TCCR_TSRQ0,
+ 	.tx_max_frame_size = 1522,
+@@ -2914,6 +2929,7 @@ static int ravb_probe(struct platform_device *pdev)
+ 
+ 	ndev->features = info->net_features;
+ 	ndev->hw_features = info->net_hw_features;
++	ndev->vlan_features = info->vlan_features;
+ 
+ 	error = reset_control_deassert(rstc);
+ 	if (error)

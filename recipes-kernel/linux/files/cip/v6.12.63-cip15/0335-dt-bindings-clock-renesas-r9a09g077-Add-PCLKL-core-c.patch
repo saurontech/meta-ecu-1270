@@ -1,0 +1,35 @@
+From d5a677fb80822a8d757982b6949b1bf11794ef0d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:39 +0000
+Subject: [PATCH 335/724] dt-bindings: clock: renesas,r9a09g077: Add PCLKL core
+ clock ID
+
+commit 62ab7ac5be90392a9ac0955febab778ebf51bc0a upstream.
+
+Add the Peripheral Module Clock L (PCLKL) core clock ID for the RZ/T2H
+(R9A09G077) SoC.  This clock is used by peripherals such as IIC, WDT,
+and others.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250617155757.149597-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-20-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+index 1b22fe88dec7..f6e5f62b07c4 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+@@ -23,5 +23,6 @@
+ #define R9A09G077_CLK_PCLKGPTL		11
+ #define R9A09G077_CLK_PCLKH		12
+ #define R9A09G077_CLK_PCLKM		13
++#define R9A09G077_CLK_PCLKL		14
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__ */

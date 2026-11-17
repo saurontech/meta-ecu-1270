@@ -1,0 +1,88 @@
+From c7b5918bbcf00febf17f0592af379a1bf4c6e578 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:12 +0100
+Subject: [PATCH 024/399] arm64: dts: renesas: rzg3l-smarc-som: Add pinctrl
+ configuration for ETH0
+
+[ Upstream commit 72411a23c3942a2d5462f1695f0bceaf1c018bf7 ]
+
+Add pin control configuration for the ETH0 Ethernet interface on the
+RZ/G3L SMARC SoM board and also enable hotplug support.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430125342.439755-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/r9a08g046l48-smarc.dts   |  1 +
+ .../boot/dts/renesas/rzg3l-smarc-som.dtsi     | 32 +++++++++++++++++++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+index acead2b1c842..0ae052238b3b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+@@ -14,6 +14,7 @@
+ 
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
++#include <dt-bindings/pinctrl/renesas,r9a08g046-pinctrl.h>
+ #include "r9a08g046l48.dtsi"
+ #include "rzg3l-smarc-som.dtsi"
+ #include "renesas-smarc2.dtsi"
+diff --git a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+index fb781d9035aa..c7227a865fa4 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3l-smarc-som.dtsi
+@@ -23,6 +23,8 @@ &eth0 {
+ 	phy-handle = <&phy0>;
+ 	phy-mode = "rgmii-id";
+ 
++	pinctrl-0 = <&eth0_pins>;
++	pinctrl-names = "default";
+ 	status = "okay";
+ };
+ 
+@@ -38,6 +40,7 @@ &mdio0 {
+ 	phy0: ethernet-phy@7 {
+ 		compatible = "ethernet-phy-id0022.1640";
+ 		reg = <7>;
++		interrupts-extended = <&icu 3 IRQ_TYPE_LEVEL_LOW>;
+ 		rxc-skew-psec = <1400>;
+ 		txc-skew-psec = <1400>;
+ 		rxdv-skew-psec = <0>;
+@@ -52,3 +55,32 @@ phy0: ethernet-phy@7 {
+ 		txd3-skew-psec = <0>;
+ 	};
+ };
++
++&pinctrl {
++	eth0_pins: eth0 {
++		txc {
++			pinmux = <RZG3L_PORT_PINMUX(B, 1, 1)>;  /* ETH0_TXC_REF_CLK */
++			power-source = <1800>;
++			output-enable;
++			drive-strength-microamp = <5200>;
++		};
++
++		ctrl {
++			pinmux = <RZG3L_PORT_PINMUX(A, 0, 1)>, /* MDIO */
++				 <RZG3L_PORT_PINMUX(A, 1, 1)>, /* MDC */
++				 <RZG3L_PORT_PINMUX(A, 2, 1)>, /* RX_CTL */
++				 <RZG3L_PORT_PINMUX(A, 3, 1)>, /* TX_CTL */
++				 <RZG3L_PORT_PINMUX(B, 0, 1)>, /* RXC */
++				 <RZG3L_PORT_PINMUX(B, 2, 1)>, /* TXD0 */
++				 <RZG3L_PORT_PINMUX(B, 3, 1)>, /* TXD1 */
++				 <RZG3L_PORT_PINMUX(B, 4, 1)>, /* TXD2 */
++				 <RZG3L_PORT_PINMUX(B, 5, 1)>, /* TXD3 */
++				 <RZG3L_PORT_PINMUX(B, 6, 1)>, /* RXD0 */
++				 <RZG3L_PORT_PINMUX(B, 7, 1)>, /* RXD1 */
++				 <RZG3L_PORT_PINMUX(C, 0, 1)>, /* RXD2 */
++				 <RZG3L_PORT_PINMUX(C, 1, 1)>, /* RXD3 */
++				 <RZG3L_PORT_PINMUX(C, 2, 15)>; /* PHY_INTR */
++				 power-source = <1800>;
++		};
++	};
++};

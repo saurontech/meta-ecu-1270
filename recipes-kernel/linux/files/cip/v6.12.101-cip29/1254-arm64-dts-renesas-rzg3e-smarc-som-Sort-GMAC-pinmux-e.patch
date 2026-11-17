@@ -1,0 +1,94 @@
+From 36b633b93b547f4451feec6960592a43abc42da7 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:50 +0100
+Subject: [PATCH 1254/1853] arm64: dts: renesas: rzg3e-smarc-som: Sort GMAC
+ pinmux entries
+
+[ Upstream commit 0bbc248fa2cc834392f128bfd127a03f6dbe9d55 ]
+
+Sort the pinmux entries for both GMAC ctrl nodes in port order (A/B/C and
+D/E/F respectively) and remove the extra blank line before the second
+pinmux assignment.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260524092016.46346-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/rzg3e-smarc-som.dtsi     | 49 +++++++++----------
+ 1 file changed, 24 insertions(+), 25 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+index 0eb0c6e92fd5..f1320ba90aa4 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+@@ -195,20 +195,20 @@ clk {
+ 		};
+ 
+ 		ctrl {
+-			pinmux = <RZG3E_PORT_PINMUX(A, 1, 1)>, /* MDC */
+-				 <RZG3E_PORT_PINMUX(A, 0, 1)>, /* MDIO */
+-				 <RZG3E_PORT_PINMUX(C, 2, 15)>, /* PHY_INTR (IRQ2) */
+-				 <RZG3E_PORT_PINMUX(C, 1, 1)>, /* RXD3 */
+-				 <RZG3E_PORT_PINMUX(C, 0, 1)>, /* RXD2 */
+-				 <RZG3E_PORT_PINMUX(B, 7, 1)>, /* RXD1 */
+-				 <RZG3E_PORT_PINMUX(B, 6, 1)>, /* RXD0 */
+-				 <RZG3E_PORT_PINMUX(B, 0, 1)>, /* RXC */
++			pinmux = <RZG3E_PORT_PINMUX(A, 0, 1)>, /* MDIO */
++				 <RZG3E_PORT_PINMUX(A, 1, 1)>, /* MDC */
+ 				 <RZG3E_PORT_PINMUX(A, 2, 1)>, /* RX_CTL */
+-				 <RZG3E_PORT_PINMUX(B, 5, 1)>, /* TXD3 */
+-				 <RZG3E_PORT_PINMUX(B, 4, 1)>, /* TXD2 */
+-				 <RZG3E_PORT_PINMUX(B, 3, 1)>, /* TXD1 */
++				 <RZG3E_PORT_PINMUX(A, 3, 1)>, /* TX_CTL */
++				 <RZG3E_PORT_PINMUX(B, 0, 1)>, /* RXC */
+ 				 <RZG3E_PORT_PINMUX(B, 2, 1)>, /* TXD0 */
+-				 <RZG3E_PORT_PINMUX(A, 3, 1)>; /* TX_CTL */
++				 <RZG3E_PORT_PINMUX(B, 3, 1)>, /* TXD1 */
++				 <RZG3E_PORT_PINMUX(B, 4, 1)>, /* TXD2 */
++				 <RZG3E_PORT_PINMUX(B, 5, 1)>, /* TXD3 */
++				 <RZG3E_PORT_PINMUX(B, 6, 1)>, /* RXD0 */
++				 <RZG3E_PORT_PINMUX(B, 7, 1)>, /* RXD1 */
++				 <RZG3E_PORT_PINMUX(C, 0, 1)>, /* RXD2 */
++				 <RZG3E_PORT_PINMUX(C, 1, 1)>, /* RXD3 */
++				 <RZG3E_PORT_PINMUX(C, 2, 15)>; /* PHY_INTR (IRQ2) */
+ 		};
+ 	};
+ 
+@@ -219,21 +219,20 @@ clk {
+ 		};
+ 
+ 		ctrl {
+-
+-			pinmux = <RZG3E_PORT_PINMUX(D, 1, 1)>, /* MDC */
+-				 <RZG3E_PORT_PINMUX(D, 0, 1)>, /* MDIO */
+-				 <RZG3E_PORT_PINMUX(F, 2, 15)>, /* PHY_INTR (IRQ15) */
+-				 <RZG3E_PORT_PINMUX(F, 1, 1)>, /* RXD3 */
+-				 <RZG3E_PORT_PINMUX(F, 0, 1)>, /* RXD2 */
+-				 <RZG3E_PORT_PINMUX(E, 7, 1)>, /* RXD1 */
+-				 <RZG3E_PORT_PINMUX(E, 6, 1)>, /* RXD0 */
+-				 <RZG3E_PORT_PINMUX(E, 0, 1)>, /* RXC */
++			pinmux = <RZG3E_PORT_PINMUX(D, 0, 1)>, /* MDIO */
++				 <RZG3E_PORT_PINMUX(D, 1, 1)>, /* MDC */
+ 				 <RZG3E_PORT_PINMUX(D, 2, 1)>, /* RX_CTL */
+-				 <RZG3E_PORT_PINMUX(E, 5, 1)>, /* TXD3 */
+-				 <RZG3E_PORT_PINMUX(E, 4, 1)>, /* TXD2 */
+-				 <RZG3E_PORT_PINMUX(E, 3, 1)>, /* TXD1 */
++				 <RZG3E_PORT_PINMUX(D, 3, 1)>, /* TX_CTL */
++				 <RZG3E_PORT_PINMUX(E, 0, 1)>, /* RXC */
+ 				 <RZG3E_PORT_PINMUX(E, 2, 1)>, /* TXD0 */
+-				 <RZG3E_PORT_PINMUX(D, 3, 1)>; /* TX_CTL */
++				 <RZG3E_PORT_PINMUX(E, 3, 1)>, /* TXD1 */
++				 <RZG3E_PORT_PINMUX(E, 4, 1)>, /* TXD2 */
++				 <RZG3E_PORT_PINMUX(E, 5, 1)>, /* TXD3 */
++				 <RZG3E_PORT_PINMUX(E, 6, 1)>, /* RXD0 */
++				 <RZG3E_PORT_PINMUX(E, 7, 1)>, /* RXD1 */
++				 <RZG3E_PORT_PINMUX(F, 0, 1)>, /* RXD2 */
++				 <RZG3E_PORT_PINMUX(F, 1, 1)>, /* RXD3 */
++				 <RZG3E_PORT_PINMUX(F, 2, 15)>; /* PHY_INTR (IRQ15) */
+ 		};
+ 	};
+ 

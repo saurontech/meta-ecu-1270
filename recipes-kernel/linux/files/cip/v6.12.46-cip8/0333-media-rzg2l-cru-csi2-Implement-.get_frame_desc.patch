@@ -1,0 +1,61 @@
+From b4317d40c614307523ba99466a64b52edbc85a81 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:11 +0200
+Subject: [PATCH 333/643] media: rzg2l-cru: csi2: Implement .get_frame_desc()
+
+commit 9e880cd9e9e8c2e54169e317985b61aafca5e2d8 upstream.
+
+The RZ/G2L CRU requires information about which VCx to process data from,
+among the four available VCs. To obtain this information, the
+.get_frame_desc() routine is implemented. This routine, in turn, calls
+.get_frame_desc() on the remote sensor connected to the CSI2 bridge.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-csi2.c   | 20 +++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index abacf53b944c..3fd0be6a3b65 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -582,6 +582,25 @@ static int rzg2l_csi2_enum_frame_size(struct v4l2_subdev *sd,
+ 	return 0;
+ }
+ 
++static int rzg2l_csi2_get_frame_desc(struct v4l2_subdev *sd, unsigned int pad,
++				     struct v4l2_mbus_frame_desc *fd)
++{
++	struct rzg2l_csi2 *csi2 = sd_to_csi2(sd);
++	struct media_pad *remote_pad;
++
++	if (!csi2->remote_source)
++		return -ENODEV;
++
++	remote_pad = media_pad_remote_pad_unique(&csi2->pads[RZG2L_CSI2_SINK]);
++	if (IS_ERR(remote_pad)) {
++		dev_err(csi2->dev, "can't get source pad of %s (%ld)\n",
++			csi2->remote_source->name, PTR_ERR(remote_pad));
++		return PTR_ERR(remote_pad);
++	}
++	return v4l2_subdev_call(csi2->remote_source, pad, get_frame_desc,
++				remote_pad->index, fd);
++}
++
+ static const struct v4l2_subdev_video_ops rzg2l_csi2_video_ops = {
+ 	.s_stream = rzg2l_csi2_s_stream,
+ 	.pre_streamon = rzg2l_csi2_pre_streamon,
+@@ -593,6 +612,7 @@ static const struct v4l2_subdev_pad_ops rzg2l_csi2_pad_ops = {
+ 	.enum_frame_size = rzg2l_csi2_enum_frame_size,
+ 	.set_fmt = rzg2l_csi2_set_format,
+ 	.get_fmt = v4l2_subdev_get_fmt,
++	.get_frame_desc = rzg2l_csi2_get_frame_desc,
+ };
+ 
+ static const struct v4l2_subdev_ops rzg2l_csi2_subdev_ops = {

@@ -1,0 +1,34 @@
+From 35fdbc9ed624352efe63c3802a4fa003b9f1eb0c Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:30 +0100
+Subject: [PATCH 018/246] net: ravb: Disable IP header TX checksum offloading
+
+Commit 4574ba5b711d7f7968c116521ef58d46fd4f89b1 upstream.
+
+For IPv4 packets, the header checksum will always be calculated in software
+in the TX path (Documentation/networking/checksum-offloads.rst says "No
+offloading of the IP header checksum is performed; it is always done in
+software.") so there is no advantage in asking the hardware to also
+calculate this checksum.
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index 98496aa39f3d..a5b4f4fe77b1 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -998,7 +998,7 @@ enum CSR1_BIT {
+ 	CSR1_TDHD	= 0x08000000,
+ };
+ 
+-#define CSR1_CSUM_ENABLE (CSR1_TIP4 | CSR1_TTCP4 | CSR1_TUDP4)
++#define CSR1_CSUM_ENABLE (CSR1_TTCP4 | CSR1_TUDP4)
+ 
+ enum CSR2_BIT {
+ 	CSR2_RIP4	= 0x00000001,

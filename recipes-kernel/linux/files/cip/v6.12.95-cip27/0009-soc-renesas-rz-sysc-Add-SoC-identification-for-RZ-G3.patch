@@ -1,0 +1,192 @@
+From d5df354d22d281afe88eacea380242a8b0d0fd0f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:28 +0100
+Subject: [PATCH 009/286] soc: renesas: rz-sysc: Add SoC identification for
+ RZ/G3L SoC
+
+[ Upstream commit b1de9823fdc67a8e9cd0dcf1f6f0e9780d425d4e ]
+
+Add SoC identification for the RZ/G3L SoC using the System Controller
+(SYSC) block.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260203103031.247435-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/soc/renesas/Kconfig          | 12 ++++
+ drivers/soc/renesas/Makefile         |  1 +
+ drivers/soc/renesas/r9a08g046-sysc.c | 91 ++++++++++++++++++++++++++++
+ drivers/soc/renesas/rz-sysc.c        |  3 +
+ drivers/soc/renesas/rz-sysc.h        |  1 +
+ 5 files changed, 108 insertions(+)
+ create mode 100644 drivers/soc/renesas/r9a08g046-sysc.c
+
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index 728eddf69085..90ba65072af2 100644
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -338,6 +338,14 @@ config ARCH_R9A08G045
+ 	help
+ 	  This enables support for the Renesas RZ/G3S SoC variants.
+ 
++config ARCH_R9A08G046
++	bool "ARM64 Platform support for R9A08G046 (RZ/G3L)"
++	default y if ARCH_RENESAS
++	select ARCH_RZG2L
++	select SYSC_R9A08G046
++	help
++	  This enables support for the Renesas RZ/G3L SoC variants.
++
+ config ARCH_R9A09G011
+ 	bool "ARM64 Platform support for RZ/V2M"
+ 	select PM
+@@ -413,6 +421,10 @@ config SYSC_R9A08G045
+ 	bool "Renesas RZ/G3S System controller support" if COMPILE_TEST
+ 	select SYSC_RZ
+ 
++config SYSC_R9A08G046
++	bool "Renesas System controller support for R9A08G046 (RZ/G3L)" if COMPILE_TEST
++	select SYSC_RZ
++
+ config SYS_R9A09G047
+ 	bool "Renesas RZ/G3E System controller support" if COMPILE_TEST
+ 	select SYSC_RZ
+diff --git a/drivers/soc/renesas/Makefile b/drivers/soc/renesas/Makefile
+index 3bdcc6a395d5..47b82be38284 100644
+--- a/drivers/soc/renesas/Makefile
++++ b/drivers/soc/renesas/Makefile
+@@ -7,6 +7,7 @@ ifdef CONFIG_SMP
+ obj-$(CONFIG_ARCH_R9A06G032)	+= r9a06g032-smp.o
+ endif
+ obj-$(CONFIG_SYSC_R9A08G045)	+= r9a08g045-sysc.o
++obj-$(CONFIG_SYSC_R9A08G046)	+= r9a08g046-sysc.o
+ obj-$(CONFIG_SYS_R9A09G047)	+= r9a09g047-sys.o
+ obj-$(CONFIG_SYS_R9A09G056)	+= r9a09g056-sys.o
+ obj-$(CONFIG_SYS_R9A09G057)	+= r9a09g057-sys.o
+diff --git a/drivers/soc/renesas/r9a08g046-sysc.c b/drivers/soc/renesas/r9a08g046-sysc.c
+new file mode 100644
+index 000000000000..fd98df196d0a
+--- /dev/null
++++ b/drivers/soc/renesas/r9a08g046-sysc.c
+@@ -0,0 +1,91 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * RZ/G3L System controller (SYSC) driver
++ *
++ * Copyright (C) 2026 Renesas Electronics Corp.
++ */
++
++#include <linux/bits.h>
++#include <linux/device.h>
++#include <linux/init.h>
++
++#include "rz-sysc.h"
++
++#define SYS_XSPI_MAP_STAADD_CS0		0x348
++#define SYS_XSPI_MAP_ENDADD_CS0		0x34c
++#define SYS_XSPI_MAP_STAADD_CS1		0x350
++#define SYS_XSPI_MAP_ENDADD_CS1		0x354
++#define SYS_GETH0_CFG			0x380
++#define SYS_GETH1_CFG			0x390
++#define SYS_PCIE_CFG			0x3a0
++#define SYS_PCIE_MON			0x3a4
++#define SYS_PCIE_PHY			0x3b4
++#define SYS_I2C0_CFG			0x400
++#define SYS_I2C1_CFG			0x410
++#define SYS_I2C2_CFG			0x420
++#define SYS_I2C3_CFG			0x430
++#define SYS_I3C_CFG			0x440
++#define SYS_PWRRDY_N			0xd70
++#define SYS_IPCONT_SEL_CLONECH		0xe2c
++
++static bool rzg3l_regmap_readable_reg(struct device *dev, unsigned int reg)
++{
++	switch (reg) {
++	case SYS_XSPI_MAP_STAADD_CS0:
++	case SYS_XSPI_MAP_ENDADD_CS0:
++	case SYS_XSPI_MAP_STAADD_CS1:
++	case SYS_XSPI_MAP_ENDADD_CS1:
++	case SYS_GETH0_CFG:
++	case SYS_GETH1_CFG:
++	case SYS_PCIE_CFG:
++	case SYS_PCIE_MON:
++	case SYS_PCIE_PHY:
++	case SYS_I2C0_CFG:
++	case SYS_I2C1_CFG:
++	case SYS_I2C2_CFG:
++	case SYS_I2C3_CFG:
++	case SYS_I3C_CFG:
++	case SYS_PWRRDY_N:
++	case SYS_IPCONT_SEL_CLONECH:
++		return true;
++	default:
++		return false;
++	}
++}
++
++static bool rzg3l_regmap_writeable_reg(struct device *dev, unsigned int reg)
++{
++	switch (reg) {
++	case SYS_XSPI_MAP_STAADD_CS0:
++	case SYS_XSPI_MAP_ENDADD_CS0:
++	case SYS_XSPI_MAP_STAADD_CS1:
++	case SYS_XSPI_MAP_ENDADD_CS1:
++	case SYS_PCIE_CFG:
++	case SYS_PCIE_PHY:
++	case SYS_I2C0_CFG:
++	case SYS_I2C1_CFG:
++	case SYS_I2C2_CFG:
++	case SYS_I2C3_CFG:
++	case SYS_I3C_CFG:
++	case SYS_PWRRDY_N:
++	case SYS_IPCONT_SEL_CLONECH:
++		return true;
++	default:
++		return false;
++	}
++}
++
++static const struct rz_sysc_soc_id_init_data rzg3l_sysc_soc_id_init_data __initconst = {
++	.family = "RZ/G3L",
++	.id = 0x87d9447,
++	.devid_offset = 0xa04,
++	.revision_mask = GENMASK(31, 28),
++	.specific_id_mask = GENMASK(27, 0),
++};
++
++const struct rz_sysc_init_data rzg3l_sysc_init_data __initconst = {
++	.soc_id_init_data = &rzg3l_sysc_soc_id_init_data,
++	.readable_reg = rzg3l_regmap_readable_reg,
++	.writeable_reg = rzg3l_regmap_writeable_reg,
++	.max_register = 0xe2c,
++};
+diff --git a/drivers/soc/renesas/rz-sysc.c b/drivers/soc/renesas/rz-sysc.c
+index 19c1e666279b..dafbf7aa3f97 100644
+--- a/drivers/soc/renesas/rz-sysc.c
++++ b/drivers/soc/renesas/rz-sysc.c
+@@ -89,6 +89,9 @@ static const struct of_device_id rz_sysc_match[] = {
+ #ifdef CONFIG_SYSC_R9A08G045
+ 	{ .compatible = "renesas,r9a08g045-sysc", .data = &rzg3s_sysc_init_data },
+ #endif
++#ifdef CONFIG_SYSC_R9A08G046
++	{ .compatible = "renesas,r9a08g046-sysc", .data = &rzg3l_sysc_init_data },
++#endif
+ #ifdef CONFIG_SYS_R9A09G047
+ 	{ .compatible = "renesas,r9a09g047-sys", .data = &rzg3e_sys_init_data },
+ #endif
+diff --git a/drivers/soc/renesas/rz-sysc.h b/drivers/soc/renesas/rz-sysc.h
+index 88929bf21cb1..921ee0d26c47 100644
+--- a/drivers/soc/renesas/rz-sysc.h
++++ b/drivers/soc/renesas/rz-sysc.h
+@@ -46,6 +46,7 @@ struct rz_sysc_init_data {
+ };
+ 
+ extern const struct rz_sysc_init_data rzg3e_sys_init_data;
++extern const struct rz_sysc_init_data rzg3l_sysc_init_data;
+ extern const struct rz_sysc_init_data rzg3s_sysc_init_data;
+ extern const struct rz_sysc_init_data rzv2h_sys_init_data;
+ extern const struct rz_sysc_init_data rzv2n_sys_init_data;

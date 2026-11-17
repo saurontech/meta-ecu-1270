@@ -1,0 +1,111 @@
+From a20db8d2f05da3b0a8b7efbc0c5e1e14805d6fd7 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 08:42:36 +0000
+Subject: [PATCH 004/838] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable
+ GBETH
+
+commit f111192baa80bb33b67270bb987c1be639843c82 upstream.
+
+Enable GBETH nodes on RZ/V2N EVK.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250514101528.41663-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g056n48-rzv2n-evk.dts    | 66 +++++++++++++++++++
+ 1 file changed, 66 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index 3e0606a8c034..d6c392f79f33 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -15,6 +15,8 @@ / {
+ 	compatible = "renesas,rzv2n-evk", "renesas,r9a09g056n48", "renesas,r9a09g056";
+ 
+ 	aliases {
++		ethernet0 = &eth0;
++		ethernet1 = &eth1;
+ 		mmc1 = &sdhi1;
+ 		serial0 = &scif;
+ 	};
+@@ -63,6 +65,60 @@ &audio_extal_clk {
+ 	clock-frequency = <22579200>;
+ };
+ 
++&eth0 {
++	pinctrl-0 = <&eth0_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy0>;
++	phy-mode = "rgmii-id";
++	status = "okay";
++};
++
++&eth1 {
++	pinctrl-0 = <&eth1_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy1>;
++	phy-mode = "rgmii-id";
++	status = "okay";
++};
++
++&mdio0 {
++	phy0: ethernet-phy@0 {
++		compatible = "ethernet-phy-id0022.1640", "ethernet-phy-ieee802.3-c22";
++		reg = <0>;
++		rxc-skew-psec = <0>;
++		txc-skew-psec = <0>;
++		rxdv-skew-psec = <0>;
++		txdv-skew-psec = <0>;
++		rxd0-skew-psec = <0>;
++		rxd1-skew-psec = <0>;
++		rxd2-skew-psec = <0>;
++		rxd3-skew-psec = <0>;
++		txd0-skew-psec = <0>;
++		txd1-skew-psec = <0>;
++		txd2-skew-psec = <0>;
++		txd3-skew-psec = <0>;
++	};
++};
++
++&mdio1 {
++	phy1: ethernet-phy@1 {
++		compatible = "ethernet-phy-id0022.1640", "ethernet-phy-ieee802.3-c22";
++		reg = <0>;
++		rxc-skew-psec = <0>;
++		txc-skew-psec = <0>;
++		rxdv-skew-psec = <0>;
++		txdv-skew-psec = <0>;
++		rxd0-skew-psec = <0>;
++		rxd1-skew-psec = <0>;
++		rxd2-skew-psec = <0>;
++		rxd3-skew-psec = <0>;
++		txd0-skew-psec = <0>;
++		txd1-skew-psec = <0>;
++		txd2-skew-psec = <0>;
++		txd3-skew-psec = <0>;
++	};
++};
++
+ &ostm0 {
+ 	status = "okay";
+ };
+@@ -96,6 +152,16 @@ &ostm7 {
+ };
+ 
+ &pinctrl {
++	eth0_pins: eth0 {
++		pins = "ET0_TXC_TXCLK";
++		output-enable;
++	};
++
++	eth1_pins: eth0 {
++		pins = "ET1_TXC_TXCLK";
++		output-enable;
++	};
++
+ 	scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";
+ 		renesas,output-impedance = <1>;

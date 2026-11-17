@@ -1,0 +1,123 @@
+From e70b6b6b55204f927d891101e45414f73efce9a3 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Tue, 3 Jun 2025 12:20:02 +0300
+Subject: [PATCH 108/246] arm64: dts: renesas: r9a08g045: Add the remaining
+ SCIF interfaces
+
+commit aaf7188d7f77bb8a6e043c70dc6cc6616c427762 upstream.
+
+The Renesas RZ/G3S SoC has 6 SCIF interfaces. SCIF0 is used as debug
+console. Add the remaining ones.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241115134401.3893008-5-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 90 ++++++++++++++++++++++
+ 1 file changed, 90 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 7cf8587bfe0f..1707d47a09df 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -87,6 +87,96 @@ scif0: serial@1004b800 {
+ 			status = "disabled";
+ 		};
+ 
++		scif1: serial@1004bc00 {
++			compatible = "renesas,scif-r9a08g045", "renesas,scif-r9a07g044";
++			reg = <0 0x1004bc00 0 0x400>;
++			interrupts = <GIC_SPI 325 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 327 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 328 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 326 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 329 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 329 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A08G045_SCIF1_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G045_SCIF1_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif2: serial@1004c000 {
++			compatible = "renesas,scif-r9a08g045", "renesas,scif-r9a07g044";
++			reg = <0 0x1004c000 0 0x400>;
++			interrupts = <GIC_SPI 330 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 332 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 333 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 331 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 334 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 334 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A08G045_SCIF2_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G045_SCIF2_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif3: serial@1004c400 {
++			compatible = "renesas,scif-r9a08g045", "renesas,scif-r9a07g044";
++			reg = <0 0x1004c400 0 0x400>;
++			interrupts = <GIC_SPI 335 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 337 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 338 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 336 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 339 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 339 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A08G045_SCIF3_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G045_SCIF3_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif4: serial@1004c800 {
++			compatible = "renesas,scif-r9a08g045", "renesas,scif-r9a07g044";
++			reg = <0 0x1004c800 0 0x400>;
++			interrupts = <GIC_SPI 340 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 342 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 343 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 341 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 344 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 344 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A08G045_SCIF4_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G045_SCIF4_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif5: serial@1004e000 {
++			compatible = "renesas,scif-r9a08g045", "renesas,scif-r9a07g044";
++			reg = <0 0x1004e000 0 0x400>;
++			interrupts = <GIC_SPI 345 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 347 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 346 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A08G045_SCIF5_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G045_SCIF5_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
+ 		rtc: rtc@1004ec00 {
+ 			compatible = "renesas,r9a08g045-rtca3", "renesas,rz-rtca3";
+ 			reg = <0 0x1004ec00 0 0x400>;

@@ -1,0 +1,39 @@
+From eb75949b67caba68b63bab02a03ce8b3209fd776 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:31:42 +0300
+Subject: [PATCH 084/246] clk: versaclock3: Add support for the 5L35023 variant
+
+commit d3dcc98f65dbd364ff839edecf39d1a1e949ee90 upstream.
+
+Add support for the 5L35023 variant of the Versa 3 clock generator.
+
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20241210170953.2936724-4-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Stephen Boyd <sboyd@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/clk-versaclock3.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/clk/clk-versaclock3.c b/drivers/clk/clk-versaclock3.c
+index 1398d16df5d0..9fe27dace111 100644
+--- a/drivers/clk/clk-versaclock3.c
++++ b/drivers/clk/clk-versaclock3.c
+@@ -1133,8 +1133,14 @@ static const struct vc3_hw_cfg vc3_5p = {
+ 	.se2_clk_sel_msk = BIT(6),
+ };
+ 
++static const struct vc3_hw_cfg vc3_5l = {
++	.pll2_vco = { .min = 30000000UL, .max = 130000000UL },
++	.se2_clk_sel_msk = BIT(0),
++};
++
+ static const struct of_device_id dev_ids[] = {
+ 	{ .compatible = "renesas,5p35023", .data = &vc3_5p },
++	{ .compatible = "renesas,5l35023", .data = &vc3_5l },
+ 	{ /* Sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, dev_ids);

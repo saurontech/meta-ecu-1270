@@ -1,0 +1,87 @@
+From 10cc34fdf7de1829a40c109578889036395fc218 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 10 Apr 2026 20:02:09 +0300
+Subject: [PATCH 246/497] dt-bindings: thermal: r9a09g047-tsu: document RZ/T2H
+ and RZ/N2H
+
+commit f41eaaa5f2c9fb4fc816e45e2061d80c0b927d39 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs include a
+Temperature Sensor Unit (TSU). The device provides real-time temperature
+measurements for thermal management, utilizing a single dedicated
+channel for temperature sensing.
+
+Compared to the previously supported RZ/G3E, the RZ/T2H and RZ/N2H SoCs
+do not have a reset for the TSU peripheral, and the OTP data is exposed
+via ARM SMC, as opposed to a system register.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20260108195223.193531-5-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+[cosmin.tanislav: resolve merge conflict]
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../thermal/renesas,r9a09g047-tsu.yaml        | 30 +++++++++++++++++--
+ 1 file changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml b/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+index c959b9834620..d560c58be4d6 100644
+--- a/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
++++ b/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+@@ -17,12 +17,17 @@ description:
+ properties:
+   compatible:
+     oneOf:
+-      - const: renesas,r9a09g047-tsu # RZ/G3E
++      - enum:
++          - renesas,r9a09g047-tsu # RZ/G3E
++          - renesas,r9a09g077-tsu # RZ/T2H
+       - items:
+           - enum:
+               - renesas,r9a09g056-tsu # RZ/V2N
+               - renesas,r9a09g057-tsu # RZ/V2H
+           - const: renesas,r9a09g047-tsu # RZ/G3E
++      - items:
++          - const: renesas,r9a09g087-tsu # RZ/N2H
++          - const: renesas,r9a09g077-tsu # RZ/T2H
+ 
+   reg:
+     maxItems: 1
+@@ -65,12 +70,31 @@ required:
+   - compatible
+   - reg
+   - clocks
+-  - resets
+   - power-domains
+   - interrupts
+   - interrupt-names
+   - "#thermal-sensor-cells"
+-  - renesas,tsu-trim
++
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g047-tsu
++    then:
++      required:
++        - resets
++        - renesas,tsu-trim
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g077-tsu
++    then:
++      properties:
++        resets: false
++        renesas,tsu-trim: false
+ 
+ additionalProperties: false
+ 

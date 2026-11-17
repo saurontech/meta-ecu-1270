@@ -1,0 +1,213 @@
+From 253fd70c51fe30e75c5fb68ea26df4e6de64c8c5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 3 Nov 2025 12:38:03 +0100
+Subject: [PATCH 179/192] net: stmmac: Add DWMAC glue layer for Renesas GBETH
+
+[ Upstream commit 461f6529e5946d98ef91bf115d5ced61d8439a6a ]
+
+Add the DWMAC glue layer for the GBETH IP found in the Renesas RZ/V2H(P)
+SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+Link: https://patch.msgid.link/20250417084015.74154-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+[john.madieu:
+ - Removed STMMAC_FLAG_EN_TX_LPI_CLK_PHY_CAP flag as it's not available
+   in 6.12.y-cip]
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/stmicro/stmmac/Kconfig   |  11 ++
+ drivers/net/ethernet/stmicro/stmmac/Makefile  |   1 +
+ .../stmicro/stmmac/dwmac-renesas-gbeth.c      | 146 ++++++++++++++++++
+ 3 files changed, 158 insertions(+)
+ create mode 100644 drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/Kconfig b/drivers/net/ethernet/stmicro/stmmac/Kconfig
+index 05cc07b8f48c..fcf5da66fd02 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/Kconfig
++++ b/drivers/net/ethernet/stmicro/stmmac/Kconfig
+@@ -131,6 +131,17 @@ config DWMAC_QCOM_ETHQOS
+ 	  This selects the Qualcomm ETHQOS glue layer support for the
+ 	  stmmac device driver.
+ 
++config DWMAC_RENESAS_GBETH
++	tristate "Renesas RZ/V2H(P) GBETH support"
++	default ARCH_RENESAS
++	depends on OF && (ARCH_RENESAS || COMPILE_TEST)
++	help
++	  Support for Gigabit Ethernet Interface (GBETH) on Renesas
++	  RZ/V2H(P) SoCs.
++
++	  This selects the Renesas RZ/V2H(P) Soc specific glue layer support
++	  for the stmmac device driver.
++
+ config DWMAC_ROCKCHIP
+ 	tristate "Rockchip dwmac support"
+ 	default ARCH_ROCKCHIP
+diff --git a/drivers/net/ethernet/stmicro/stmmac/Makefile b/drivers/net/ethernet/stmicro/stmmac/Makefile
+index c2f0e91f6bf8..dd53002cbfb0 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/Makefile
++++ b/drivers/net/ethernet/stmicro/stmmac/Makefile
+@@ -20,6 +20,7 @@ obj-$(CONFIG_DWMAC_LPC18XX)	+= dwmac-lpc18xx.o
+ obj-$(CONFIG_DWMAC_MEDIATEK)	+= dwmac-mediatek.o
+ obj-$(CONFIG_DWMAC_MESON)	+= dwmac-meson.o dwmac-meson8b.o
+ obj-$(CONFIG_DWMAC_QCOM_ETHQOS)	+= dwmac-qcom-ethqos.o
++obj-$(CONFIG_DWMAC_RENESAS_GBETH) += dwmac-renesas-gbeth.o
+ obj-$(CONFIG_DWMAC_ROCKCHIP)	+= dwmac-rk.o
+ obj-$(CONFIG_DWMAC_RZN1)	+= dwmac-rzn1.o
+ obj-$(CONFIG_DWMAC_SOCFPGA)	+= dwmac-altr-socfpga.o
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c
+new file mode 100644
+index 000000000000..8bd554bf94f9
+--- /dev/null
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c
+@@ -0,0 +1,146 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * dwmac-renesas-gbeth.c - DWMAC Specific Glue layer for Renesas GBETH
++ *
++ * The Rx and Tx clocks are supplied as follows for the GBETH IP.
++ *
++ *                         Rx / Tx
++ *   -------+------------- on / off -------
++ *          |
++ *          |            Rx-180 / Tx-180
++ *          +---- not ---- on / off -------
++ *
++ * Copyright (C) 2025 Renesas Electronics Corporation
++ */
++
++#include <linux/clk.h>
++#include <linux/device.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/reset.h>
++
++#include "stmmac_platform.h"
++
++struct renesas_gbeth {
++	struct plat_stmmacenet_data *plat_dat;
++	struct reset_control *rstc;
++	struct device *dev;
++};
++
++static const char *const renesas_gbeth_clks[] = {
++	"tx", "tx-180", "rx", "rx-180",
++};
++
++static int renesas_gbeth_init(struct platform_device *pdev, void *priv)
++{
++	struct plat_stmmacenet_data *plat_dat;
++	struct renesas_gbeth *gbeth = priv;
++	int ret;
++
++	plat_dat = gbeth->plat_dat;
++
++	ret = reset_control_deassert(gbeth->rstc);
++	if (ret) {
++		dev_err(gbeth->dev, "Reset deassert failed\n");
++		return ret;
++	}
++
++	ret = clk_bulk_prepare_enable(plat_dat->num_clks,
++				      plat_dat->clks);
++	if (ret)
++		reset_control_assert(gbeth->rstc);
++
++	return ret;
++}
++
++static void renesas_gbeth_exit(struct platform_device *pdev, void *priv)
++{
++	struct plat_stmmacenet_data *plat_dat;
++	struct renesas_gbeth *gbeth = priv;
++	int ret;
++
++	plat_dat = gbeth->plat_dat;
++
++	clk_bulk_disable_unprepare(plat_dat->num_clks, plat_dat->clks);
++
++	ret = reset_control_assert(gbeth->rstc);
++	if (ret)
++		dev_err(gbeth->dev, "Reset assert failed\n");
++}
++
++static int renesas_gbeth_probe(struct platform_device *pdev)
++{
++	struct plat_stmmacenet_data *plat_dat;
++	struct stmmac_resources stmmac_res;
++	struct device *dev = &pdev->dev;
++	struct renesas_gbeth *gbeth;
++	unsigned int i;
++	int err;
++
++	err = stmmac_get_platform_resources(pdev, &stmmac_res);
++	if (err)
++		return dev_err_probe(dev, err,
++				     "failed to get resources\n");
++
++	plat_dat = devm_stmmac_probe_config_dt(pdev, stmmac_res.mac);
++	if (IS_ERR(plat_dat))
++		return dev_err_probe(dev, PTR_ERR(plat_dat),
++				     "dt configuration failed\n");
++
++	gbeth = devm_kzalloc(dev, sizeof(*gbeth), GFP_KERNEL);
++	if (!gbeth)
++		return -ENOMEM;
++
++	plat_dat->num_clks = ARRAY_SIZE(renesas_gbeth_clks);
++	plat_dat->clks = devm_kcalloc(dev, plat_dat->num_clks,
++				      sizeof(*plat_dat->clks), GFP_KERNEL);
++	if (!plat_dat->clks)
++		return -ENOMEM;
++
++	for (i = 0; i < plat_dat->num_clks; i++)
++		plat_dat->clks[i].id = renesas_gbeth_clks[i];
++
++	err = devm_clk_bulk_get(dev, plat_dat->num_clks, plat_dat->clks);
++	if (err < 0)
++		return err;
++
++	plat_dat->clk_tx_i = stmmac_pltfr_find_clk(plat_dat, "tx");
++	if (!plat_dat->clk_tx_i)
++		return dev_err_probe(dev, -EINVAL,
++				     "error finding tx clock\n");
++
++	gbeth->rstc = devm_reset_control_get_exclusive(dev, NULL);
++	if (IS_ERR(gbeth->rstc))
++		return PTR_ERR(gbeth->rstc);
++
++	gbeth->dev = dev;
++	gbeth->plat_dat = plat_dat;
++	plat_dat->bsp_priv = gbeth;
++	plat_dat->set_clk_tx_rate = stmmac_set_clk_tx_rate;
++	plat_dat->init = renesas_gbeth_init;
++	plat_dat->exit = renesas_gbeth_exit;
++
++	plat_dat->flags |= STMMAC_FLAG_HWTSTAMP_CORRECT_LATENCY |
++			   STMMAC_FLAG_SPH_DISABLE;
++
++	return devm_stmmac_pltfr_probe(pdev, plat_dat, &stmmac_res);
++}
++
++static const struct of_device_id renesas_gbeth_match[] = {
++	{ .compatible = "renesas,rzv2h-gbeth", },
++	{ /* Sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, renesas_gbeth_match);
++
++static struct platform_driver renesas_gbeth_driver = {
++	.probe  = renesas_gbeth_probe,
++	.driver = {
++		.name		= "renesas-gbeth",
++		.of_match_table	= renesas_gbeth_match,
++	},
++};
++module_platform_driver(renesas_gbeth_driver);
++
++MODULE_AUTHOR("Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>");
++MODULE_DESCRIPTION("Renesas GBETH DWMAC Specific Glue layer");
++MODULE_LICENSE("GPL");

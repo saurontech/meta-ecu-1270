@@ -1,0 +1,43 @@
+From e60d020a0313ac16268152f269f5021769ff96d5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 2 Jul 2025 12:37:07 +0200
+Subject: [PATCH 153/246] dt-bindings: gpu: mali-bifrost: Add compatible for
+ RZ/V2H(P) SoC
+
+commit c29ebef507a62b7a01fb61b7117065022552946f upstream.
+
+Add a compatible string for the Renesas RZ/V2H(P) SoC variants that
+include a Mali-G31 GPU. These variants share the same restrictions on
+interrupts, clocks, and power domains as the RZ/G2L SoC, so extend
+the existing schema validation accordingly.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250218115922.407816-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+index 278399adc550..d03e5c61e4dd 100644
+--- a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
++++ b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+@@ -24,6 +24,7 @@ properties:
+               - realtek,rtd1619-mali
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
++              - renesas,r9a09g057-mali
+               - rockchip,px30-mali
+               - rockchip,rk3568-mali
+           - const: arm,mali-bifrost # Mali Bifrost GPU model/revision is fully discoverable
+@@ -141,6 +142,7 @@ allOf:
+             enum:
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
++              - renesas,r9a09g057-mali
+     then:
+       properties:
+         interrupts:

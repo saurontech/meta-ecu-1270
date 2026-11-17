@@ -1,0 +1,90 @@
+From 35d1ea26243a975b43aa945fad662fc23c573654 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:43 +0000
+Subject: [PATCH 339/724] clk: renesas: Add CPG/MSSR support to RZ/N2H SoC
+
+commit 8b8ca279752e0c9ae242a110ecb513dd85e5844f upstream.
+
+Add clock driver support for the Renesas RZ/N2H (R9A09G087) SoC by reusing
+the existing RZ/T2H (R9A09G077) CPG/MSSR implementation, as both SoCs
+share the same clock and reset architecture.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250617155757.149597-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-24-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/Kconfig            | 5 +++++
+ drivers/clk/renesas/Makefile           | 1 +
+ drivers/clk/renesas/r9a09g077-cpg.c    | 1 +
+ drivers/clk/renesas/renesas-cpg-mssr.c | 6 ++++++
+ 4 files changed, 13 insertions(+)
+
+diff --git a/drivers/clk/renesas/Kconfig b/drivers/clk/renesas/Kconfig
+index 45f9ae5b6ef1..6a5a04664990 100644
+--- a/drivers/clk/renesas/Kconfig
++++ b/drivers/clk/renesas/Kconfig
+@@ -44,6 +44,7 @@ config CLK_RENESAS
+ 	select CLK_R9A09G056 if ARCH_R9A09G056
+ 	select CLK_R9A09G057 if ARCH_R9A09G057
+ 	select CLK_R9A09G077 if ARCH_R9A09G077
++	select CLK_R9A09G087 if ARCH_R9A09G087
+ 	select CLK_SH73A0 if ARCH_SH73A0
+ 
+ if CLK_RENESAS
+@@ -213,6 +214,10 @@ config CLK_R9A09G077
+ 	bool "RZ/T2H clock support" if COMPILE_TEST
+ 	select CLK_RENESAS_CPG_MSSR
+ 
++config CLK_R9A09G087
++	bool "RZ/N2H clock support" if COMPILE_TEST
++	select CLK_RENESAS_CPG_MSSR
++
+ config CLK_SH73A0
+ 	bool "SH-Mobile AG5 clock support" if COMPILE_TEST
+ 	select CLK_RENESAS_CPG_MSTP
+diff --git a/drivers/clk/renesas/Makefile b/drivers/clk/renesas/Makefile
+index d8d894a15d24..d28eb276a153 100644
+--- a/drivers/clk/renesas/Makefile
++++ b/drivers/clk/renesas/Makefile
+@@ -41,6 +41,7 @@ obj-$(CONFIG_CLK_R9A09G047)		+= r9a09g047-cpg.o
+ obj-$(CONFIG_CLK_R9A09G056)		+= r9a09g056-cpg.o
+ obj-$(CONFIG_CLK_R9A09G057)		+= r9a09g057-cpg.o
+ obj-$(CONFIG_CLK_R9A09G077)		+= r9a09g077-cpg.o
++obj-$(CONFIG_CLK_R9A09G087)		+= r9a09g077-cpg.o
+ obj-$(CONFIG_CLK_SH73A0)		+= clk-sh73a0.o
+ 
+ # Family
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index b83ef933ae0f..baf917ff4beb 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -13,6 +13,7 @@
+ #include <linux/kernel.h>
+ 
+ #include <dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h>
++#include <dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h>
+ #include "renesas-cpg-mssr.h"
+ 
+ #define RZT2H_REG_BLOCK_SHIFT	11
+diff --git a/drivers/clk/renesas/renesas-cpg-mssr.c b/drivers/clk/renesas/renesas-cpg-mssr.c
+index 2ae0b513b973..9ea544d00634 100644
+--- a/drivers/clk/renesas/renesas-cpg-mssr.c
++++ b/drivers/clk/renesas/renesas-cpg-mssr.c
+@@ -948,6 +948,12 @@ static const struct of_device_id cpg_mssr_match[] = {
+ 		.compatible = "renesas,r9a09g077-cpg-mssr",
+ 		.data = &r9a09g077_cpg_mssr_info,
+ 	},
++#endif
++#ifdef CONFIG_CLK_R9A09G087
++	{
++		.compatible = "renesas,r9a09g087-cpg-mssr",
++		.data = &r9a09g077_cpg_mssr_info,
++	},
+ #endif
+ 	{ /* sentinel */ }
+ };

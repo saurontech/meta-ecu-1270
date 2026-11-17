@@ -1,0 +1,39 @@
+From d024610e3882fdd4e42092c8ec325c1519ccd492 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 3 Dec 2025 15:40:49 +0000
+Subject: [PATCH 120/724] soc: renesas: Add config option for RZ/V2N
+ (R9A09G056) SoC
+
+commit 31d358e611b7cc21349da58dd2c9118c84b0859f upstream.
+
+Add a new Kconfig option, ARCH_R9A09G056, to enable ARM64 platform support
+for the Renesas RZ/V2N SoC. Default this option to "y" when ARCH_RENESAS is
+enabled, ensuring that support for the RZ/V2N SoC is automatically included.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407191628.323613-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/soc/renesas/Kconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index 49648cf28bd2..c679a6e089b1 100644
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -352,6 +352,12 @@ config ARCH_R9A09G047
+ 	help
+ 	  This enables support for the Renesas RZ/G3E SoC variants.
+ 
++config ARCH_R9A09G056
++	bool "ARM64 Platform support for RZ/V2N"
++	default y if ARCH_RENESAS
++	help
++	  This enables support for the Renesas RZ/V2N SoC variants.
++
+ config ARCH_R9A09G057
+ 	bool "ARM64 Platform support for RZ/V2H(P)"
+ 	select RENESAS_RZV2H_ICU

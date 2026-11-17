@@ -1,0 +1,61 @@
+From 09e5991f9a779076d6d9184fe61f8d7a3b98271d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:06 +0200
+Subject: [PATCH 328/643] media: platform: rzg2l-cru: rzg2l-video: Set AXI
+ burst max length
+
+commit 12564e809c8cb30e3eb0dba5368cf7d356ffc883 upstream.
+
+As per the hardware manual section 35.2.3.26 'AXI Master Transfer
+Setting Register for CRU Image Data', it is mentioned that to improve
+the transfer performance of CRU, it is recommended to use AXILEN value
+'0xf' for AXI burst max length setting for image data.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Link: https://lore.kernel.org/r/20240905111828.159670-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../media/platform/renesas/rzg2l-cru/rzg2l-video.c    | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index e80bfb9fc1af..bbf4674f888d 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -52,6 +52,11 @@
+ #define AMnMBS				0x14c
+ #define AMnMBS_MBSTS			0x7
+ 
++/* AXI Master Transfer Setting Register for CRU Image Data */
++#define AMnAXIATTR			0x158
++#define AMnAXIATTR_AXILEN_MASK		GENMASK(3, 0)
++#define AMnAXIATTR_AXILEN		(0xf)
++
+ /* AXI Master FIFO Pointer Register for CRU Image Data */
+ #define AMnFIFOPNTR			0x168
+ #define AMnFIFOPNTR_FIFOWPNTR		GENMASK(7, 0)
+@@ -278,6 +283,7 @@ static void rzg2l_cru_fill_hw_slot(struct rzg2l_cru_dev *cru, int slot)
+ static void rzg2l_cru_initialize_axi(struct rzg2l_cru_dev *cru)
+ {
+ 	unsigned int slot;
++	u32 amnaxiattr;
+ 
+ 	/*
+ 	 * Set image data memory banks.
+@@ -287,6 +293,11 @@ static void rzg2l_cru_initialize_axi(struct rzg2l_cru_dev *cru)
+ 
+ 	for (slot = 0; slot < cru->num_buf; slot++)
+ 		rzg2l_cru_fill_hw_slot(cru, slot);
++
++	/* Set AXI burst max length to recommended setting */
++	amnaxiattr = rzg2l_cru_read(cru, AMnAXIATTR) & ~AMnAXIATTR_AXILEN_MASK;
++	amnaxiattr |= AMnAXIATTR_AXILEN;
++	rzg2l_cru_write(cru, AMnAXIATTR, amnaxiattr);
+ }
+ 
+ static void rzg2l_cru_csi2_setup(struct rzg2l_cru_dev *cru, bool *input_is_yuv,

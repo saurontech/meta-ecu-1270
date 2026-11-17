@@ -1,0 +1,40 @@
+From 7dc21376d44846ad09d4362cc4e19f59b013f802 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:11 +0100
+Subject: [PATCH 023/399] arm64: dts: renesas: r9a08g046l48-smarc: Add SCIF0
+ pincontrol
+
+[ Upstream commit cdc8ef62ae6d04d2ba6a9226bc432168d06ad9a5 ]
+
+Add device node for SCIF0 pincontrol.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430125342.439755-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+index 86db86335d5e..acead2b1c842 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+@@ -35,3 +35,15 @@ &keys {
+ 	/delete-node/ key-2;
+ 	/delete-node/ key-3;
+ };
++
++&pinctrl {
++	scif0_pins: scif0 {
++		pins = "SCIF0_TXD", "SCIF0_RXD";
++		power-source = <1800>;
++	};
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++};

@@ -1,0 +1,95 @@
+From 0866809dfe19d22470ce76c749e0ac479b94e95e Mon Sep 17 00:00:00 2001
+From: Jens Axboe <axboe@kernel.dk>
+Date: Thu, 19 Mar 2026 14:29:20 -0600
+Subject: [PATCH 699/851] io_uring/kbuf: propagate BUF_MORE through early
+ buffer commit path
+
+Commit 418eab7a6f3c002d8e64d6e95ec27118017019af upstream.
+
+When io_should_commit() returns true (eg for non-pollable files), buffer
+commit happens at buffer selection time and sel->buf_list is set to
+NULL. When __io_put_kbufs() generates CQE flags at completion time, it
+calls __io_put_kbuf_ring() which finds a NULL buffer_list and hence
+cannot determine whether the buffer was consumed or not. This means that
+IORING_CQE_F_BUF_MORE is never set for non-pollable input with
+incrementally consumed buffers.
+
+Likewise for io_buffers_select(), which always commits upfront and
+discards the return value of io_kbuf_commit().
+
+Add REQ_F_BUF_MORE to store the result of io_kbuf_commit() during early
+commit. Then __io_put_kbuf_ring() can check this flag and set
+IORING_F_BUF_MORE accordingy.
+
+Reported-by: Martin Michaelis <code@mgjm.de>
+Cc: stable@vger.kernel.org
+Fixes: ae98dbf43d75 ("io_uring/kbuf: add support for incremental buffer consumption")
+Link: https://github.com/axboe/liburing/issues/1553
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ include/linux/io_uring_types.h | 3 +++
+ io_uring/kbuf.c                | 6 ++++--
+ io_uring/kbuf.h                | 4 +++-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/io_uring_types.h b/include/linux/io_uring_types.h
+index f18f50d39598..9c61e3b96628 100644
+--- a/include/linux/io_uring_types.h
++++ b/include/linux/io_uring_types.h
+@@ -467,6 +467,7 @@ enum {
+ 	REQ_F_BL_EMPTY_BIT,
+ 	REQ_F_BL_NO_RECYCLE_BIT,
+ 	REQ_F_BUFFERS_COMMIT_BIT,
++	REQ_F_BUF_MORE_BIT,
+ 
+ 	/* not a real bit, just to check we're not overflowing the space */
+ 	__REQ_F_LAST_BIT,
+@@ -547,6 +548,8 @@ enum {
+ 	REQ_F_BL_NO_RECYCLE	= IO_REQ_FLAG(REQ_F_BL_NO_RECYCLE_BIT),
+ 	/* buffer ring head needs incrementing on put */
+ 	REQ_F_BUFFERS_COMMIT	= IO_REQ_FLAG(REQ_F_BUFFERS_COMMIT_BIT),
++	/* incremental buffer consumption, more space available */
++	REQ_F_BUF_MORE		= IO_REQ_FLAG(REQ_F_BUF_MORE_BIT),
+ };
+ 
+ typedef void (*io_req_tw_func_t)(struct io_kiocb *req, struct io_tw_state *ts);
+diff --git a/io_uring/kbuf.c b/io_uring/kbuf.c
+index 25597f0629f3..590973c47cd3 100644
+--- a/io_uring/kbuf.c
++++ b/io_uring/kbuf.c
+@@ -175,7 +175,8 @@ static void __user *io_ring_buffer_select(struct io_kiocb *req, size_t *len,
+ 		 * the transfer completes (or if we get -EAGAIN and must poll of
+ 		 * retry).
+ 		 */
+-		io_kbuf_commit(req, bl, *len, 1);
++		if (!io_kbuf_commit(req, bl, *len, 1))
++			req->flags |= REQ_F_BUF_MORE;
+ 		req->buf_list = NULL;
+ 	}
+ 	return ret;
+@@ -321,7 +322,8 @@ int io_buffers_select(struct io_kiocb *req, struct buf_sel_arg *arg,
+ 		 */
+ 		if (ret > 0) {
+ 			req->flags |= REQ_F_BUFFERS_COMMIT | REQ_F_BL_NO_RECYCLE;
+-			io_kbuf_commit(req, bl, arg->out_len, ret);
++			if (!io_kbuf_commit(req, bl, arg->out_len, ret))
++				req->flags |= REQ_F_BUF_MORE;
+ 		}
+ 	} else {
+ 		ret = io_provided_buffers_select(req, &arg->out_len, bl, arg->iovs);
+diff --git a/io_uring/kbuf.h b/io_uring/kbuf.h
+index a3ad8aea45c8..903800b20ff3 100644
+--- a/io_uring/kbuf.h
++++ b/io_uring/kbuf.h
+@@ -165,7 +165,9 @@ static inline bool __io_put_kbuf_ring(struct io_kiocb *req, int len, int nr)
+ 		ret = io_kbuf_commit(req, bl, len, nr);
+ 		req->buf_index = bl->bgid;
+ 	}
+-	req->flags &= ~REQ_F_BUFFER_RING;
++	if (ret && (req->flags & REQ_F_BUF_MORE))
++		ret = false;
++	req->flags &= ~(REQ_F_BUFFER_RING | REQ_F_BUF_MORE);
+ 	return ret;
+ }
+ 

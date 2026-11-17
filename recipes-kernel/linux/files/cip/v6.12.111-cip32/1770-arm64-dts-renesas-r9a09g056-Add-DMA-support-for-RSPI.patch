@@ -1,0 +1,67 @@
+From 21c9ce31c97b6bf947ee0e8beb483cc8ad373322 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Sun, 13 Sep 2026 16:36:33 +0000
+Subject: [PATCH 1770/2868] arm64: dts: renesas: r9a09g056: Add DMA support for
+ RSPI channels
+
+commit ce2c7ca2c2acd252c495da0d924f48b70f2f4198 upstream.
+
+Enable DMA support for RSPI channels.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260303233314.2928711-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g056.dtsi | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+index d76c0608524e..0a0d7b400486 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+@@ -732,6 +732,13 @@ rspi0: spi@12800000 {
+ 			clock-names = "pclk", "pclk_sfr", "tclk";
+ 			resets = <&cpg 0x7b>, <&cpg 0x7c>;
+ 			reset-names = "presetn", "tresetn";
++			dmas = <&dmac0 0x448c>, <&dmac0 0x448d>,
++			       <&dmac1 0x448c>, <&dmac1 0x448d>,
++			       <&dmac2 0x448c>, <&dmac2 0x448d>,
++			       <&dmac3 0x448c>, <&dmac3 0x448d>,
++			       <&dmac4 0x448c>, <&dmac4 0x448d>;
++			dma-names = "rx", "tx", "rx", "tx", "rx",
++				    "tx", "rx", "tx", "rx", "tx";
+ 			power-domains = <&cpg>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+@@ -753,6 +760,13 @@ rspi1: spi@12800400 {
+ 			clock-names = "pclk", "pclk_sfr", "tclk";
+ 			resets = <&cpg 0x7d>, <&cpg 0x7e>;
+ 			reset-names = "presetn", "tresetn";
++			dmas = <&dmac0 0x448e>, <&dmac0 0x448f>,
++			       <&dmac1 0x448e>, <&dmac1 0x448f>,
++			       <&dmac2 0x448e>, <&dmac2 0x448f>,
++			       <&dmac3 0x448e>, <&dmac3 0x448f>,
++			       <&dmac4 0x448e>, <&dmac4 0x448f>;
++			dma-names = "rx", "tx", "rx", "tx", "rx",
++				    "tx", "rx", "tx", "rx", "tx";
+ 			power-domains = <&cpg>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+@@ -774,6 +788,13 @@ rspi2: spi@12800800 {
+ 			clock-names = "pclk", "pclk_sfr", "tclk";
+ 			resets = <&cpg 0x7f>, <&cpg 0x80>;
+ 			reset-names = "presetn", "tresetn";
++			dmas = <&dmac0 0x4490>, <&dmac0 0x4491>,
++			       <&dmac1 0x4490>, <&dmac1 0x4491>,
++			       <&dmac2 0x4490>, <&dmac2 0x4491>,
++			       <&dmac3 0x4490>, <&dmac3 0x4491>,
++			       <&dmac4 0x4490>, <&dmac4 0x4491>;
++			dma-names = "rx", "tx", "rx", "tx", "rx",
++				    "tx", "rx", "tx", "rx", "tx";
+ 			power-domains = <&cpg>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;

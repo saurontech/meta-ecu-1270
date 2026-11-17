@@ -1,0 +1,30 @@
+From 3d58cd16558c10ce61d527fd09a96c40294fb3ff Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Fri, 10 Apr 2026 20:02:11 +0300
+Subject: [PATCH 248/497] PM: domains: Add RZ/T2H and RZ/N2H compatibles to PM
+ domain detach list
+
+Add Renesas RZ/T2H and RZ/N2H compatibles to the PM domain detach list
+in dev_pm_domain_allow_detach_on_unbind_cleanup(). This fixes
+asynchronous aborts when unbinding the TSU devices.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/base/power/common.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/base/power/common.c b/drivers/base/power/common.c
+index b1fb615af292..2871d27dcbda 100644
+--- a/drivers/base/power/common.c
++++ b/drivers/base/power/common.c
+@@ -453,6 +453,8 @@ bool dev_pm_domain_allow_detach_on_unbind_cleanup(void)
+ 		"renesas,r9a09g047", /* Renesas RZ/G3E */
+ 		"renesas,r9a09g056", /* Renesas RZ/V2N */
+ 		"renesas,r9a09g057", /* Renesas RZ/V2H */
++		"renesas,r9a09g077", /* Renesas RZ/T2H */
++		"renesas,r9a09g087", /* Renesas RZ/N2H */
+ 		NULL
+ 	};
+ 

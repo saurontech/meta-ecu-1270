@@ -1,0 +1,39 @@
+From 0f443783e315aeb569f0e20d6694735e97021488 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 10 Mar 2026 16:00:46 +0000
+Subject: [PATCH 043/851] dt-bindings: interrupt-controller: renesas,rzv2h-icu:
+ Document RZ/V2N SoC
+
+commit c71869c61d7cf2070421cdcc4dd64c4c860df49d upstream.
+
+Document the Interrupt Control Unit (ICU) used on the Renesas RZ/V2N SoC.
+
+Although the ICU closely matches the design found on the RZ/V2H(P) family,
+it differs in its register layout, particularly in the reduced set of
+ECCRAM related registers. These variations require a distinct compatible
+string so that software can correctly match and handle the RZ/V2N
+implementation.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://patch.msgid.link/20251127162447.320971-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/interrupt-controller/renesas,rzv2h-icu.yaml         | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/renesas,rzv2h-icu.yaml b/Documentation/devicetree/bindings/interrupt-controller/renesas,rzv2h-icu.yaml
+index 3f99c8645767..cb244b8f5e1c 100644
+--- a/Documentation/devicetree/bindings/interrupt-controller/renesas,rzv2h-icu.yaml
++++ b/Documentation/devicetree/bindings/interrupt-controller/renesas,rzv2h-icu.yaml
+@@ -22,6 +22,7 @@ properties:
+   compatible:
+     enum:
+       - renesas,r9a09g047-icu # RZ/G3E
++      - renesas,r9a09g056-icu # RZ/V2N
+       - renesas,r9a09g057-icu # RZ/V2H(P)
+ 
+   '#interrupt-cells':

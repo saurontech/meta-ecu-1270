@@ -1,0 +1,45 @@
+From 33d7b4c5ed7ee46618caf03a35675375898a0a59 Mon Sep 17 00:00:00 2001
+From: Richard Fitzgerald <rf@opensource.cirrus.com>
+Date: Wed, 10 Jun 2026 11:55:56 +0100
+Subject: [PATCH 0306/1853] ASoC: cs35l56: Don't leave parent IRQ disabled if
+ system_suspend fails
+
+[ Upstream commit 53cebeb017164254cde5e31c94d8deef9e4fff97 ]
+
+In cs35l56_system_suspend() re-enable the parent IRQ if the call to
+pm_runtime_force_suspend() returns an error.
+
+Fixes: f9dc6b875ec0 ("ASoC: cs35l56: Add basic system suspend handling")
+Signed-off-by: Richard Fitzgerald <rf@opensource.cirrus.com>
+Link: https://patch.msgid.link/20260610105556.612830-1-rf@opensource.cirrus.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ sound/soc/codecs/cs35l56.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/cs35l56.c b/sound/soc/codecs/cs35l56.c
+index d5d6d5b03d03..c78f7f95f127 100644
+--- a/sound/soc/codecs/cs35l56.c
++++ b/sound/soc/codecs/cs35l56.c
+@@ -950,6 +950,7 @@ static int __maybe_unused cs35l56_runtime_resume_i2c_spi(struct device *dev)
+ int cs35l56_system_suspend(struct device *dev)
+ {
+ 	struct cs35l56_private *cs35l56 = dev_get_drvdata(dev);
++	int ret;
+ 
+ 	dev_dbg(dev, "system_suspend\n");
+ 
+@@ -965,7 +966,11 @@ int cs35l56_system_suspend(struct device *dev)
+ 	if (cs35l56->base.irq)
+ 		disable_irq(cs35l56->base.irq);
+ 
+-	return pm_runtime_force_suspend(dev);
++	ret = pm_runtime_force_suspend(dev);
++	if ((ret < 0) && cs35l56->base.irq)
++		enable_irq(cs35l56->base.irq);
++
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(cs35l56_system_suspend);
+ 

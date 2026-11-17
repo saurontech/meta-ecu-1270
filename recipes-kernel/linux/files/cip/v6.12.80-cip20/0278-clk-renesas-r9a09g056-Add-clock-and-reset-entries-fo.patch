@@ -1,0 +1,46 @@
+From 9ae22fe5568871357ff2b4af863bbe1ebaccaf9f Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Wed, 8 Apr 2026 09:41:46 +0000
+Subject: [PATCH 278/283] clk: renesas: r9a09g056: Add clock and reset entries
+ for TSU
+
+commit ebb3acf4d7c95b52265084168b59a565bf972883 upstream.
+
+Add module clock and reset entries for the TSU0 and TSU1 blocks on the
+Renesas RZ/V2N (R9A09G056) SoC.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251209091115.8541-3-ovidiu.panait.rb@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g056-cpg.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g056-cpg.c b/drivers/clk/renesas/r9a09g056-cpg.c
+index 651f5efc34bc..1c2b7c3a3821 100644
+--- a/drivers/clk/renesas/r9a09g056-cpg.c
++++ b/drivers/clk/renesas/r9a09g056-cpg.c
+@@ -374,6 +374,10 @@ static const struct rzv2h_mod_clk r9a09g056_mod_clks[] __initconst = {
+ 						BUS_MSTOP(3, BIT(4))),
+ 	DEF_MOD("gpu_0_ace_clk",		CLK_PLLDTY_ACPU_DIV2, 15, 2, 7, 18,
+ 						BUS_MSTOP(3, BIT(4))),
++	DEF_MOD("tsu_0_pclk",			CLK_QEXTAL, 16, 9, 8, 9,
++						BUS_MSTOP(5, BIT(2))),
++	DEF_MOD("tsu_1_pclk",			CLK_QEXTAL, 16, 10, 8, 10,
++						BUS_MSTOP(2, BIT(15))),
+ };
+ 
+ static const struct rzv2h_reset r9a09g056_resets[] __initconst = {
+@@ -426,6 +430,8 @@ static const struct rzv2h_reset r9a09g056_resets[] __initconst = {
+ 	DEF_RST(13, 13, 6, 14),		/* GPU_0_RESETN */
+ 	DEF_RST(13, 14, 6, 15),		/* GPU_0_AXI_RESETN */
+ 	DEF_RST(13, 15, 6, 16),		/* GPU_0_ACE_RESETN */
++	DEF_RST(15, 7, 7, 8),		/* TSU_0_PRESETN */
++	DEF_RST(15, 8, 7, 9),		/* TSU_1_PRESETN */
+ };
+ 
+ const struct rzv2h_cpg_info r9a09g056_cpg_info __initconst = {

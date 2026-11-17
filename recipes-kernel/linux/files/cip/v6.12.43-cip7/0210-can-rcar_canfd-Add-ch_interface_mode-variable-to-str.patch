@@ -1,0 +1,70 @@
+From 40d38848157582c34588b9120f7308b9e8ec22c1 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:27 +0100
+Subject: [PATCH 210/246] can: rcar_canfd: Add ch_interface_mode variable to
+ struct rcar_canfd_hw_info
+
+commit c10e5510101112932fc2955a5ff97ecf8448a9d1 upstream.
+
+R-Car Gen4 has channel specific interface mode bit for setting CAN-FD or
+Classical CAN mode whereas on R-Car Gen3 it is global. Add a
+ch_interface_mode variable to struct rcar_canfd_hw_info to handle this
+difference.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-14-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index d8380f38cdde..25c00abee9cc 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -516,6 +516,7 @@ struct rcar_canfd_hw_info {
+ 	/* hardware features */
+ 	unsigned shared_global_irqs:1;	/* Has shared global irqs */
+ 	unsigned multi_channel_irqs:1;	/* Has multiple channel irqs */
++	unsigned ch_interface_mode:1;	/* Has channel interface mode */
+ };
+ 
+ /* Channel priv data */
+@@ -619,6 +620,7 @@ static const struct rcar_canfd_hw_info rcar_gen3_hw_info = {
+ 	.max_channels = 2,
+ 	.postdiv = 2,
+ 	.shared_global_irqs = 1,
++	.ch_interface_mode = 0,
+ };
+ 
+ static const struct rcar_canfd_hw_info rcar_gen4_hw_info = {
+@@ -630,6 +632,7 @@ static const struct rcar_canfd_hw_info rcar_gen4_hw_info = {
+ 	.max_channels = 8,
+ 	.postdiv = 2,
+ 	.shared_global_irqs = 1,
++	.ch_interface_mode = 1,
+ };
+ 
+ static const struct rcar_canfd_hw_info rzg2l_hw_info = {
+@@ -641,6 +644,7 @@ static const struct rcar_canfd_hw_info rzg2l_hw_info = {
+ 	.max_channels = 2,
+ 	.postdiv = 1,
+ 	.multi_channel_irqs = 1,
++	.ch_interface_mode = 0,
+ };
+ 
+ /* Helper functions */
+@@ -733,7 +737,7 @@ static void rcar_canfd_setrnc(struct rcar_canfd_global *gpriv, unsigned int ch,
+ 
+ static void rcar_canfd_set_mode(struct rcar_canfd_global *gpriv)
+ {
+-	if (is_gen4(gpriv)) {
++	if (gpriv->info->ch_interface_mode) {
+ 		u32 ch, val = gpriv->fdmode ? RCANFD_GEN4_FDCFG_FDOE
+ 					    : RCANFD_GEN4_FDCFG_CLOE;
+ 

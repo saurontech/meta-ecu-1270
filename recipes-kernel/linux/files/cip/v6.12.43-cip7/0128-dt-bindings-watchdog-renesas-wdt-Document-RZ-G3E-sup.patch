@@ -1,0 +1,42 @@
+From b95f32d3396c6f7295619960edda9e7c694e40af Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 12:28:51 +0200
+Subject: [PATCH 128/246] dt-bindings: watchdog: renesas,wdt: Document RZ/G3E
+ support
+
+commit c40524d1615a72548adc30dbfb15c981fd03dacb upstream.
+
+Document the support for the watchdog IP available on RZ/G3E SoC. The
+watchdog IP available on RZ/G3E SoC is identical to the one found on
+RZ/V2H SoC.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250126132633.31956-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Wim Van Sebroeck <wim@linux-watchdog.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Message-ID: <20250623102857.1493371-3-tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml b/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
+index 29ada89fdcdc..3e0a8747a357 100644
+--- a/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
++++ b/Documentation/devicetree/bindings/watchdog/renesas,wdt.yaml
+@@ -75,6 +75,10 @@ properties:
+               - renesas,r8a779h0-wdt     # R-Car V4M
+           - const: renesas,rcar-gen4-wdt # R-Car Gen4
+ 
++      - items:
++          - const: renesas,r9a09g047-wdt # RZ/G3E
++          - const: renesas,r9a09g057-wdt # RZ/V2H(P)
++
+       - const: renesas,r9a09g057-wdt       # RZ/V2H(P)
+ 
+   reg:

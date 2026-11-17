@@ -1,0 +1,64 @@
+From 1d69ad64668e77dfc00af58b9a39c494982e43f0 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:02 +0000
+Subject: [PATCH 013/838] i2c: riic: Make use of devres helper to request
+ deasserted reset line
+
+commit 3d9e63c3aba479ec2f669cbc410754a2b1cf38fb upstream.
+
+Simplify the `riic_i2c_probe()` function by using the
+`devm_reset_control_get_optional_exclusive_deasserted()` API to request a
+deasserted reset line. This eliminates the need to manually deassert the
+reset control and the additional cleanup.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Andy Shevchenko <andy@kernel.org>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/i2c/busses/i2c-riic.c | 17 ++---------------
+ 1 file changed, 2 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index 79540179fbd8..28ca8b9bfa2b 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -447,11 +447,6 @@ static const struct riic_irq_desc riic_irqs[] = {
+ 	{ .res_num = 5, .isr = riic_tend_isr, .name = "riic-nack" },
+ };
+ 
+-static void riic_reset_control_assert(void *data)
+-{
+-	reset_control_assert(data);
+-}
+-
+ static int riic_i2c_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -472,18 +467,10 @@ static int riic_i2c_probe(struct platform_device *pdev)
+ 		return dev_err_probe(dev, PTR_ERR(riic->clk),
+ 				     "missing controller clock");
+ 
+-	riic->rstc = devm_reset_control_get_optional_exclusive(dev, NULL);
++	riic->rstc = devm_reset_control_get_optional_exclusive_deasserted(dev, NULL);
+ 	if (IS_ERR(riic->rstc))
+ 		return dev_err_probe(dev, PTR_ERR(riic->rstc),
+-				     "Error: missing reset ctrl\n");
+-
+-	ret = reset_control_deassert(riic->rstc);
+-	if (ret)
+-		return ret;
+-
+-	ret = devm_add_action_or_reset(dev, riic_reset_control_assert, riic->rstc);
+-	if (ret)
+-		return ret;
++				     "failed to acquire deasserted reset\n");
+ 
+ 	for (i = 0; i < ARRAY_SIZE(riic_irqs); i++) {
+ 		int irq;

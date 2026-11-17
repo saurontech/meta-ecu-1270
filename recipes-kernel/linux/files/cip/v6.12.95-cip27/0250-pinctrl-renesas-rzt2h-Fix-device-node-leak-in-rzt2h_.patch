@@ -1,0 +1,41 @@
+From bdf37a5bb72c08980112b21f55370bc7c478ee54 Mon Sep 17 00:00:00 2001
+From: Felix Gu <ustc.gu@gmail.com>
+Date: Thu, 2 Jul 2026 11:23:44 +0100
+Subject: [PATCH 250/286] pinctrl: renesas: rzt2h: Fix device node leak in
+ rzt2h_gpio_register()
+
+commit e825c79ef914bd55cf7c2476ddcfb2738eb689c3 upstream.
+
+When calling of_parse_phandle_with_fixed_args(), the caller is
+responsible for calling of_node_put() to release the device node
+reference.
+
+In rzt2h_gpio_register(), the driver fails to call of_node_put() to
+release the reference in of_args.np, which causes a memory leak.
+
+Add the missing of_node_put() call to fix the leak.
+
+Fixes: 34d4d093077a ("pinctrl: renesas: Add support for RZ/T2H")
+Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260127-rzt2h-v1-1-86472e7421b8@gmail.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pinctrl/renesas/pinctrl-rzt2h.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzt2h.c b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+index b4107f18f5d6..8dfdedeac23f 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzt2h.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzt2h.c
+@@ -831,6 +831,7 @@ static int rzt2h_gpio_register(struct rzt2h_pinctrl *pctrl)
+ 	if (ret)
+ 		return dev_err_probe(dev, ret, "Unable to parse gpio-ranges\n");
+ 
++	of_node_put(of_args.np);
+ 	if (of_args.args[0] != 0 || of_args.args[1] != 0 ||
+ 	    of_args.args[2] != pctrl->data->n_port_pins)
+ 		return dev_err_probe(dev, -EINVAL,

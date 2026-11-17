@@ -1,0 +1,103 @@
+From 53dac97021ce8d34ee89565aef3996ac8f89bc0d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:58 +0100
+Subject: [PATCH 039/286] arm64: dts: renesas: r9a08g046: Add OPP table
+
+[ Upstream commit 60f8dfd33c1c7daade9846207be735c7f4fd802d ]
+
+Add OPP table for RZ/G3L SoC.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430125342.439755-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a08g046.dtsi | 44 ++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+index 236a675231e5..e52498b3a745 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+@@ -14,6 +14,42 @@ / {
+ 	#size-cells = <2>;
+ 	interrupt-parent = <&gic>;
+ 
++	cluster0_opp: opp-table-0 {
++		compatible = "operating-points-v2";
++
++		opp-37500000 {
++			opp-hz = /bits/ 64 <37500000>;
++			opp-microvolt = <1000000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-75000000 {
++			opp-hz = /bits/ 64 <75000000>;
++			opp-microvolt = <1000000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-150000000 {
++			opp-hz = /bits/ 64 <150000000>;
++			opp-microvolt = <1000000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-300000000 {
++			opp-hz = /bits/ 64 <300000000>;
++			opp-microvolt = <1000000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <1000000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++			opp-microvolt = <1000000>;
++			clock-latency-ns = <300000>;
++			opp-suspend;
++		};
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -24,6 +60,8 @@ cpu0: cpu@0 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A08G046_CLK_IC0>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		cpu1: cpu@100 {
+@@ -32,6 +70,8 @@ cpu1: cpu@100 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A08G046_CLK_IC1>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		cpu2: cpu@200 {
+@@ -40,6 +80,8 @@ cpu2: cpu@200 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A08G046_CLK_IC2>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		cpu3: cpu@300 {
+@@ -48,6 +90,8 @@ cpu3: cpu@300 {
+ 			device_type = "cpu";
+ 			next-level-cache = <&L3_CA55>;
+ 			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A08G046_CLK_IC3>;
++			operating-points-v2 = <&cluster0_opp>;
+ 		};
+ 
+ 		L3_CA55: cache-controller-0 {

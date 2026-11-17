@@ -1,0 +1,127 @@
+From ce9c2d044d6c789525b55a5a38317a222bc9c470 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 6 Jul 2026 19:23:23 +0100
+Subject: [PATCH 1209/1853] dt-bindings: memory: renesas,rzg3e-xspi: Add RZ/T2H
+ and RZ/N2H support
+
+commit a6954060adc9d956a99f909f46bf9fb0348c4fa2 upstream.
+
+Document xSPI controller found on the Renesas RZ/T2H and RZ/N2H SoCs.
+The xSPI IP on these SoCs is identical to that found on the RZ/G3E SoC.
+
+The RZ/G3E HW manual (Rev.1.15) references bridge channel 1 and its
+bits, however the hardware actually supports only a single bridge
+channel (channel 0), matching the RZ/T2H design. The references to
+channel 1 and its configuration bits will be corrected in a future
+revision of the HW manual.
+
+Update clock/reset constraints to handle the SoC differences.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260515115202.1515577-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../renesas,rzg3e-xspi.yaml                   | 60 +++++++++++++++----
+ 1 file changed, 50 insertions(+), 10 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml b/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml
+index 7a84f5bb7284..cdeca4c795f3 100644
+--- a/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml
++++ b/Documentation/devicetree/bindings/memory-controllers/renesas,rzg3e-xspi.yaml
+@@ -30,6 +30,8 @@ properties:
+           - enum:
+               - renesas,r9a09g056-xspi  # RZ/V2N
+               - renesas,r9a09g057-xspi  # RZ/V2H(P)
++              - renesas,r9a09g077-xspi  # RZ/T2H
++              - renesas,r9a09g087-xspi  # RZ/N2H
+           - const: renesas,r9a09g047-xspi
+ 
+   reg:
+@@ -53,28 +55,38 @@ properties:
+       - const: err_pulse
+ 
+   clocks:
+-    items:
+-      - description: AHB clock
+-      - description: AXI clock
+-      - description: SPI clock
+-      - description: Double speed SPI clock
++    oneOf:
++      - items:
++          - description: AHB clock
++          - description: AXI clock
++          - description: SPI clock
++          - description: Double speed SPI clock
++      - items:
++          - description: AHB clock
++          - description: SPI clock
+ 
+   clock-names:
+-    items:
+-      - const: ahb
+-      - const: axi
+-      - const: spi
+-      - const: spix2
++    oneOf:
++      - items:
++          - const: ahb
++          - const: axi
++          - const: spi
++          - const: spix2
++      - items:
++          - const: ahb
++          - const: spi
+ 
+   power-domains:
+     maxItems: 1
+ 
+   resets:
++    minItems: 1
+     items:
+       - description: Hardware reset
+       - description: AXI reset
+ 
+   reset-names:
++    minItems: 1
+     items:
+       - const: hresetn
+       - const: aresetn
+@@ -109,6 +121,34 @@ required:
+   - '#address-cells'
+   - '#size-cells'
+ 
++if:
++  properties:
++    compatible:
++      contains:
++        enum:
++          - renesas,r9a09g077-xspi
++          - renesas,r9a09g087-xspi
++then:
++  properties:
++    clocks:
++      maxItems: 2
++    clock-names:
++      maxItems: 2
++    resets:
++      maxItems: 1
++    reset-names:
++      maxItems: 1
++else:
++  properties:
++    clocks:
++      minItems: 4
++    clock-names:
++      minItems: 4
++    resets:
++      minItems: 2
++    reset-names:
++      minItems: 2
++
+ unevaluatedProperties: false
+ 
+ examples:

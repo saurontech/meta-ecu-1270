@@ -1,0 +1,35 @@
+From 93d66eb7f3c736a15af0fc6c6b774635c991bf24 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 19 Jan 2026 12:55:12 +0000
+Subject: [PATCH 814/838] dt-bindings: clock: renesas,r9a09g056/57-cpg: Add
+ XSPI core clock
+
+commit 5e4e8c1415c181ce311a0b5936ef301edd57c5d1 upstream.
+
+Add XSPI core clock definitions to the clock bindings for the Renesas
+R9A09G056 and R9A09G057 SoCs. These clocks IDs are used to support XSPI
+interface.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250627204237.214635-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[OP: cherry-pick only the RZ/V2N part]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ include/dt-bindings/clock/renesas,r9a09g056-cpg.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g056-cpg.h b/include/dt-bindings/clock/renesas,r9a09g056-cpg.h
+index f4905b27f8d9..a9af5af9e3a1 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g056-cpg.h
++++ b/include/dt-bindings/clock/renesas,r9a09g056-cpg.h
+@@ -20,5 +20,6 @@
+ #define R9A09G056_USB2_0_CLK_CORE0		9
+ #define R9A09G056_GBETH_0_CLK_PTP_REF_I		10
+ #define R9A09G056_GBETH_1_CLK_PTP_REF_I		11
++#define R9A09G056_SPI_CLK_SPI			12
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G056_CPG_H__ */

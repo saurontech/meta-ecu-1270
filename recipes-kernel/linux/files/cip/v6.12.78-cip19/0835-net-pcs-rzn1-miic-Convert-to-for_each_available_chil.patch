@@ -1,0 +1,41 @@
+From 453c44e7c13722cd07987669f7b03d2f1f6243d3 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Mon, 16 Mar 2026 14:58:58 +0000
+Subject: [PATCH 835/851] net: pcs: rzn1-miic: Convert to
+ for_each_available_child_of_node() helper
+
+commit ec7309525a37b3f34c4efa85fc2ecaa65f41830e upstream.
+
+Simplify miic_parse_dt() by using the for_each_available_child_of_node()
+helper instead of manually skipping unavailable child nodes.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Link: https://patch.msgid.link/3e394d4cf8204bcf17b184bfda474085aa8ed0dd.1738771631.git.geert+renesas@glider.be
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/pcs/pcs-rzn1-miic.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/net/pcs/pcs-rzn1-miic.c b/drivers/net/pcs/pcs-rzn1-miic.c
+index a7acbed14b0a..52fb2c30fba4 100644
+--- a/drivers/net/pcs/pcs-rzn1-miic.c
++++ b/drivers/net/pcs/pcs-rzn1-miic.c
+@@ -472,13 +472,10 @@ static int miic_parse_dt(struct device *dev, u32 *mode_cfg)
+ 	if (of_property_read_u32(np, "renesas,miic-switch-portin", &conf) == 0)
+ 		dt_val[0] = conf;
+ 
+-	for_each_child_of_node(np, conv) {
++	for_each_available_child_of_node(np, conv) {
+ 		if (of_property_read_u32(conv, "reg", &port))
+ 			continue;
+ 
+-		if (!of_device_is_available(conv))
+-			continue;
+-
+ 		if (of_property_read_u32(conv, "renesas,miic-input", &conf) == 0)
+ 			dt_val[port] = conf;
+ 	}

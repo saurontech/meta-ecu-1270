@@ -1,0 +1,92 @@
+From 752b1ece014af954cfa2dd3e4d62a51b6a22a92e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:42 +0000
+Subject: [PATCH 331/851] serial: rsci: Rename early_console data, port_params
+ and callback() names
+
+[ Upstream commit 068b862f5025920e3e10228e9904c2560e08b855 ]
+
+Rename rsci_early_console_setup()->rsci_rzt2h_early_console_setup(),
+the early_console data of_sci_rsci_data->of_rsci_rzt2h_data and the
+port_params rsci_port_params->rsci_rzt2h_port_params to support RZ/G3E
+RSCI that uses different data and callback().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-17-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/rsci.c   | 14 +++++++-------
+ drivers/tty/serial/rsci.h   |  2 +-
+ drivers/tty/serial/sh-sci.c |  2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/tty/serial/rsci.c b/drivers/tty/serial/rsci.c
+index 8a4f2618e53c..62a64fa73b74 100644
+--- a/drivers/tty/serial/rsci.c
++++ b/drivers/tty/serial/rsci.c
+@@ -418,7 +418,7 @@ static const struct sci_port_params_bits rsci_port_param_bits = {
+ 	.poll_sent_bits = CSR_TDRE | CSR_TEND,
+ };
+ 
+-static const struct sci_port_params rsci_port_params = {
++static const struct sci_port_params rsci_rzt2h_port_params = {
+ 	.fifosize = 16,
+ 	.overrun_reg = CSR,
+ 	.overrun_mask = CSR_ORER,
+@@ -460,22 +460,22 @@ static const struct sci_port_ops rsci_port_ops = {
+ 	.shutdown_complete	= rsci_shutdown_complete,
+ };
+ 
+-struct sci_of_data of_sci_rsci_data = {
++struct sci_of_data of_rsci_rzt2h_data = {
+ 	.type = RSCI_PORT_SCIF16,
+ 	.ops = &rsci_port_ops,
+ 	.uart_ops = &rsci_uart_ops,
+-	.params = &rsci_port_params,
++	.params = &rsci_rzt2h_port_params,
+ };
+ 
+ #ifdef CONFIG_SERIAL_SH_SCI_EARLYCON
+ 
+-static int __init rsci_early_console_setup(struct earlycon_device *device,
+-					   const char *opt)
++static int __init rsci_rzt2h_early_console_setup(struct earlycon_device *device,
++						 const char *opt)
+ {
+-	return scix_early_console_setup(device, &of_sci_rsci_data);
++	return scix_early_console_setup(device, &of_rsci_rzt2h_data);
+ }
+ 
+-OF_EARLYCON_DECLARE(rsci, "renesas,r9a09g077-rsci", rsci_early_console_setup);
++OF_EARLYCON_DECLARE(rsci, "renesas,r9a09g077-rsci", rsci_rzt2h_early_console_setup);
+ 
+ #endif /* CONFIG_SERIAL_SH_SCI_EARLYCON */
+ 
+diff --git a/drivers/tty/serial/rsci.h b/drivers/tty/serial/rsci.h
+index 2af3f28b465a..9547148e8bd1 100644
+--- a/drivers/tty/serial/rsci.h
++++ b/drivers/tty/serial/rsci.h
+@@ -5,6 +5,6 @@
+ 
+ #include "sh-sci-common.h"
+ 
+-extern struct sci_of_data of_sci_rsci_data;
++extern struct sci_of_data of_rsci_rzt2h_data;
+ 
+ #endif /* __RSCI_H__ */
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 588027a8068f..29e14e224d02 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3665,7 +3665,7 @@ static const struct of_device_id of_sci_match[] __maybe_unused = {
+ #ifdef CONFIG_SERIAL_RSCI
+ 	{
+ 		.compatible = "renesas,r9a09g077-rsci",
+-		.data = &of_sci_rsci_data,
++		.data = &of_rsci_rzt2h_data,
+ 	},
+ #endif	/* CONFIG_SERIAL_RSCI */
+ 	/* Family-specific types */

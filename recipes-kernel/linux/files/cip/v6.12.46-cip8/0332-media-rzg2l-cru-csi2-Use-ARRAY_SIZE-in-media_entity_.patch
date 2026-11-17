@@ -1,0 +1,37 @@
+From 1fdf97fc8a437fe30eba84b277f50b39ef0539eb Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:10 +0200
+Subject: [PATCH 332/643] media: rzg2l-cru: csi2: Use ARRAY_SIZE() in
+ media_entity_pads_init()
+
+commit a5754e5db387b90e6d2090e58bf50860e2cd8c7e upstream.
+
+The media_entity_pads_init() function was previously hardcoded to use a
+magic number for the number of pads. Replace the magic number with the
+ARRAY_SIZE() macro to determine the number of pads dynamically.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index 2f4c87ede8bf..abacf53b944c 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -804,7 +804,8 @@ static int rzg2l_csi2_probe(struct platform_device *pdev)
+ 	 */
+ 	csi2->pads[RZG2L_CSI2_SOURCE].flags = MEDIA_PAD_FL_SOURCE |
+ 					      MEDIA_PAD_FL_MUST_CONNECT;
+-	ret = media_entity_pads_init(&csi2->subdev.entity, 2, csi2->pads);
++	ret = media_entity_pads_init(&csi2->subdev.entity, ARRAY_SIZE(csi2->pads),
++				     csi2->pads);
+ 	if (ret)
+ 		goto error_pm;
+ 

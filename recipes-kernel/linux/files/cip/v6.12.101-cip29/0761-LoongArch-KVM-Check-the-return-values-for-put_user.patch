@@ -1,0 +1,34 @@
+From d6b18597e6f62dbe1d199e3de5b738b8108654af Mon Sep 17 00:00:00 2001
+From: Qiang Ma <maqianga@uniontech.com>
+Date: Thu, 11 Jun 2026 20:46:43 +0800
+Subject: [PATCH 0761/1853] LoongArch: KVM: Check the return values for
+ put_user()
+
+commit fb89e0fe2dc4246c86ad0eb0fa2b7cb2f8ba9728 upstream.
+
+put_user() may return -EFAULT, so, when the user space address is
+invalid, the caller should return -EFAULT.
+
+Cc: stable@vger.kernel.org
+Reviewed-by: Bibo Mao <maobibo@loongson.cn>
+Signed-off-by: Qiang Ma <maqianga@uniontech.com>
+Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/loongarch/kvm/vcpu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/loongarch/kvm/vcpu.c b/arch/loongarch/kvm/vcpu.c
+index 6670e18e741d..a59e6557fd4c 100644
+--- a/arch/loongarch/kvm/vcpu.c
++++ b/arch/loongarch/kvm/vcpu.c
+@@ -1029,7 +1029,8 @@ static int kvm_loongarch_cpucfg_get_attr(struct kvm_vcpu *vcpu,
+ 		return -ENXIO;
+ 	}
+ 
+-	put_user(val, uaddr);
++	if (put_user(val, uaddr))
++		return -EFAULT;
+ 
+ 	return ret;
+ }

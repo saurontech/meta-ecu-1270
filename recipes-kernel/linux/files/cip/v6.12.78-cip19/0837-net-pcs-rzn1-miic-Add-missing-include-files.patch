@@ -1,0 +1,37 @@
+From b3d82b3c2279af8737bf98d90113dad81394253d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:59:00 +0000
+Subject: [PATCH 837/851] net: pcs: rzn1-miic: Add missing include files
+
+commit 861d10f09250537e6eb0cfd3b6fcee8ada8b482f upstream.
+
+The pcs-rzn1-miic driver makes use of ARRAY_SIZE(), BIT() and GENMASK()
+macros but does not explicitly include the headers where they are
+defined. Add the missing <linux/array_size.h> and <linux/bits.h>
+includes.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://patch.msgid.link/20250910204132.319975-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/pcs/pcs-rzn1-miic.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/pcs/pcs-rzn1-miic.c b/drivers/net/pcs/pcs-rzn1-miic.c
+index 5e3be121efca..82a26edcdfac 100644
+--- a/drivers/net/pcs/pcs-rzn1-miic.c
++++ b/drivers/net/pcs/pcs-rzn1-miic.c
+@@ -5,6 +5,8 @@
+  * Clément Léger <clement.leger@bootlin.com>
+  */
+ 
++#include <linux/array_size.h>
++#include <linux/bits.h>
+ #include <linux/clk.h>
+ #include <linux/device.h>
+ #include <linux/mdio.h>

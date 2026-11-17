@@ -1,0 +1,38 @@
+From f552bc1fe65abc9383c35660f7c7fe6e3b01b1e6 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:25 +0100
+Subject: [PATCH 006/286] net: stmmac: dwmac-renesas-gbeth: Add support for
+ RZ/G3L SoC
+
+[ Upstream commit 1ba377008420a63ba2cdbb3f5d1f9d30591f6c52 ]
+
+Compared to other Renesas GBETH stmmac glue drivers, RZ/G3L GBETH IP use
+the version Synopsys DesignWare MAC (version 5.30). It has an extra clock
+compared to RZ/V2H and has ptp_pps_o interrupts. Add support for RZ/G3L
+GBETH by reusing device data of RZ/V2H and can be extended to add other
+functionalities later.
+
+Reviewed-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20260131161250.5047-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c
+index 62a33b3fb00d..3233d979cf32 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-renesas-gbeth.c
+@@ -213,6 +213,7 @@ static const struct renesas_gbeth_of_data renesas_gmac_of_data = {
+ };
+ 
+ static const struct of_device_id renesas_gbeth_match[] = {
++	{ .compatible = "renesas,r9a08g046-gbeth", .data = &renesas_gbeth_of_data },
+ 	{ .compatible = "renesas,r9a09g077-gbeth", .data = &renesas_gmac_of_data },
+ 	{ .compatible = "renesas,rzv2h-gbeth", .data = &renesas_gbeth_of_data },
+ 	{ /* Sentinel */ }

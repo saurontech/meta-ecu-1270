@@ -1,0 +1,40 @@
+From 3dd7a3a4aa9b551f1b2977c7d540942bc25923b5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 5 Mar 2026 15:37:20 +0000
+Subject: [PATCH 014/851] media: dt-bindings: media: renesas,vsp1: Document
+ RZ/V2N SoC
+
+commit 2632f288ab1180c42c9379893357b8b7744fbf92 upstream.
+
+The VSPD block on the RZ/V2N SoC is identical to the one found on the
+RZ/G2L SoC.
+
+No driver changes are required, as `renesas,r9a07g044-vsp2` will be used
+as a fallback compatible string on the RZ/V2N SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250530154148.374663-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/media/renesas,vsp1.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/media/renesas,vsp1.yaml b/Documentation/devicetree/bindings/media/renesas,vsp1.yaml
+index 9d03b972f522..722ae14718e0 100644
+--- a/Documentation/devicetree/bindings/media/renesas,vsp1.yaml
++++ b/Documentation/devicetree/bindings/media/renesas,vsp1.yaml
+@@ -25,6 +25,7 @@ properties:
+           - enum:
+               - renesas,r9a07g043u-vsp2   # RZ/G2UL
+               - renesas,r9a07g054-vsp2    # RZ/V2L
++              - renesas,r9a09g056-vsp2    # RZ/V2N
+               - renesas,r9a09g057-vsp2    # RZ/V2H(P)
+           - const: renesas,r9a07g044-vsp2 # RZ/G2L fallback
+ 

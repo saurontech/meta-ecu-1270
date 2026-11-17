@@ -1,0 +1,45 @@
+From 763207e609b7e33ba6ef0f5e56d54c7a8ac45c2a Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 2 Jul 2025 12:37:08 +0200
+Subject: [PATCH 154/246] dt-bindings: gpu: mali-bifrost: Add compatible for
+ RZ/G3E SoC
+
+commit b9457813016841df82eaa39f1f00ddebf385f352 upstream.
+
+Add a compatible string for the Renesas RZ/G3E SoC variants that
+include a Mali-G52 GPU. These variants share the same restrictions on
+interrupts, clocks, and power domains as the RZ/G2L SoC, so extend
+the existing schema validation accordingly.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250528073040.904033-1-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+index d03e5c61e4dd..3090e2ab6bd1 100644
+--- a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
++++ b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+@@ -24,6 +24,7 @@ properties:
+               - realtek,rtd1619-mali
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
++              - renesas,r9a09g047-mali
+               - renesas,r9a09g057-mali
+               - rockchip,px30-mali
+               - rockchip,rk3568-mali
+@@ -142,6 +143,7 @@ allOf:
+             enum:
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
++              - renesas,r9a09g047-mali
+               - renesas,r9a09g057-mali
+     then:
+       properties:

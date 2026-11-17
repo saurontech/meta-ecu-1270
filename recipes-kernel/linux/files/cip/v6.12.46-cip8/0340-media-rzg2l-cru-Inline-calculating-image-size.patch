@@ -1,0 +1,47 @@
+From e0b2cce044b8e46cbd47cb99c42ea0fedf6fcbfd Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:18 +0200
+Subject: [PATCH 340/643] media: rzg2l-cru: Inline calculating image size
+
+commit a8af02e8a9dfc962dc24f0f0cc1c3a320208ee7a upstream.
+
+Inline the `rzg2l_cru_format_sizeimage()` function into its single
+caller as the function is trivial and is not expected to be called
+anywhere else.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-13-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 37fea2bed00f..6a4f0455dc9c 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -839,11 +839,6 @@ static u32 rzg2l_cru_format_bytesperline(struct v4l2_pix_format *pix)
+ 	return pix->width * fmt->bpp[0];
+ }
+ 
+-static u32 rzg2l_cru_format_sizeimage(struct v4l2_pix_format *pix)
+-{
+-	return pix->bytesperline * pix->height;
+-}
+-
+ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 				   struct v4l2_pix_format *pix)
+ {
+@@ -868,7 +863,7 @@ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 			      &pix->height, 240, RZG2L_CRU_MAX_INPUT_HEIGHT, 2, 0);
+ 
+ 	pix->bytesperline = rzg2l_cru_format_bytesperline(pix);
+-	pix->sizeimage = rzg2l_cru_format_sizeimage(pix);
++	pix->sizeimage = pix->bytesperline * pix->height;
+ 
+ 	dev_dbg(cru->dev, "Format %ux%u bpl: %u size: %u\n",
+ 		pix->width, pix->height, pix->bytesperline, pix->sizeimage);

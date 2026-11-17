@@ -1,0 +1,78 @@
+From a04890b5e5bb7fbb65043d28333bed98def621d3 Mon Sep 17 00:00:00 2001
+From: Niklas Cassel <cassel@kernel.org>
+Date: Wed, 11 Mar 2026 13:06:22 +0200
+Subject: [PATCH 009/283] PCI: Move link up wait time and max retries macros to
+ pci.h
+
+commit d7467bc72ce4e3f64062017d6c9ae3816e8a7b0e upstream.
+
+Move the LINK_WAIT_SLEEP_MS and LINK_WAIT_MAX_RETRIES macros to pci.h.
+Prefix the macros with PCIE_ in order to avoid redefining these for
+drivers that already have macros named like this.
+
+No functional changes.
+
+Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Link: https://patch.msgid.link/20250625102347.1205584-15-cassel@kernel.org
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/dwc/pcie-designware.c | 6 +++---
+ drivers/pci/controller/dwc/pcie-designware.h | 4 ----
+ drivers/pci/pci.h                            | 4 ++++
+ 3 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index f7d10cb788e0..6a6cd1d9cb86 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -643,14 +643,14 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ 	int retries;
+ 
+ 	/* Check if the link is up or not */
+-	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
++	for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
+ 		if (dw_pcie_link_up(pci))
+ 			break;
+ 
+-		msleep(LINK_WAIT_SLEEP_MS);
++		msleep(PCIE_LINK_WAIT_SLEEP_MS);
+ 	}
+ 
+-	if (retries >= LINK_WAIT_MAX_RETRIES) {
++	if (retries >= PCIE_LINK_WAIT_MAX_RETRIES) {
+ 		dev_info(pci->dev, "Phy link never came up\n");
+ 		return -ETIMEDOUT;
+ 	}
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 0fad7751490f..61d7d8d13f36 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -60,10 +60,6 @@
+ #define dw_pcie_cap_set(_pci, _cap) \
+ 	set_bit(DW_PCIE_CAP_ ## _cap, &(_pci)->caps)
+ 
+-/* Parameters for the waiting for link up routine */
+-#define LINK_WAIT_MAX_RETRIES		10
+-#define LINK_WAIT_SLEEP_MS		90
+-
+ /* Parameters for the waiting for iATU enabled routine */
+ #define LINK_WAIT_MAX_IATU_RETRIES	5
+ #define LINK_WAIT_IATU			9
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index b9b97ec0f836..8ab1f3e6d295 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -59,6 +59,10 @@
+  */
+ #define PCIE_RESET_CONFIG_WAIT_MS	100
+ 
++/* Parameters for the waiting for link up routine */
++#define PCIE_LINK_WAIT_MAX_RETRIES	10
++#define PCIE_LINK_WAIT_SLEEP_MS		90
++
+ /* Message Routing (r[2:0]); PCIe r6.0, sec 2.2.8 */
+ #define PCIE_MSG_TYPE_R_RC	0
+ #define PCIE_MSG_TYPE_R_ADDR	1

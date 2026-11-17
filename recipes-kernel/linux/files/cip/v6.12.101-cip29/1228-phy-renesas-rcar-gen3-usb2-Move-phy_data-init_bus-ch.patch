@@ -1,0 +1,53 @@
+From 2f04df5a1ff7c40fb154acdd6048ebe63825c930 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:34 +0300
+Subject: [PATCH 1228/1853] phy: renesas: rcar-gen3-usb2: Move
+ phy_data->init_bus check
+
+commit 79d9db7f7a0c94b2b505666513879ac470c7e12f upstream.
+
+Move the check of phy_data->init_bus from rcar_gen3_phy_usb2_init_bus()
+to rcar_gen3_phy_usb2_probe() to avoid having it duplicated in both the
+probe path and the upcoming resume code. This is a preparatory patch.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://patch.msgid.link/20251119120418.686224-2-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+[claudiu.beznea: fixed conflict by keeping the code from this patch]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index 4e8cf7527439..6127c0b4b944 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -782,6 +782,9 @@ static int rcar_gen3_phy_usb2_init_bus(struct rcar_gen3_chan *channel)
+ 	int ret;
+ 	u32 val;
+ 
++	if (!channel->phy_data->init_bus)
++		return 0;
++
+ 	rstc = devm_reset_control_array_get_shared(dev);
+ 	if (IS_ERR(rstc))
+ 		return PTR_ERR(rstc);
+@@ -861,11 +864,9 @@ static int rcar_gen3_phy_usb2_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, channel);
+ 	channel->dev = dev;
+ 
+-	if (channel->phy_data->init_bus) {
+-		ret = rcar_gen3_phy_usb2_init_bus(channel);
+-		if (ret)
+-			goto error;
+-	}
++	ret = rcar_gen3_phy_usb2_init_bus(channel);
++	if (ret)
++		goto error;
+ 
+ 	spin_lock_init(&channel->lock);
+ 	for (i = 0; i < NUM_OF_PHYS; i++) {

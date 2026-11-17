@@ -1,0 +1,162 @@
+From 8ce0291bc31d630c5557d906aa0981aa7d353d86 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 6 Nov 2025 10:40:19 +0000
+Subject: [PATCH 186/192] dt-bindings: net: Define interrupt constraints for
+ DWMAC vendor bindings
+
+commit 5a1dddd2944492edb1e61c5db1cc386e5419fcf4 upstream.
+
+The `snps,dwmac.yaml` binding currently sets `maxItems: 3` for the
+`interrupts` and `interrupt-names` properties, but vendor bindings
+selecting `snps,dwmac.yaml` do not impose these limits.
+
+Define constraints for `interrupts` and `interrupt-names` properties in
+various DWMAC vendor bindings to ensure proper validation and consistency.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Acked-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Link: https://patch.msgid.link/20250309003301.1152228-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/net/amlogic,meson-dwmac.yaml   |  6 ++++++
+ .../devicetree/bindings/net/intel,dwmac-plat.yaml      |  6 ++++++
+ .../devicetree/bindings/net/mediatek-dwmac.yaml        |  6 ++++++
+ .../devicetree/bindings/net/nxp,dwmac-imx.yaml         |  8 ++++++++
+ .../devicetree/bindings/net/rockchip-dwmac.yaml        | 10 ++++++++++
+ Documentation/devicetree/bindings/net/stm32-dwmac.yaml | 10 ++++++++++
+ .../bindings/net/toshiba,visconti-dwmac.yaml           |  6 ++++++
+ 7 files changed, 52 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/amlogic,meson-dwmac.yaml b/Documentation/devicetree/bindings/net/amlogic,meson-dwmac.yaml
+index d1e2bca3c503..125b44953bf0 100644
+--- a/Documentation/devicetree/bindings/net/amlogic,meson-dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/amlogic,meson-dwmac.yaml
+@@ -152,6 +152,12 @@ properties:
+           The second range is is for the Amlogic specific configuration
+           (for example the PRG_ETHERNET register range on Meson8b and newer)
+ 
++  interrupts:
++    maxItems: 1
++
++  interrupt-names:
++    const: macirq
++
+ required:
+   - compatible
+   - reg
+diff --git a/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml b/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml
+index 42a0bc94312c..62c1da36a2b5 100644
+--- a/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml
++++ b/Documentation/devicetree/bindings/net/intel,dwmac-plat.yaml
+@@ -41,6 +41,12 @@ properties:
+       - const: ptp_ref
+       - const: tx_clk
+ 
++  interrupts:
++    maxItems: 1
++
++  interrupt-names:
++    const: macirq
++
+ required:
+   - compatible
+   - clocks
+diff --git a/Documentation/devicetree/bindings/net/mediatek-dwmac.yaml b/Documentation/devicetree/bindings/net/mediatek-dwmac.yaml
+index ed9d845f6008..3aab21b8e8de 100644
+--- a/Documentation/devicetree/bindings/net/mediatek-dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/mediatek-dwmac.yaml
+@@ -64,6 +64,12 @@ properties:
+       - const: rmii_internal
+       - const: mac_cg
+ 
++  interrupts:
++    maxItems: 1
++
++  interrupt-names:
++    const: macirq
++
+   power-domains:
+     maxItems: 1
+ 
+diff --git a/Documentation/devicetree/bindings/net/nxp,dwmac-imx.yaml b/Documentation/devicetree/bindings/net/nxp,dwmac-imx.yaml
+index 87bc4416eadf..e5db346beca9 100644
+--- a/Documentation/devicetree/bindings/net/nxp,dwmac-imx.yaml
++++ b/Documentation/devicetree/bindings/net/nxp,dwmac-imx.yaml
+@@ -56,6 +56,14 @@ properties:
+         - tx
+         - mem
+ 
++  interrupts:
++    maxItems: 2
++
++  interrupt-names:
++    items:
++      - const: macirq
++      - const: eth_wake_irq
++
+   intf_mode:
+     $ref: /schemas/types.yaml#/definitions/phandle-array
+     items:
+diff --git a/Documentation/devicetree/bindings/net/rockchip-dwmac.yaml b/Documentation/devicetree/bindings/net/rockchip-dwmac.yaml
+index f8a576611d6c..891396140a7f 100644
+--- a/Documentation/devicetree/bindings/net/rockchip-dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/rockchip-dwmac.yaml
+@@ -58,6 +58,16 @@ properties:
+               - rockchip,rv1126-gmac
+           - const: snps,dwmac-4.20a
+ 
++  interrupts:
++    minItems: 1
++    maxItems: 2
++
++  interrupt-names:
++    minItems: 1
++    items:
++      - const: macirq
++      - const: eth_wake_irq
++
+   clocks:
+     minItems: 5
+     maxItems: 8
+diff --git a/Documentation/devicetree/bindings/net/stm32-dwmac.yaml b/Documentation/devicetree/bindings/net/stm32-dwmac.yaml
+index bf23838fe6e8..297ac150b1ea 100644
+--- a/Documentation/devicetree/bindings/net/stm32-dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/stm32-dwmac.yaml
+@@ -54,6 +54,16 @@ properties:
+     items:
+       - const: stmmaceth
+ 
++  interrupts:
++    minItems: 1
++    maxItems: 2
++
++  interrupt-names:
++    minItems: 1
++    items:
++      - const: macirq
++      - const: eth_wake_irq
++
+   clocks:
+     minItems: 3
+     items:
+diff --git a/Documentation/devicetree/bindings/net/toshiba,visconti-dwmac.yaml b/Documentation/devicetree/bindings/net/toshiba,visconti-dwmac.yaml
+index 052f636158b3..f0f32e18fc85 100644
+--- a/Documentation/devicetree/bindings/net/toshiba,visconti-dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/toshiba,visconti-dwmac.yaml
+@@ -42,6 +42,12 @@ properties:
+       - const: stmmaceth
+       - const: phy_ref_clk
+ 
++  interrupts:
++    maxItems: 1
++
++  interrupt-names:
++    const: macirq
++
+ required:
+   - compatible
+   - reg

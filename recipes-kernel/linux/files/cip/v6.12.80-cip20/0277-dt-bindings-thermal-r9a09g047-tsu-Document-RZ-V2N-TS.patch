@@ -1,0 +1,47 @@
+From 352642c98e1fd6b52d91f596cc8e47d453f23331 Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Wed, 8 Apr 2026 09:41:45 +0000
+Subject: [PATCH 277/283] dt-bindings: thermal: r9a09g047-tsu: Document RZ/V2N
+ TSU
+
+commit 96b0bb4a2310302307bafe62edbc3455fae8b723 upstream.
+
+The Renesas RZ/V2N SoC includes a Thermal Sensor Unit (TSU) block designed
+to measure the junction temperature. The device provides real-time
+temperature measurements for thermal management, utilizing two dedicated
+channels for temperature sensing.
+
+The Renesas RZ/V2N SoC is using the same TSU IP found on the RZ/G3E SoC,
+the only difference being that it has two channels instead of one.
+
+Add new compatible string "renesas,r9a09g056-tsu" for RZ/V2N and use
+"renesas,r9a09g047-tsu" as a fallback compatible to indicate hardware
+compatibility with the RZ/G3E implementation.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251209091115.8541-2-ovidiu.panait.rb@renesas.com
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml    | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml b/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+index befdc8b7a082..c959b9834620 100644
+--- a/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
++++ b/Documentation/devicetree/bindings/thermal/renesas,r9a09g047-tsu.yaml
+@@ -19,7 +19,9 @@ properties:
+     oneOf:
+       - const: renesas,r9a09g047-tsu # RZ/G3E
+       - items:
+-          - const: renesas,r9a09g057-tsu # RZ/V2H
++          - enum:
++              - renesas,r9a09g056-tsu # RZ/V2N
++              - renesas,r9a09g057-tsu # RZ/V2H
+           - const: renesas,r9a09g047-tsu # RZ/G3E
+ 
+   reg:

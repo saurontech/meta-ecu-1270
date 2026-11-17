@@ -1,0 +1,49 @@
+From 2cf86384c018ea001ca6c766ca76e6c4befbdf3c Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:04 +0100
+Subject: [PATCH 016/399] pinctrl: renesas: rzg2l: Simplify
+ rzg2l_pinctrl_set_mux()
+
+[ Upstream commit b2aff3c99facba8174eb594870b7eeb909aa9e1a ]
+
+The port and function selectors are evaluated multiple times
+in rzg2l_pinctrl_set_mux(). Simplify the function by dropping
+dupicate evaluation storing them in local variables.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430093422.74812-7-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index c2976a6b2d5c..780e4c86a7c2 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -689,16 +689,18 @@ static int rzg2l_pinctrl_set_mux(struct pinctrl_dev *pctldev,
+ 	for (i = 0; i < group->grp.npins; i++) {
+ 		u64 *pin_data = pctrl->desc.pins[pins[i]].drv_data;
+ 		u32 off = RZG2L_PIN_CFG_TO_PORT_OFFSET(*pin_data);
++		u32 port = RZG2L_PIN_ID_TO_PORT(pins[i]);
+ 		u32 pin = RZG2L_PIN_ID_TO_PIN(pins[i]);
++		unsigned int func;
+ 
+-		ret = rzg2l_validate_pin(pctrl, *pin_data, RZG2L_PIN_ID_TO_PORT(pins[i]), pin);
++		ret = rzg2l_validate_pin(pctrl, *pin_data, port, pin);
+ 		if (ret)
+ 			return ret;
+ 
+-		dev_dbg(pctrl->dev, "port:%u pin: %u off:%x PSEL:%u\n",
+-			RZG2L_PIN_ID_TO_PORT(pins[i]), pin, off, psel_val[i] - hwcfg->func_base);
++		func = psel_val[i] - hwcfg->func_base;
++		dev_dbg(pctrl->dev, "port:%u pin: %u off:%x PSEL:%u\n", port, pin, off, func);
+ 
+-		rzg2l_pinctrl_set_pfc_mode(pctrl, pin, off, psel_val[i] - hwcfg->func_base);
++		rzg2l_pinctrl_set_pfc_mode(pctrl, pin, off, func);
+ 	}
+ 
+ 	return 0;

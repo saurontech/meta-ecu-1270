@@ -1,0 +1,35 @@
+From 3192cc52181d866ea1aa86d3eff8efa71d6a4610 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:22 +0200
+Subject: [PATCH 344/643] media: rzg2l-cru: Use `rzg2l_cru_ip_formats` array in
+ enum_frame_size
+
+commit ec37ac1ad27a361fe2c4ec61e521f2a347ef311e upstream.
+
+Use the `rzg2l_cru_ip_formats` array in `rzg2l_cru_ip_enum_frame_size()`
+to validate the format code.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-17-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index a40b0184b955..07859c89be77 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -165,7 +165,7 @@ static int rzg2l_cru_ip_enum_frame_size(struct v4l2_subdev *sd,
+ 	if (fse->index != 0)
+ 		return -EINVAL;
+ 
+-	if (fse->code != MEDIA_BUS_FMT_UYVY8_1X16)
++	if (!rzg2l_cru_ip_code_to_fmt(fse->code))
+ 		return -EINVAL;
+ 
+ 	fse->min_width = RZG2L_CRU_MIN_INPUT_WIDTH;

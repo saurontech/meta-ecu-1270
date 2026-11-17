@@ -1,0 +1,144 @@
+From 8c81e01df80939160034a4cfed27cd8c132b526a Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 22 Oct 2026 14:40:11 +0100
+Subject: [PATCH 1360/1368] serial: sh-sci: Add support for RZ/G3L RSCI
+
+[ Upstream commit 8f18d3cbd92065146147e958afa912ca94a237b0 ]
+
+Add support for RZ/G3L RSCI. The RSCI IP found on the RZ/G3L SoC is
+similar to RZ/G3E, but it has 3 clocks (2 module clocks + 1 external
+clock) instead of 6 clocks (5 module clocks + 1 external clock) on the
+RZ/G3E. Both RZ/G3L and RZ/G3E have a 32-bit FIFO, but RZ/G3L has a
+single TCLK with internal dividers, whereas the RZ/G3E has explicit
+clocks for TCLK and its dividers. Add a new port type
+RSCI_PORT_SCIF32_SINGLE_TCLK to handle this clock difference.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260312082708.98835-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/rsci.c          | 13 +++++++++++++
+ drivers/tty/serial/rsci.h          |  1 +
+ drivers/tty/serial/sh-sci-common.h |  1 +
+ drivers/tty/serial/sh-sci.c        | 14 +++++++++++---
+ 4 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/tty/serial/rsci.c b/drivers/tty/serial/rsci.c
+index 4dea8ddf6665d..56d12d8a822c2 100644
+--- a/drivers/tty/serial/rsci.c
++++ b/drivers/tty/serial/rsci.c
+@@ -695,6 +695,13 @@ struct sci_of_data of_rsci_rzg3e_data = {
+ 	.params = &rsci_rzg3e_port_params,
+ };
+ 
++struct sci_of_data of_rsci_rzg3l_data = {
++	.type = RSCI_PORT_SCIF32_SINGLE_TCLK,
++	.ops = &rsci_port_ops,
++	.uart_ops = &rsci_uart_ops,
++	.params = &rsci_rzg3e_port_params,
++};
++
+ struct sci_of_data of_rsci_rzt2h_data = {
+ 	.type = RSCI_PORT_SCIF16,
+ 	.ops = &rsci_port_ops,
+@@ -703,6 +710,11 @@ struct sci_of_data of_rsci_rzt2h_data = {
+ };
+ 
+ #ifdef CONFIG_SERIAL_SH_SCI_EARLYCON
++static int __init rsci_rzg3l_early_console_setup(struct earlycon_device *device,
++						 const char *opt)
++{
++	return scix_early_console_setup(device, &of_rsci_rzg3l_data);
++}
+ 
+ static int __init rsci_rzg3e_early_console_setup(struct earlycon_device *device,
+ 						 const char *opt)
+@@ -716,6 +728,7 @@ static int __init rsci_rzt2h_early_console_setup(struct earlycon_device *device,
+ 	return scix_early_console_setup(device, &of_rsci_rzt2h_data);
+ }
+ 
++OF_EARLYCON_DECLARE(rsci, "renesas,r9a08g046-rsci", rsci_rzg3l_early_console_setup);
+ OF_EARLYCON_DECLARE(rsci, "renesas,r9a09g047-rsci", rsci_rzg3e_early_console_setup);
+ OF_EARLYCON_DECLARE(rsci, "renesas,r9a09g077-rsci", rsci_rzt2h_early_console_setup);
+ 
+diff --git a/drivers/tty/serial/rsci.h b/drivers/tty/serial/rsci.h
+index 2aa2ba3973ee6..0985fd1b3348e 100644
+--- a/drivers/tty/serial/rsci.h
++++ b/drivers/tty/serial/rsci.h
+@@ -6,6 +6,7 @@
+ #include "sh-sci-common.h"
+ 
+ extern struct sci_of_data of_rsci_rzg3e_data;
++extern struct sci_of_data of_rsci_rzg3l_data;
+ extern struct sci_of_data of_rsci_rzt2h_data;
+ 
+ #endif /* __RSCI_H__ */
+diff --git a/drivers/tty/serial/sh-sci-common.h b/drivers/tty/serial/sh-sci-common.h
+index f363a659c46a0..01ff9fced8033 100644
+--- a/drivers/tty/serial/sh-sci-common.h
++++ b/drivers/tty/serial/sh-sci-common.h
+@@ -9,6 +9,7 @@
+ enum SCI_PORT_TYPE {
+ 	RSCI_PORT_SCIF16 = BIT(7) | 0,
+ 	RSCI_PORT_SCIF32 = BIT(7) | 1,
++	RSCI_PORT_SCIF32_SINGLE_TCLK = BIT(7) | 2,
+ };
+ 
+ enum SCI_CLKS {
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 515e9f0bb82a4..c31fbc99a6659 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -1184,7 +1184,8 @@ static int sci_handle_errors(struct uart_port *port)
+ 
+ static bool sci_is_rsci_type(u8 type)
+ {
+-	return (type == RSCI_PORT_SCIF16 || type == RSCI_PORT_SCIF32);
++	return (type == RSCI_PORT_SCIF16 || type == RSCI_PORT_SCIF32 ||
++		type == RSCI_PORT_SCIF32_SINGLE_TCLK);
+ }
+ 
+ static int sci_handle_fifo_overrun(struct uart_port *port)
+@@ -3182,7 +3183,8 @@ static int sci_init_clocks(struct sci_port *sci_port, struct device *dev)
+ 
+ 	if (sci_port->type == PORT_HSCIF) {
+ 		clk_names[SCI_SCK] = "hsck";
+-	} else if (sci_port->type == RSCI_PORT_SCIF16) {
++	} else if (sci_port->type == RSCI_PORT_SCIF16 ||
++		   sci_port->type == RSCI_PORT_SCIF32_SINGLE_TCLK) {
+ 		clk_names[SCI_FCK] = "operation";
+ 		clk_names[SCI_BRG_INT] = "bus";
+ 	} else if (sci_port->type == RSCI_PORT_SCIF32) {
+@@ -3197,7 +3199,8 @@ static int sci_init_clocks(struct sci_port *sci_port, struct device *dev)
+ 		if (IS_ERR(clk))
+ 			return PTR_ERR(clk);
+ 
+-		if (!clk && sci_port->type == RSCI_PORT_SCIF16 &&
++		if (!clk && (sci_port->type == RSCI_PORT_SCIF16 ||
++			     sci_port->type == RSCI_PORT_SCIF32_SINGLE_TCLK) &&
+ 		    (i == SCI_FCK || i == SCI_BRG_INT))
+ 			return dev_err_probe(dev, -ENODEV, "failed to get %s\n", name);
+ 
+@@ -3331,6 +3334,7 @@ static int sci_init_single(struct platform_device *dev,
+ 		break;
+ 	case PORT_SCIFA:
+ 	case RSCI_PORT_SCIF32:
++	case RSCI_PORT_SCIF32_SINGLE_TCLK:
+ 		sci_port->rx_trigger = 32;
+ 		break;
+ 	case PORT_SCIF:
+@@ -3664,6 +3668,10 @@ static const struct of_device_id of_sci_match[] __maybe_unused = {
+ 		.data = &of_sci_scif_rzv2h,
+ 	},
+ #ifdef CONFIG_SERIAL_RSCI
++	{
++		.compatible = "renesas,r9a08g046-rsci",
++		.data = &of_rsci_rzg3l_data,
++	},
+ 	{
+ 		.compatible = "renesas,r9a09g047-rsci",
+ 		.data = &of_rsci_rzg3e_data,

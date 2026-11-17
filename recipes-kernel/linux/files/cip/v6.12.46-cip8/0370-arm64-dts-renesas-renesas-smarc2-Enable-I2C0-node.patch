@@ -1,0 +1,44 @@
+From 2b22ce35932aa8b076115f4516d8c1d2d2183dde Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:48 +0200
+Subject: [PATCH 370/643] arm64: dts: renesas: renesas-smarc2: Enable I2C0 node
+
+commit 0acdad4097dbd166d5b12a94e2b58bf4cd5e9ac2 upstream.
+
+Enable device I2C0 node for the RZ SMARC Carrier-II Board and set clock
+frequency to 400kHz.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250514162422.910114-4-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index afdc1940e24a..3cac292f20b3 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -35,6 +35,7 @@ chosen {
+ 	};
+ 
+ 	aliases {
++		i2c0 = &i2c0;
+ 		serial3 = &scif0;
+ 		mmc1 = &sdhi1;
+ 	};
+@@ -58,6 +59,11 @@ &canfd {
+ 	status = "okay";
+ };
+ 
++&i2c0 {
++	status = "okay";
++	clock-frequency = <400000>;
++};
++
+ &scif0 {
+ 	status = "okay";
+ };

@@ -1,0 +1,50 @@
+From 8e44c0ecfa42929ce4925c60939715d0b8095646 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:36:00 +0200
+Subject: [PATCH 834/838] clk: renesas: r9a08g045: Add MSTOP for coupled clocks
+ as well
+
+commit 0ab2d84f94dae48c3e7605cdc99dbb4e7c7b206a upstream.
+
+If MSTOP is not added for both clocks in a coupled pair, and the clocks
+are not disabled in the reverse order of their enable sequence, the MSTOP
+may remain enabled when disabling the clocks.
+
+This happens because rzg2l_mod_clock_endisable() executes for coupled
+clocks only when a single clock from the pair is enabled. If one clock has
+no MSTOP defined, it can result in the MSTOP configuration being left
+active when the clocks are disabled out of order (i.e., not in the reverse
+order of enabling).
+
+Fixes: c49695952746 ("clk: renesas: r9a08g045: Drop power domain instantiation")
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250704134328.3614317-2-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a08g045-cpg.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/renesas/r9a08g045-cpg.c b/drivers/clk/renesas/r9a08g045-cpg.c
+index c3bdc7b0b67b..812adb223fdd 100644
+--- a/drivers/clk/renesas/r9a08g045-cpg.c
++++ b/drivers/clk/renesas/r9a08g045-cpg.c
+@@ -255,11 +255,13 @@ static const struct rzg2l_mod_clk r9a08g045_mod_clks[] = {
+ 					MSTOP(BUS_PERI_COM, BIT(4))),
+ 	DEF_COUPLED("eth0_axi",		R9A08G045_ETH0_CLK_AXI, R9A08G045_CLK_M0, 0x57c, 0,
+ 					MSTOP(BUS_PERI_COM, BIT(2))),
+-	DEF_COUPLED("eth0_chi",		R9A08G045_ETH0_CLK_CHI, R9A08G045_CLK_ZT, 0x57c, 0, 0),
++	DEF_COUPLED("eth0_chi",		R9A08G045_ETH0_CLK_CHI, R9A08G045_CLK_ZT, 0x57c, 0,
++					MSTOP(BUS_PERI_COM, BIT(2))),
+ 	DEF_MOD("eth0_refclk",		R9A08G045_ETH0_REFCLK, R9A08G045_CLK_HP, 0x57c, 8, 0),
+ 	DEF_COUPLED("eth1_axi",		R9A08G045_ETH1_CLK_AXI, R9A08G045_CLK_M0, 0x57c, 1,
+ 					MSTOP(BUS_PERI_COM, BIT(3))),
+-	DEF_COUPLED("eth1_chi",		R9A08G045_ETH1_CLK_CHI, R9A08G045_CLK_ZT, 0x57c, 1, 0),
++	DEF_COUPLED("eth1_chi",		R9A08G045_ETH1_CLK_CHI, R9A08G045_CLK_ZT, 0x57c, 1,
++					MSTOP(BUS_PERI_COM, BIT(3))),
+ 	DEF_MOD("eth1_refclk",		R9A08G045_ETH1_REFCLK, R9A08G045_CLK_HP, 0x57c, 9, 0),
+ 	DEF_MOD("i2c0_pclk",		R9A08G045_I2C0_PCLK, R9A08G045_CLK_P0, 0x580, 0,
+ 					MSTOP(BUS_MCPU2, BIT(10))),

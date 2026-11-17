@@ -1,0 +1,45 @@
+From aeb1aae3183801ae86c3c0f3800fd2d470e18355 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:32 +0100
+Subject: [PATCH 013/286] clk: renesas: rzg2l: Re-assert reset on deassert
+ timeout
+
+[ Upstream commit f8c5f0dc77d86da36bcbf0684c6747a2937cc3cd ]
+
+Prevent issues during reset deassertion by re-asserting the reset if a
+timeout occurs when trying to deassert. This ensures the reset line is in a
+known state and improves reliability for hardware that may not immediately
+clear the reset monitor bit.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/20250903082757.115778-3-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index 25e565100986..bd562aa6f301 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1780,8 +1780,14 @@ static int __rzg2l_cpg_assert(struct reset_controller_dev *rcdev,
+ 		return 0;
+ 	}
+ 
+-	return readl_poll_timeout_atomic(priv->base + reg, value,
+-					 assert == !!(value & mask), 10, 200);
++	ret = readl_poll_timeout_atomic(priv->base + reg, value,
++					assert == !!(value & mask), 10, 200);
++	if (ret && !assert) {
++		value = mask << 16;
++		writel(value, priv->base + CLK_RST_R(info->resets[id].off));
++	}
++
++	return ret;
+ }
+ 
+ static int rzg2l_cpg_assert(struct reset_controller_dev *rcdev,
