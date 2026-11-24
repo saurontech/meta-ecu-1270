@@ -1,0 +1,34 @@
+From bbc320410b34be81a89bae1f04732166cfa9f4b1 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 12:28:55 +0200
+Subject: [PATCH 132/246] arm64: dts: renesas: rzg3e-smarc-som: Enable watchdog
+
+commit db2bbe1e6c48f03ed1f5ac57f5614d02351dcb4c upstream.
+
+Enable WDT1 watchdog on RZ/G3E SMARC SoM platform.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250115103858.104709-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Message-ID: <20250623102857.1493371-7-tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+index 6b583ae2ac52..f4ba050beb0d 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+@@ -26,3 +26,7 @@ &qextal_clk {
+ &rtxin_clk {
+ 	clock-frequency = <32768>;
+ };
++
++&wdt1 {
++	status = "okay";
++};

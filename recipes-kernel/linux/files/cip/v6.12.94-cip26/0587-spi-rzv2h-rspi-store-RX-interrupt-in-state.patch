@@ -1,0 +1,59 @@
+From b20088754e89122e859b2e49660ae3d33b7381e9 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:50 +0200
+Subject: [PATCH 587/600] spi: rzv2h-rspi: store RX interrupt in state
+
+commit 28b590bd4c6a051ec61cf286a46a8b14846e6fcf upstream.
+
+In preparation for implementing DMA support, store the RX interrupt
+number in the private state, to allow disabling it during DMA.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-6-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index 6163ada3ccbb..50fd7ddef58d 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -100,6 +100,7 @@ struct rzv2h_rspi_priv {
+ 	struct clk *pclk;
+ 	wait_queue_head_t wait;
+ 	unsigned int bytes_per_word;
++	int irq_rx;
+ 	u32 last_speed_hz;
+ 	u32 freq;
+ 	u16 status;
+@@ -534,8 +535,8 @@ static int rzv2h_rspi_probe(struct platform_device *pdev)
+ 	struct rzv2h_rspi_priv *rspi;
+ 	struct reset_control *reset;
+ 	struct clk_bulk_data *clks;
+-	int irq_rx, ret, i;
+ 	long tclk_rate;
++	int ret, i;
+ 
+ 	controller = devm_spi_alloc_host(dev, sizeof(*rspi));
+ 	if (!controller)
+@@ -580,13 +581,13 @@ static int rzv2h_rspi_probe(struct platform_device *pdev)
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(reset),
+ 				     "cannot get tresetn reset\n");
+ 
+-	irq_rx = platform_get_irq_byname(pdev, "rx");
+-	if (irq_rx < 0)
+-		return dev_err_probe(dev, irq_rx, "cannot get IRQ 'rx'\n");
++	rspi->irq_rx = platform_get_irq_byname(pdev, "rx");
++	if (rspi->irq_rx < 0)
++		return dev_err_probe(dev, rspi->irq_rx, "cannot get IRQ 'rx'\n");
+ 
+ 	init_waitqueue_head(&rspi->wait);
+ 
+-	ret = devm_request_irq(dev, irq_rx, rzv2h_rx_irq_handler, 0,
++	ret = devm_request_irq(dev, rspi->irq_rx, rzv2h_rx_irq_handler, 0,
+ 			       dev_name(dev), rspi);
+ 	if (ret) {
+ 		dev_err(dev, "cannot request `rx` IRQ\n");

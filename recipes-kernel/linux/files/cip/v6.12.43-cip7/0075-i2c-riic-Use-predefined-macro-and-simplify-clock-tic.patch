@@ -1,0 +1,67 @@
+From 9575d6228d309c4416cb47bd4f80c16f8866645c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 23 Apr 2025 22:04:57 +0100
+Subject: [PATCH 075/246] i2c: riic: Use predefined macro and simplify clock
+ tick calculation
+
+commit 385bb1c2678b59db201831255b524a6d7f7a25ff upstream.
+
+Replace the hardcoded `1000000000` with the predefined `NSEC_PER_SEC`
+macro for clarity. Simplify the code by introducing a `ns_per_tick`
+variable to store `NSEC_PER_SEC / rate`, reducing redundancy and
+improving readability.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Andy Shevchenko <andy@kernel.org>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/i2c/busses/i2c-riic.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index 8538a4de1b43..506b21423e75 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -46,6 +46,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/reset.h>
++#include <linux/time.h>
+ 
+ #define ICCR1_ICE	BIT(7)
+ #define ICCR1_IICRST	BIT(6)
+@@ -313,6 +314,7 @@ static int riic_init_hw(struct riic_dev *riic)
+ {
+ 	int ret;
+ 	unsigned long rate;
++	unsigned long ns_per_tick;
+ 	int total_ticks, cks, brl, brh;
+ 	struct i2c_timings *t = &riic->i2c_t;
+ 	struct device *dev = riic->adapter.dev.parent;
+@@ -376,8 +378,9 @@ static int riic_init_hw(struct riic_dev *riic)
+ 	 * Remove clock ticks for rise and fall times. Convert ns to clock
+ 	 * ticks.
+ 	 */
+-	brl -= t->scl_fall_ns / (1000000000 / rate);
+-	brh -= t->scl_rise_ns / (1000000000 / rate);
++	ns_per_tick = NSEC_PER_SEC / rate;
++	brl -= t->scl_fall_ns / ns_per_tick;
++	brh -= t->scl_rise_ns / ns_per_tick;
+ 
+ 	/* Adjust for min register values for when SCLE=1 and NFE=1 */
+ 	if (brl < 1)
+@@ -387,8 +390,7 @@ static int riic_init_hw(struct riic_dev *riic)
+ 
+ 	pr_debug("i2c-riic: freq=%lu, duty=%d, fall=%lu, rise=%lu, cks=%d, brl=%d, brh=%d\n",
+ 		 rate / total_ticks, ((brl + 3) * 100) / (brl + brh + 6),
+-		 t->scl_fall_ns / (1000000000 / rate),
+-		 t->scl_rise_ns / (1000000000 / rate), cks, brl, brh);
++		 t->scl_fall_ns / ns_per_tick, t->scl_rise_ns / ns_per_tick, cks, brl, brh);
+ 
+ 	ret = pm_runtime_resume_and_get(dev);
+ 	if (ret)

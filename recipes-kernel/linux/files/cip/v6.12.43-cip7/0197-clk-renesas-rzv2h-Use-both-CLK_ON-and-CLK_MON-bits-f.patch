@@ -1,0 +1,53 @@
+From c44e07cafb11009ec39cfaf41355f38a3a0bdf7c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:14 +0100
+Subject: [PATCH 197/246] clk: renesas: rzv2h: Use both CLK_ON and CLK_MON bits
+ for clock state validation
+
+commit ef224dd26ca3554ba810996710bcf671bc1c6be9 upstream.
+
+Update the clock enable/disable logic to follow the latest hardware
+manual's guidelines, ensuring that both CLK_ON and CLK_MON bits are used
+to confirm the clock state.
+
+According to the manual, enabling a clock requires setting the
+CPG_CLK_ON bit and verifying the clock has started using the CPG_CLK_MON
+bit.  Similarly, disabling a clock requires clearing the CPG_CLK_ON bit
+and confirming the clock has stopped via the CPG_CLK_MON bit.
+
+Modify `rzv2h_mod_clock_is_enabled()` to check CLK_MON first and then
+validate CLK_ON for a more accurate clock status evaluation.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407165202.197570-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index ed72b8013500..e4cfc05a0d62 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -574,11 +574,14 @@ static int rzv2h_mod_clock_is_enabled(struct clk_hw *hw)
+ 	if (clock->mon_index >= 0) {
+ 		offset = GET_CLK_MON_OFFSET(clock->mon_index);
+ 		bitmask = BIT(clock->mon_bit);
+-	} else {
+-		offset = GET_CLK_ON_OFFSET(clock->on_index);
+-		bitmask = BIT(clock->on_bit);
++
++		if (!(readl(priv->base + offset) & bitmask))
++			return 0;
+ 	}
+ 
++	offset = GET_CLK_ON_OFFSET(clock->on_index);
++	bitmask = BIT(clock->on_bit);
++
+ 	return readl(priv->base + offset) & bitmask;
+ }
+ 

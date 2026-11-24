@@ -1,0 +1,40 @@
+From 9093e61c63c2f771b770c9d619f53cd787da23f5 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:42 +0200
+Subject: [PATCH 579/600] spi: dt-bindings: renesas,rzv2h-rspi: document
+ optional support for DMA
+
+commit 163345e356722e98ba57cd120787d6e991da7b1d upstream.
+
+The IP supports using DMA for reading and writing data from the FIFO,
+document it.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://patch.msgid.link/20251201134229.600817-11-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../devicetree/bindings/spi/renesas,rzv2h-rspi.yaml       | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+index 069557a587b5..a588b112e11e 100644
+--- a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
++++ b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+@@ -57,6 +57,14 @@ properties:
+       - const: presetn
+       - const: tresetn
+ 
++  dmas:
++    maxItems: 2
++
++  dma-names:
++    items:
++      - const: rx
++      - const: tx
++
+   power-domains:
+     maxItems: 1
+ 

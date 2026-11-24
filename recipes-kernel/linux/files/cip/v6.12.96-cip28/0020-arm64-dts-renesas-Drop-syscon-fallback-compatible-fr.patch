@@ -1,0 +1,81 @@
+From 5738f161774c269ca02d3fd424b8521400da45cb Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:08 +0100
+Subject: [PATCH 020/399] arm64: dts: renesas: Drop "syscon" fallback
+ compatible from sysc/sys nodes
+
+Remove the redundant "syscon" fallback compatible string from the
+system controller nodes on RZ/G3S (r9a08g045), RZ/G3E (r9a09g047),
+RZ/V2H(P) (r9a09g056), and RZ/V2N (r9a09g057), so they match the
+current DT bindings.
+
+This is now possible because commit ba5095ebbc7a ("mfd: syscon:
+Allow syscon nodes without a "syscon" compatible") has been
+backported to 6.12.y-cip, allowing the syscon driver to bind to
+these nodes without the extra "syscon" compatible string.
+
+Fixes: 9d4dac59bc3d ("arm64: dts: renesas: r9a08g045: Use syscon compatible for the system controller")
+Fixes: 8d6a8af15fe7 ("arm64: dts: renesas: r9a09g047: Add TSU node")
+Fixes: 04e1331b93df ("arm64: dts: renesas: r9a09g056: Use syscon compatible for the system controller")
+Fixes: 3fd072f3b59e ("arm64: dts: renesas: r9a09g057: Add TSU nodes")
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 2 +-
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 2 +-
+ arch/arm64/boot/dts/renesas/r9a09g056.dtsi | 2 +-
+ arch/arm64/boot/dts/renesas/r9a09g057.dtsi | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 7a5f339728d5..3173e6be1ffc 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -473,7 +473,7 @@ cpg: clock-controller@11010000 {
+ 		};
+ 
+ 		sysc: system-controller@11020000 {
+-			compatible = "renesas,r9a08g045-sysc", "syscon";
++			compatible = "renesas,r9a08g045-sysc";
+ 			reg = <0 0x11020000 0 0x10000>;
+ 			interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index ec5e1132d9e1..4267b10937f3 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -279,7 +279,7 @@ cpg: clock-controller@10420000 {
+ 		};
+ 
+ 		sys: system-controller@10430000 {
+-			compatible = "renesas,r9a09g047-sys", "syscon";
++			compatible = "renesas,r9a09g047-sys";
+ 			reg = <0 0x10430000 0 0x10000>;
+ 			clocks = <&cpg CPG_CORE R9A09G047_SYS_0_PCLK>;
+ 			resets = <&cpg 0x30>;
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+index 03eeb06e0400..d76c0608524e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+@@ -297,7 +297,7 @@ cpg: clock-controller@10420000 {
+ 		};
+ 
+ 		sys: system-controller@10430000 {
+-			compatible = "renesas,r9a09g056-sys", "syscon";
++			compatible = "renesas,r9a09g056-sys";
+ 			reg = <0 0x10430000 0 0x10000>;
+ 			clocks = <&cpg CPG_CORE R9A09G056_SYS_0_PCLK>;
+ 			resets = <&cpg 0x30>;
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+index 0d36754ebe0c..eca57c29fc9b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+@@ -279,7 +279,7 @@ cpg: clock-controller@10420000 {
+ 		};
+ 
+ 		sys: system-controller@10430000 {
+-			compatible = "renesas,r9a09g057-sys", "syscon";
++			compatible = "renesas,r9a09g057-sys";
+ 			reg = <0 0x10430000 0 0x10000>;
+ 			clocks = <&cpg CPG_CORE R9A09G057_SYS_0_PCLK>;
+ 			resets = <&cpg 0x30>;

@@ -1,0 +1,120 @@
+From 31b91ed85ce12b5ca17f66793a037ba606cec3f6 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:40 +0100
+Subject: [PATCH 280/286] dt-bindings: interrupt-controller:
+ renesas,rzg2l-irqc: Document RZ/G3L SoC
+
+[ Upstream commit 3aa78b828e5d68bc8231a70ed295bcc6227bc611 ]
+
+Document RZ/G3L (R9A08G046) IRQC. The IRQC block on the RZ/G3L SoC is
+nearly identical to that found on the RZ/G3S SoC, with the following
+differences: it supports more external interrupts and GPT error
+interrupts, and adds registers for GPT/MTU interrupt selection and shared
+interrupt selection between external interrupt and TINT. A new compatible
+string "renesas,r9a08g046-irqc" is therefore introduced for the RZ/G3L
+SoC.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../renesas,rzg2l-irqc.yaml                   | 43 ++++++++++++++++---
+ 1 file changed, 36 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/renesas,rzg2l-irqc.yaml b/Documentation/devicetree/bindings/interrupt-controller/renesas,rzg2l-irqc.yaml
+index a0b57d808639..3a221e1800a0 100644
+--- a/Documentation/devicetree/bindings/interrupt-controller/renesas,rzg2l-irqc.yaml
++++ b/Documentation/devicetree/bindings/interrupt-controller/renesas,rzg2l-irqc.yaml
+@@ -30,7 +30,9 @@ properties:
+               - renesas,r9a08g045-irqc     # RZ/G3S
+           - const: renesas,rzg2l-irqc
+ 
+-      - const: renesas,r9a07g043f-irqc     # RZ/Five
++      - enum:
++          - renesas,r9a07g043f-irqc    # RZ/Five
++          - renesas,r9a08g046-irqc     # RZ/G3L
+ 
+   '#interrupt-cells':
+     description: The first cell should contain a macro RZG2L_{NMI,IRQX} included in the
+@@ -48,17 +50,17 @@ properties:
+ 
+   interrupts:
+     minItems: 45
+-    maxItems: 48
++    maxItems: 61
+ 
+   interrupt-names:
+     minItems: 45
+-    maxItems: 48
++    maxItems: 61
+     items:
+       oneOf:
+         - description: NMI interrupt
+           const: nmi
+         - description: External IRQ interrupt
+-          pattern: '^irq([0-7])$'
++          pattern: '^irq([0-9]|1[0-5])$'
+         - description: GPIO interrupt
+           pattern: '^tint([0-9]|1[0-9]|2[0-9]|3[0-1])$'
+         - description: Bus error interrupt
+@@ -75,6 +77,8 @@ properties:
+           const: ec7tie2-1
+         - description: ECCRAM1 error overflow interrupt
+           const: ec7tiovf-1
++        - description: Integrated GPT Error interrupt
++          pattern: '^ovfunf([0-7])$'
+ 
+   clocks:
+     maxItems: 2
+@@ -106,6 +110,24 @@ required:
+ allOf:
+   - $ref: /schemas/interrupt-controller.yaml#
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,r9a07g043f-irqc
++              - renesas,r9a07g043u-irqc
++              - renesas,r9a07g044-irqc
++              - renesas,r9a07g054-irqc
++    then:
++      properties:
++        interrupts:
++          minItems: 48
++          maxItems: 48
++        interrupt-names:
++          minItems: 48
++          maxItems: 48
++
+   - if:
+       properties:
+         compatible:
+@@ -118,12 +140,19 @@ allOf:
+           maxItems: 45
+         interrupt-names:
+           maxItems: 45
+-    else:
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,r9a08g046-irqc
++    then:
+       properties:
+         interrupts:
+-          minItems: 48
++          minItems: 61
+         interrupt-names:
+-          minItems: 48
++          minItems: 61
+ 
+ unevaluatedProperties: false
+ 

@@ -1,0 +1,64 @@
+From 5e5d7281af08a6eceafb281052e602ff4367eba6 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 12 Mar 2026 15:35:15 +0000
+Subject: [PATCH 348/851] arm64: dts: renesas: r9a09g047e57-smarc: Enable
+ USB3HOST
+
+[ Upstream commit 6ea91acf0f67a7e6dd1e899955346e00778d7b0f ]
+
+Enable USB3.2 Gen2 Host controller(a.k.a USB3HOST) on the RZ/G3E SMARC EVK
+platform.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250916150255.4231-9-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 10 ++++++++++
+ arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi    |  8 ++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 342b885006e9..696903dc7a63 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -196,6 +196,11 @@ sd1-data {
+ 				 <RZG3E_PORT_PINMUX(G, 5, 1)>; /* SD1DAT3 */
+ 		};
+ 	};
++
++	usb3_pins: usb3 {
++		pinmux = <RZG3E_PORT_PINMUX(4, 1, 12)>, /* USB30_VBUSEN */
++			 <RZG3E_PORT_PINMUX(4, 0, 12)>; /* USB30_OVRCURN */
++	};
+ };
+ 
+ #if SW_SER0_PMOD && SW_SER2_EN
+@@ -242,3 +247,8 @@ &sdhi1 {
+ 	vmmc-supply = <&reg_3p3v>;
+ 	vqmmc-supply = <&vqmmc_sd1_pvdd>;
+ };
++
++&xhci {
++	pinctrl-0 = <&usb3_pins>;
++	pinctrl-names = "default";
++};
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index 69c0101ff7f5..b607b5d6c259 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -107,3 +107,11 @@ &sdhi1 {
+ 
+ 	status = "okay";
+ };
++
++&usb3_phy {
++	status = "okay";
++};
++
++&xhci {
++	status = "okay";
++};

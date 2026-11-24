@@ -1,0 +1,66 @@
+From 60ad457ad04bfa17d6af9c2010980dfbde2397a8 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 12 Mar 2026 15:35:10 +0000
+Subject: [PATCH 343/851] usb: host: xhci-plat: Add .post_resume_quirk for
+ struct xhci_plat_priv
+
+[ Upstream commit 2ef16e4eb41fe711479d92805e4b9e430c7bbefd ]
+
+Some SoCs (eg Renesas RZ/G3E SoC) have special sequence after
+xhci_resume, add .post_resume_quick for it.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250916150255.4231-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/usb/host/xhci-plat.c | 14 ++++++++++++++
+ drivers/usb/host/xhci-plat.h |  1 +
+ 2 files changed, 15 insertions(+)
+
+diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
+index 448656d68e49..48e0463ee194 100644
+--- a/drivers/usb/host/xhci-plat.c
++++ b/drivers/usb/host/xhci-plat.c
+@@ -74,6 +74,16 @@ static int xhci_priv_resume_quirk(struct usb_hcd *hcd)
+ 	return priv->resume_quirk(hcd);
+ }
+ 
++static int xhci_priv_post_resume_quirk(struct usb_hcd *hcd)
++{
++	struct xhci_plat_priv *priv = hcd_to_xhci_priv(hcd);
++
++	if (!priv->post_resume_quirk)
++		return 0;
++
++	return priv->post_resume_quirk(hcd);
++}
++
+ static void xhci_plat_quirks(struct device *dev, struct xhci_hcd *xhci)
+ {
+ 	struct xhci_plat_priv *priv = xhci_to_priv(xhci);
+@@ -505,6 +515,10 @@ static int xhci_plat_resume_common(struct device *dev, struct pm_message pmsg)
+ 	if (ret)
+ 		goto disable_clks;
+ 
++	ret = xhci_priv_post_resume_quirk(hcd);
++	if (ret)
++		goto disable_clks;
++
+ 	pm_runtime_disable(dev);
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
+diff --git a/drivers/usb/host/xhci-plat.h b/drivers/usb/host/xhci-plat.h
+index 6475130eac4b..8c904b0fe555 100644
+--- a/drivers/usb/host/xhci-plat.h
++++ b/drivers/usb/host/xhci-plat.h
+@@ -19,6 +19,7 @@ struct xhci_plat_priv {
+ 	int (*init_quirk)(struct usb_hcd *);
+ 	int (*suspend_quirk)(struct usb_hcd *);
+ 	int (*resume_quirk)(struct usb_hcd *);
++	int (*post_resume_quirk)(struct usb_hcd *);
+ };
+ 
+ #define hcd_to_xhci_priv(h) ((struct xhci_plat_priv *)hcd_to_xhci(h)->priv)

@@ -1,0 +1,50 @@
+From b6853993079295218a21a71e1c0b95bf2109c20d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:08 +0100
+Subject: [PATCH 191/246] clk: renesas: rzv2h: Sort compatible list based on
+ SoC part number
+
+commit c3400fd7c717e752701e6832175f86ff935b812b upstream.
+
+Reorder the compatible entries in `rzv2h_cpg_match[]` to follow a
+numerical sequence based on the SoC part numbers.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407191628.323613-8-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index dfb896710b43..8d58fb57a548 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -1015,17 +1015,17 @@ static int __init rzv2h_cpg_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct of_device_id rzv2h_cpg_match[] = {
+-#ifdef CONFIG_CLK_R9A09G057
+-	{
+-		.compatible = "renesas,r9a09g057-cpg",
+-		.data = &r9a09g057_cpg_info,
+-	},
+-#endif
+ #ifdef CONFIG_CLK_R9A09G047
+ 	{
+ 		.compatible = "renesas,r9a09g047-cpg",
+ 		.data = &r9a09g047_cpg_info,
+ 	},
++#endif
++#ifdef CONFIG_CLK_R9A09G057
++	{
++		.compatible = "renesas,r9a09g057-cpg",
++		.data = &r9a09g057_cpg_info,
++	},
+ #endif
+ 	{ /* sentinel */ }
+ };

@@ -1,0 +1,39 @@
+From 0bb0e7ddf6486690dc0c2166cff5592e3c8ce1a0 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Tue, 3 Mar 2026 18:53:41 +0200
+Subject: [PATCH 001/851] clk: renesas: r9a09g077: Add ADC module clocks
+
+commit ba1ec92ccfe22c93afd5b20e2176e290d268381b upstream.
+
+Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs have three 12-bit
+ADC peripherals, each with their own peripheral clock.
+
+For conversion, they use the PCLKL clock.
+
+Add their clocks to the list of module clocks.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250923160524.1096720-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index cb792aa5877b..af49565a544e 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -156,6 +156,9 @@ static const struct mssr_mod_clk r9a09g077_mod_clks[] __initconst = {
+ 	DEF_MOD("sci0fck", 8, CLK_SCI0ASYNC),
+ 	DEF_MOD("iic0", 100, R9A09G077_CLK_PCLKL),
+ 	DEF_MOD("iic1", 101, R9A09G077_CLK_PCLKL),
++	DEF_MOD("adc0", 206, R9A09G077_CLK_PCLKH),
++	DEF_MOD("adc1", 207, R9A09G077_CLK_PCLKH),
++	DEF_MOD("adc2", 225, R9A09G077_CLK_PCLKM),
+ 	DEF_MOD("iic2", 601, R9A09G077_CLK_PCLKL),
+ 	DEF_MOD("sdhi0", 1212, R9A09G077_CLK_PCLKAM),
+ 	DEF_MOD("sdhi1", 1213, R9A09G077_CLK_PCLKAM),

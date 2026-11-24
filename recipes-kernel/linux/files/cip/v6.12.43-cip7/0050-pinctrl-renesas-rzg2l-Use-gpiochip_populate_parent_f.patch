@@ -1,0 +1,56 @@
+From 1eeb43bf24a799c8a1df7717fa9566380e72d36b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 31 Mar 2025 13:06:55 +0200
+Subject: [PATCH 050/246] pinctrl: renesas: rzg2l: Use
+ gpiochip_populate_parent_fwspec_twocell helper
+
+commit f407af78c8d3b6035f81152b15ad67063f42514e upstream.
+
+Because rzg2l_gpio_populate_parent_fwspec() and
+gpiochip_populate_parent_fwspec_twocell() are identical.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241017113942.139712-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index a240a713da86..6d850a016712 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -2435,21 +2435,6 @@ static int rzg2l_gpio_child_to_parent_hwirq(struct gpio_chip *gc,
+ 	return ret;
+ }
+ 
+-static int rzg2l_gpio_populate_parent_fwspec(struct gpio_chip *chip,
+-					     union gpio_irq_fwspec *gfwspec,
+-					     unsigned int parent_hwirq,
+-					     unsigned int parent_type)
+-{
+-	struct irq_fwspec *fwspec = &gfwspec->fwspec;
+-
+-	fwspec->fwnode = chip->irq.parent_domain->fwnode;
+-	fwspec->param_count = 2;
+-	fwspec->param[0] = parent_hwirq;
+-	fwspec->param[1] = parent_type;
+-
+-	return 0;
+-}
+-
+ static void rzg2l_gpio_irq_restore(struct rzg2l_pinctrl *pctrl)
+ {
+ 	struct irq_domain *domain = pctrl->gpio_chip.irq.domain;
+@@ -2658,7 +2643,7 @@ static int rzg2l_gpio_register(struct rzg2l_pinctrl *pctrl)
+ 	girq->fwnode = dev_fwnode(pctrl->dev);
+ 	girq->parent_domain = parent_domain;
+ 	girq->child_to_parent_hwirq = rzg2l_gpio_child_to_parent_hwirq;
+-	girq->populate_parent_alloc_arg = rzg2l_gpio_populate_parent_fwspec;
++	girq->populate_parent_alloc_arg = gpiochip_populate_parent_fwspec_twocell;
+ 	girq->child_irq_domain_ops.free = rzg2l_gpio_irq_domain_free;
+ 	girq->init_valid_mask = rzg2l_init_irq_valid_mask;
+ 

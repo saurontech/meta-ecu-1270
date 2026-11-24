@@ -1,0 +1,35 @@
+From 05a421608b1c5af837ea63ef395b2b776a7fad3d Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:27 +0100
+Subject: [PATCH 008/286] dt-bindings: soc: renesas: renesas,rzg2l-sysc:
+ Document RZ/G3L SoC
+
+[ Upstream commit 3ac4e6b92fc200e047d13aae06224b2a72539b9e ]
+
+Document RZ/G3L (R9A08G046) SYSC bindings.  The SYSC block found on the
+RZ/G3L SoC is similar to the one found on RZ/G3S.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260203103031.247435-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/soc/renesas/renesas,rzg2l-sysc.yaml      | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas,rzg2l-sysc.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas,rzg2l-sysc.yaml
+index 4386b2c3fa4d..94ae72eb8fb6 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas,rzg2l-sysc.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas,rzg2l-sysc.yaml
+@@ -24,6 +24,7 @@ properties:
+       - renesas,r9a07g044-sysc # RZ/G2{L,LC}
+       - renesas,r9a07g054-sysc # RZ/V2L
+       - renesas,r9a08g045-sysc # RZ/G3S
++      - renesas,r9a08g046-sysc # RZ/G3L
+ 
+   reg:
+     maxItems: 1

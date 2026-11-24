@@ -1,0 +1,48 @@
+From a51b931cc6a449882b17ade83b703d2786a685c2 Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Thu, 17 Sep 2026 10:16:17 +0100
+Subject: [PATCH 2863/2868] dt-bindings: rtc: renesas,rz-rtca3: Add RZ/V2N
+ support
+
+commit f3ac75cfacc66f48523e730646dbbc2f19844799 upstream.
+
+The Renesas RZ/V2N (r9a09g056) RTC is identical to the RZ/V2H
+(r9a09g057) variant. Add the compatible string for RZ/V2N and
+extend the existing RZ/V2H reset configuration to cover both
+variants.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260125192706.27099-4-ovidiu.panait.rb@renesas.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml b/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml
+index ccb1638c35b9..988bb9fa8143 100644
+--- a/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml
++++ b/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml
+@@ -14,6 +14,7 @@ properties:
+     items:
+       - enum:
+           - renesas,r9a08g045-rtca3 # RZ/G3S
++          - renesas,r9a09g056-rtca3 # RZ/V2N
+           - renesas,r9a09g057-rtca3 # RZ/V2H
+       - const: renesas,rz-rtca3
+ 
+@@ -82,7 +83,9 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            const: renesas,r9a09g057-rtca3
++            enum:
++              - renesas,r9a09g056-rtca3
++              - renesas,r9a09g057-rtca3
+     then:
+       properties:
+         resets:

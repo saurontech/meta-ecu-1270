@@ -1,0 +1,39 @@
+From 717962a739c1e65031387c6081a68e72828538da Mon Sep 17 00:00:00 2001
+From: David Sterba <dsterba@suse.com>
+Date: Sun, 9 Aug 2026 10:47:58 -0400
+Subject: [PATCH 143/435] btrfs: add debug build only WARN
+
+[ Upstream commit 3db15c6ca6feb2c5000a1cbb39c33866e0349abd ]
+
+Add conditional WARN() wrapper that's enabled only in debug build. It
+should be used for unexpected conditions that should be noisy.  Use it
+instead of ASSERT(0). As it will not lead to BUG() make sure that
+continuing is still possible, e.g. the error is handled anyway.
+
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+Signed-off-by: David Sterba <dsterba@suse.com>
+Stable-dep-of: 8bc4d7209611 ("btrfs: zoned: fix missing chunk metadata reservation")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/btrfs/messages.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/fs/btrfs/messages.h b/fs/btrfs/messages.h
+index 08a9272399d2..66ea41aa3608 100644
+--- a/fs/btrfs/messages.h
++++ b/fs/btrfs/messages.h
+@@ -181,6 +181,13 @@ do {								\
+ #define ASSERT(expr)	(void)(expr)
+ #endif
+ 
++#ifdef CONFIG_BTRFS_DEBUG
++/* Verbose warning only under debug build. */
++#define DEBUG_WARN(args...)			WARN(1, KERN_ERR args)
++#else
++#define DEBUG_WARN(...)				do {} while(0)
++#endif
++
+ __printf(5, 6)
+ __cold
+ void __btrfs_handle_fs_error(struct btrfs_fs_info *fs_info, const char *function,

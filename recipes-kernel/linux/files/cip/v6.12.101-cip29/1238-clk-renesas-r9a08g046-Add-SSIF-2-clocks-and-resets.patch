@@ -1,0 +1,59 @@
+From 7dbd30b9083b2497b60086514c80f183745ebd3c Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 1 Aug 2026 10:14:34 +0100
+Subject: [PATCH 1238/1853] clk: renesas: r9a08g046: Add SSIF-2 clocks and
+ resets
+
+[ Upstream commit 29c46057d55648d88805e0412deb8729d806bf97 ]
+
+Add SSIF-2 clock and reset entries on the RZ/G3L SoC.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260505071544.8965-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/r9a08g046-cpg.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a08g046-cpg.c b/drivers/clk/renesas/r9a08g046-cpg.c
+index 0cb681358642..fe3cb9a4f0ec 100644
+--- a/drivers/clk/renesas/r9a08g046-cpg.c
++++ b/drivers/clk/renesas/r9a08g046-cpg.c
+@@ -269,6 +269,22 @@ static const struct rzg2l_mod_clk r9a08g046_mod_clks[] = {
+ 					MSTOP(BUS_REG0, BIT(0))),
+ 	DEF_MOD("wdt0_clk",		R9A08G046_WDT0_CLK, R9A08G046_OSCCLK, 0x548, 1,
+ 					MSTOP(BUS_REG0, BIT(0))),
++	DEF_MOD("ssi0_pclk2",		R9A08G046_SSI0_PCLK2, R9A08G046_CLK_P0,	0x570, 0,
++					MSTOP(BUS_MCPU1, BIT(10))),
++	DEF_MOD("ssi0_pclk_sfr",	R9A08G046_SSI0_PCLK_SFR, R9A08G046_CLK_P0, 0x570, 1,
++					MSTOP(BUS_MCPU1, BIT(10))),
++	DEF_MOD("ssi1_pclk2",		R9A08G046_SSI1_PCLK2, R9A08G046_CLK_P0, 0x570, 2,
++					MSTOP(BUS_MCPU1, BIT(11))),
++	DEF_MOD("ssi1_pclk_sfr",	R9A08G046_SSI1_PCLK_SFR, R9A08G046_CLK_P0, 0x570, 3,
++					MSTOP(BUS_MCPU1, BIT(11))),
++	DEF_MOD("ssi2_pclk2",		R9A08G046_SSI2_PCLK2, R9A08G046_CLK_P0,	0x570, 4,
++					MSTOP(BUS_MCPU1, BIT(12))),
++	DEF_MOD("ssi2_pclk_sfr",	R9A08G046_SSI2_PCLK_SFR, R9A08G046_CLK_P0, 0x570, 5,
++					MSTOP(BUS_MCPU1, BIT(12))),
++	DEF_MOD("ssi3_pclk2",		R9A08G046_SSI3_PCLK2, R9A08G046_CLK_P0,	0x570, 6,
++					MSTOP(BUS_MCPU1, BIT(13))),
++	DEF_MOD("ssi3_pclk_sfr",	R9A08G046_SSI3_PCLK_SFR, R9A08G046_CLK_P0, 0x570, 7,
++					MSTOP(BUS_MCPU1, BIT(13))),
+ 	DEF_MOD("eth0_clk_axi",		R9A08G046_ETH0_CLK_AXI, R9A08G046_CLK_P1, 0x57c, 0,
+ 					MSTOP(BUS_PERI_COM, BIT(2))),
+ 	DEF_MOD("eth1_clk_axi",		R9A08G046_ETH1_CLK_AXI, R9A08G046_CLK_P1, 0x57c, 1,
+@@ -356,6 +372,10 @@ static const struct rzg2l_reset r9a08g046_resets[] = {
+ 	DEF_RST(R9A08G046_DMAC_ARESETN, 0x82c, 0),
+ 	DEF_RST(R9A08G046_DMAC_RST_ASYNC, 0x82c, 1),
+ 	DEF_RST(R9A08G046_WDT0_PRESETN, 0x848, 0),
++	DEF_RST(R9A08G046_SSI0_RST_M2_REG, 0x870, 0),
++	DEF_RST(R9A08G046_SSI1_RST_M2_REG, 0x870, 1),
++	DEF_RST(R9A08G046_SSI2_RST_M2_REG, 0x870, 2),
++	DEF_RST(R9A08G046_SSI3_RST_M2_REG, 0x870, 3),
+ 	DEF_RST(R9A08G046_ETH0_ARESET_N, 0x87c, 0),
+ 	DEF_RST(R9A08G046_ETH1_ARESET_N, 0x87c, 1),
+ 	DEF_RST(R9A08G046_I2C0_MRST, 0x880, 0),

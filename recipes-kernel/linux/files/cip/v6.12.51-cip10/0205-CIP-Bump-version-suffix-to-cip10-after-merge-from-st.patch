@@ -1,0 +1,18 @@
+From 9ca012159eec014224e8e4f20c982956741f7ae5 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Thu, 9 Oct 2025 16:01:14 +0900
+Subject: [PATCH 205/205] CIP: Bump version suffix to -cip10 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index d9d4b933640b..4e18b030f244 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip9
++-cip10

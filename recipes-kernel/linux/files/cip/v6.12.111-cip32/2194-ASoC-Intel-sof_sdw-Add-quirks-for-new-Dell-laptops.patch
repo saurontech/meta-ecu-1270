@@ -1,0 +1,32 @@
+From 1cbc804a9fe482d8039024899c8b14d2b3dfe333 Mon Sep 17 00:00:00 2001
+From: Charles Keepax <ckeepax@opensource.cirrus.com>
+Date: Thu, 16 Jul 2026 15:42:09 +0100
+Subject: [PATCH 2194/2868] ASoC: Intel: sof_sdw: Add quirks for new Dell
+ laptops
+
+[ Upstream commit efd80de2de9d06ddf0eee55ca11b04e39bfc7cd8 ]
+
+A couple of new Dell laptops are shipping using the sidecar amp
+configuration. Add the required kernel quirk to enable.
+
+Signed-off-by: Charles Keepax <ckeepax@opensource.cirrus.com>
+Link: https://patch.msgid.link/20260716144209.2411523-1-ckeepax@opensource.cirrus.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ sound/soc/intel/boards/sof_sdw.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sound/soc/intel/boards/sof_sdw.c b/sound/soc/intel/boards/sof_sdw.c
+index ba53b67530e5..b1e40784e7f9 100644
+--- a/sound/soc/intel/boards/sof_sdw.c
++++ b/sound/soc/intel/boards/sof_sdw.c
+@@ -687,6 +687,8 @@ static const struct dmi_system_id sof_sdw_quirk_table[] = {
+ };
+ 
+ static const struct snd_pci_quirk sof_sdw_ssid_quirk_table[] = {
++	SND_PCI_QUIRK(0x1028, 0x0e53, "Dell XPS WCL", SOC_SDW_SIDECAR_AMPS),
++	SND_PCI_QUIRK(0x1028, 0x0e54, "Dell XPS PTL", SOC_SDW_SIDECAR_AMPS),
+ 	SND_PCI_QUIRK(0x1043, 0x1e13, "ASUS Zenbook S14", SOC_SDW_CODEC_MIC),
+ 	SND_PCI_QUIRK(0x1043, 0x1f43, "ASUS Zenbook S16", SOC_SDW_CODEC_MIC),
+ 	{}

@@ -1,0 +1,60 @@
+From 42ac14a4897ba16c0968f67170481d0123985101 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 12 Dec 2025 09:19:56 +0000
+Subject: [PATCH 313/724] dt-bindings: timer: renesas,ostm: Document RZ/V2N
+ (R9A09G056) support
+
+commit f0e0c374379cc0b99698d3786d78d936c6c4bf38 upstream.
+
+Document support for the Renesas OS Timer (OSTM) found on the Renesas
+RZ/V2N (R9A09G056) SoC. The OSTM IP on RZ/V2N is identical to that on
+other RZ families, so no driver changes are required as `renesas,ostm`
+will be used as fallback compatible.
+
+Also update the bindings to require the "resets" property for RZ/V2N
+by inverting the logic: all SoCs except RZ/A1 and RZ/A2 now require
+the "resets" property.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://lore.kernel.org/r/20250515182207.329176-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Message-ID: <20251212091959.22073-3-ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/timer/renesas,ostm.yaml      | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/timer/renesas,ostm.yaml b/Documentation/devicetree/bindings/timer/renesas,ostm.yaml
+index e8c642166462..f23577be8ba4 100644
+--- a/Documentation/devicetree/bindings/timer/renesas,ostm.yaml
++++ b/Documentation/devicetree/bindings/timer/renesas,ostm.yaml
+@@ -26,6 +26,7 @@ properties:
+           - renesas,r9a07g043-ostm # RZ/G2UL and RZ/Five
+           - renesas,r9a07g044-ostm # RZ/G2{L,LC}
+           - renesas,r9a07g054-ostm # RZ/V2L
++          - renesas,r9a09g056-ostm # RZ/V2N
+           - renesas,r9a09g057-ostm # RZ/V2H(P)
+       - const: renesas,ostm        # Generic
+ 
+@@ -54,12 +55,11 @@ required:
+ if:
+   properties:
+     compatible:
+-      contains:
+-        enum:
+-          - renesas,r9a07g043-ostm
+-          - renesas,r9a07g044-ostm
+-          - renesas,r9a07g054-ostm
+-          - renesas,r9a09g057-ostm
++      not:
++        contains:
++          enum:
++            - renesas,r7s72100-ostm
++            - renesas,r7s9210-ostm
+ then:
+   required:
+     - resets

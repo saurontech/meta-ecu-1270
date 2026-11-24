@@ -1,0 +1,111 @@
+From aefa355c66953b06597ae36ab16c91c685ee20a6 Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Fri, 9 Jan 2026 12:17:11 +0000
+Subject: [PATCH 663/838] dt-bindings: rtc: renesas,rz-rtca3: Add RZ/V2H
+ support
+
+commit 4800046b56a5b240ab280f55165484a9dbdf7092 upstream.
+
+The Renesas RZ/V2H RTC IP is based on the same RTCA3 IP as RZ/G3S
+(r9a08g045), with the following differences:
+- It lacks the time capture functionality
+- The maximum supported periodic interrupt frequency is 128Hz instead
+  of 256Hz
+- It requires two reset lines instead of one
+
+Add new compatible string "renesas,r9a09g057-rtca3" for RZ/V2H and update
+the binding accordingly:
+- Allow "resets" to contain one or two entries depending on the SoC.
+- Add "reset-names" property, but make it required only for RZ/V2H.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://patch.msgid.link/20251107210706.45044-2-ovidiu.panait.rb@renesas.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/rtc/renesas,rz-rtca3.yaml        | 46 +++++++++++++++++--
+ 1 file changed, 41 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml b/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml
+index e70eeb66aa64..ccb1638c35b9 100644
+--- a/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml
++++ b/Documentation/devicetree/bindings/rtc/renesas,rz-rtca3.yaml
+@@ -9,14 +9,12 @@ title: Renesas RTCA-3 Real Time Clock
+ maintainers:
+   - Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+ 
+-allOf:
+-  - $ref: rtc.yaml#
+-
+ properties:
+   compatible:
+     items:
+       - enum:
+           - renesas,r9a08g045-rtca3 # RZ/G3S
++          - renesas,r9a09g057-rtca3 # RZ/V2H
+       - const: renesas,rz-rtca3
+ 
+   reg:
+@@ -48,8 +46,12 @@ properties:
+     maxItems: 1
+ 
+   resets:
+-    items:
+-      - description: VBATTB module reset
++    minItems: 1
++    maxItems: 2
++
++  reset-names:
++    minItems: 1
++    maxItems: 2
+ 
+ required:
+   - compatible
+@@ -61,6 +63,39 @@ required:
+   - power-domains
+   - resets
+ 
++allOf:
++  - $ref: rtc.yaml#
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a08g045-rtca3
++    then:
++      properties:
++        resets:
++          items:
++            - description: VBATTB module reset
++        reset-names:
++          const: vbattb
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g057-rtca3
++    then:
++      properties:
++        resets:
++          items:
++            - description: RTC reset
++            - description: Reset for the RTEST registers
++        reset-names:
++          items:
++            - const: rtc
++            - const: rtest
++      required:
++        - reset-names
++
+ additionalProperties: false
+ 
+ examples:
+@@ -81,4 +116,5 @@ examples:
+         clock-names = "bus", "counter";
+         power-domains = <&cpg>;
+         resets = <&cpg R9A08G045_VBAT_BRESETN>;
++        reset-names = "vbattb";
+     };

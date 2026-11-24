@@ -1,0 +1,57 @@
+From 9ef299d4a8eb9882e22e93916d3b973c7d6b6f8e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:45 +0000
+Subject: [PATCH 334/851] arm64: dts: renesas: renesas-smarc2: Move aliases to
+ board DTS
+
+[ Upstream commit ccf2044987b41dc589de6a86b35d3a4f8ea14762 ]
+
+SMARC2 board dtsi is common for multiple SoCs. So Move aliases
+to board DTS as SoC may have different IPs for a given alias.
+eg: RZ/G3S does not have RSCI interface.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251129185203.380002-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 6 ++++++
+ arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi    | 6 ------
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index ed6fcdc337a0..a612c9784f1e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -35,6 +35,12 @@ / {
+ 	compatible = "renesas,smarc2-evk", "renesas,rzg3e-smarcm",
+ 		     "renesas,r9a09g047e57", "renesas,r9a09g047";
+ 
++	aliases {
++		i2c0 = &i2c0;
++		serial3 = &scif0;
++		mmc1 = &sdhi1;
++	};
++
+ 	vqmmc_sd1_pvdd: regulator-vqmmc-sd1-pvdd {
+ 		compatible = "regulator-gpio";
+ 		regulator-name = "SD1_PVDD";
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index 58561da3007a..a296c2c1c7ab 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -37,12 +37,6 @@ chosen {
+ 		stdout-path = "serial3:115200n8";
+ 	};
+ 
+-	aliases {
+-		i2c0 = &i2c0;
+-		serial3 = &scif0;
+-		mmc1 = &sdhi1;
+-	};
+-
+ 	can_transceiver0: can-phy0 {
+ 		compatible = "ti,tcan1042";
+ 		#phy-cells = <0>;

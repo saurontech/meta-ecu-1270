@@ -1,0 +1,62 @@
+From 87034482038dfaeb89f5e145f7ed1c1d564abf6e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 26 Feb 2026 19:28:42 +0000
+Subject: [PATCH 0201/1190] ASoC: renesas: rz-ssi: Add support for 32 bits
+ sample width
+
+[ Upstream commit 124f6155f3d97b0e33f178c10a5138a42c8fd207 ]
+
+Add support for 32 bits sample format width for RZ/G2L SoCs.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251114075856.4751-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ sound/soc/sh/rz-ssi.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/sound/soc/sh/rz-ssi.c b/sound/soc/sh/rz-ssi.c
+index 53a5d0b9d58c..808dd6dcbe12 100644
+--- a/sound/soc/sh/rz-ssi.c
++++ b/sound/soc/sh/rz-ssi.c
+@@ -75,7 +75,8 @@
+ #define PREALLOC_BUFFER_MAX	(SZ_32K)
+ 
+ #define SSI_RATES		SNDRV_PCM_RATE_8000_48000 /* 8k-48kHz */
+-#define SSI_FMTS		(SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE)
++#define SSI_FMTS		(SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE | \
++				 SNDRV_PCM_FMTBIT_S32_LE)
+ #define SSI_CHAN_MIN		2
+ #define SSI_CHAN_MAX		2
+ #define SSI_FIFO_DEPTH		32
+@@ -301,7 +302,7 @@ static int rz_ssi_clk_setup(struct rz_ssi_priv *ssi, unsigned int rate,
+ 	}
+ 
+ 	/*
+-	 * DWL: Data Word Length = {16, 24} bits
++	 * DWL: Data Word Length = {16, 24, 32} bits
+ 	 * SWL: System Word Length = 32 bits
+ 	 */
+ 	ssicr |= SSICR_CKDV(clk_ckdv);
+@@ -312,6 +313,9 @@ static int rz_ssi_clk_setup(struct rz_ssi_priv *ssi, unsigned int rate,
+ 	case 24:
+ 		ssicr |= SSICR_DWL(5) | SSICR_PDTA;
+ 		break;
++	case 32:
++		ssicr |= SSICR_DWL(6);
++		break;
+ 	default:
+ 		dev_err(ssi->dev, "Not support %u data width",
+ 			ssi->hw_params_cache.sample_width);
+@@ -1024,7 +1028,7 @@ static int rz_ssi_dai_hw_params(struct snd_pcm_substream *substream,
+ 	unsigned int rate = params_rate(params);
+ 	int ret;
+ 
+-	if (!(sample_bits == 16 || sample_bits == 24)) {
++	if (!(sample_bits == 16 || sample_bits == 24 || sample_bits == 32)) {
+ 		dev_err(ssi->dev, "Unsupported sample width: %d\n",
+ 			sample_bits);
+ 		return -EINVAL;

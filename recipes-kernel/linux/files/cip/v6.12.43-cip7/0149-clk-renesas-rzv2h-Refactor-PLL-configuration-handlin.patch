@@ -1,0 +1,172 @@
+From 943751a58138943531b6e6f82453e8f3acb9a9f5 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 2 Jul 2025 12:37:03 +0200
+Subject: [PATCH 149/246] clk: renesas: rzv2h: Refactor PLL configuration
+ handling
+
+commit 20fc4ea6d7e379cd492a6fd5c060013a9ebdf3db upstream.
+
+Refactor PLL handling by introducing a `struct pll` to encapsulate PLL
+configuration parameters, ensuring consistency with the existing dynamic
+divider structure.
+
+Introduce the `PLL_PACK()` macro to simplify PLL structure initialization
+and update the `DEF_PLL()` macro to use the new `pll` structure. Modify
+relevant clock register functions to utilize the structured PLL data
+instead of raw configuration values.
+
+This refactoring improves code readability, maintainability, and
+alignment with the existing clock configuration approach.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250309211402.80886-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/r9a09g047-cpg.c |  2 +-
+ drivers/clk/renesas/r9a09g057-cpg.c |  2 +-
+ drivers/clk/renesas/rzv2h-cpg.c     | 13 ++++++++-----
+ drivers/clk/renesas/rzv2h-cpg.h     | 30 +++++++++++++++++++++--------
+ 4 files changed, 32 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/clk/renesas/r9a09g047-cpg.c b/drivers/clk/renesas/r9a09g047-cpg.c
+index e9cf4342d0cf..7b9311af603e 100644
+--- a/drivers/clk/renesas/r9a09g047-cpg.c
++++ b/drivers/clk/renesas/r9a09g047-cpg.c
+@@ -79,7 +79,7 @@ static const struct cpg_core_clk r9a09g047_core_clks[] __initconst = {
+ 	DEF_FIXED(".pllcm33", CLK_PLLCM33, CLK_QEXTAL, 200, 3),
+ 	DEF_FIXED(".pllcln", CLK_PLLCLN, CLK_QEXTAL, 200, 3),
+ 	DEF_FIXED(".plldty", CLK_PLLDTY, CLK_QEXTAL, 200, 3),
+-	DEF_PLL(".pllca55", CLK_PLLCA55, CLK_QEXTAL, PLL_CONF(0x64)),
++	DEF_PLL(".pllca55", CLK_PLLCA55, CLK_QEXTAL, PLLCA55),
+ 	DEF_FIXED(".pllvdo", CLK_PLLVDO, CLK_QEXTAL, 105, 2),
+ 
+ 	/* Internal Core Clocks */
+diff --git a/drivers/clk/renesas/r9a09g057-cpg.c b/drivers/clk/renesas/r9a09g057-cpg.c
+index 3705e18f66ad..cd0f3d4d737a 100644
+--- a/drivers/clk/renesas/r9a09g057-cpg.c
++++ b/drivers/clk/renesas/r9a09g057-cpg.c
+@@ -81,7 +81,7 @@ static const struct cpg_core_clk r9a09g057_core_clks[] __initconst = {
+ 	DEF_FIXED(".pllcm33", CLK_PLLCM33, CLK_QEXTAL, 200, 3),
+ 	DEF_FIXED(".pllcln", CLK_PLLCLN, CLK_QEXTAL, 200, 3),
+ 	DEF_FIXED(".plldty", CLK_PLLDTY, CLK_QEXTAL, 200, 3),
+-	DEF_PLL(".pllca55", CLK_PLLCA55, CLK_QEXTAL, PLL_CONF(0x64)),
++	DEF_PLL(".pllca55", CLK_PLLCA55, CLK_QEXTAL, PLLCA55),
+ 	DEF_FIXED(".pllvdo", CLK_PLLVDO, CLK_QEXTAL, 105, 2),
+ 
+ 	/* Internal Core Clocks */
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 2689de28bb56..76720d234598 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -44,9 +44,11 @@
+ #define CPG_BUS_1_MSTOP		(0xd00)
+ #define CPG_BUS_MSTOP(m)	(CPG_BUS_1_MSTOP + ((m) - 1) * 4)
+ 
++#define CPG_PLL_CLK1(x)		((x) + 0x004)
+ #define KDIV(val)		((s16)FIELD_GET(GENMASK(31, 16), (val)))
+ #define MDIV(val)		FIELD_GET(GENMASK(15, 6), (val))
+ #define PDIV(val)		FIELD_GET(GENMASK(5, 0), (val))
++#define CPG_PLL_CLK2(x)		((x) + 0x008)
+ #define SDIV(val)		FIELD_GET(GENMASK(2, 0), (val))
+ 
+ #define DDIV_DIVCTL_WEN(shift)		BIT((shift) + 16)
+@@ -94,7 +96,7 @@ struct pll_clk {
+ 	struct rzv2h_cpg_priv *priv;
+ 	void __iomem *base;
+ 	struct clk_hw hw;
+-	unsigned int conf;
++	struct pll pll;
+ 	unsigned int type;
+ };
+ 
+@@ -145,14 +147,15 @@ static unsigned long rzv2h_cpg_pll_clk_recalc_rate(struct clk_hw *hw,
+ {
+ 	struct pll_clk *pll_clk = to_pll(hw);
+ 	struct rzv2h_cpg_priv *priv = pll_clk->priv;
++	struct pll pll = pll_clk->pll;
+ 	unsigned int clk1, clk2;
+ 	u64 rate;
+ 
+-	if (!PLL_CLK_ACCESS(pll_clk->conf))
++	if (!pll.has_clkn)
+ 		return 0;
+ 
+-	clk1 = readl(priv->base + PLL_CLK1_OFFSET(pll_clk->conf));
+-	clk2 = readl(priv->base + PLL_CLK2_OFFSET(pll_clk->conf));
++	clk1 = readl(priv->base + CPG_PLL_CLK1(pll.offset));
++	clk2 = readl(priv->base + CPG_PLL_CLK2(pll.offset));
+ 
+ 	rate = mul_u64_u32_shr(parent_rate, (MDIV(clk1) << 16) + KDIV(clk1),
+ 			       16 + SDIV(clk2));
+@@ -193,7 +196,7 @@ rzv2h_cpg_pll_clk_register(const struct cpg_core_clk *core,
+ 	init.num_parents = 1;
+ 
+ 	pll_clk->hw.init = &init;
+-	pll_clk->conf = core->cfg.conf;
++	pll_clk->pll = core->cfg.pll;
+ 	pll_clk->base = base;
+ 	pll_clk->priv = priv;
+ 	pll_clk->type = core->type;
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index fd8eb985c75b..6811c0332812 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -10,6 +10,25 @@
+ 
+ #include <linux/bitfield.h>
+ 
++/**
++ * struct pll - Structure for PLL configuration
++ *
++ * @offset: STBY register offset
++ * @has_clkn: Flag to indicate if CLK1/2 are accessible or not
++ */
++struct pll {
++	unsigned int offset:9;
++	unsigned int has_clkn:1;
++};
++
++#define PLL_PACK(_offset, _has_clkn) \
++	((struct pll){ \
++		.offset = _offset, \
++		.has_clkn = _has_clkn \
++	})
++
++#define PLLCA55		PLL_PACK(0x60, 1)
++
+ /**
+  * struct ddiv - Structure for dynamic switching divider
+  *
+@@ -72,6 +91,7 @@ struct cpg_core_clk {
+ 	union {
+ 		unsigned int conf;
+ 		struct ddiv ddiv;
++		struct pll pll;
+ 	} cfg;
+ 	const struct clk_div_table *dtable;
+ 	u32 flag;
+@@ -85,18 +105,12 @@ enum clk_types {
+ 	CLK_TYPE_DDIV,		/* Dynamic Switching Divider */
+ };
+ 
+-/* BIT(31) indicates if CLK1/2 are accessible or not */
+-#define PLL_CONF(n)		(BIT(31) | ((n) & ~GENMASK(31, 16)))
+-#define PLL_CLK_ACCESS(n)	((n) & BIT(31) ? 1 : 0)
+-#define PLL_CLK1_OFFSET(n)	((n) & ~GENMASK(31, 16))
+-#define PLL_CLK2_OFFSET(n)	(((n) & ~GENMASK(31, 16)) + (0x4))
+-
+ #define DEF_TYPE(_name, _id, _type...) \
+ 	{ .name = _name, .id = _id, .type = _type }
+ #define DEF_BASE(_name, _id, _type, _parent...) \
+ 	DEF_TYPE(_name, _id, _type, .parent = _parent)
+-#define DEF_PLL(_name, _id, _parent, _conf) \
+-	DEF_TYPE(_name, _id, CLK_TYPE_PLL, .parent = _parent, .cfg.conf = _conf)
++#define DEF_PLL(_name, _id, _parent, _pll_packed) \
++	DEF_TYPE(_name, _id, CLK_TYPE_PLL, .parent = _parent, .cfg.pll = _pll_packed)
+ #define DEF_INPUT(_name, _id) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_IN)
+ #define DEF_FIXED(_name, _id, _parent, _mult, _div) \

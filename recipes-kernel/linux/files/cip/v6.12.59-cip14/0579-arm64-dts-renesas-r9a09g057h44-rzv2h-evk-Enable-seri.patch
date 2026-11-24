@@ -1,0 +1,90 @@
+From efc3d64c7f67fb3c163e21172bfcee2796d50c32 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 21 Nov 2025 08:07:37 +0000
+Subject: [PATCH 579/768] arm64: dts: renesas: r9a09g057h44-rzv2h-evk: Enable
+ serial NOR FLASH
+
+commit 145a2a9e27562926c592645a05d682fe8e1f82e9 upstream.
+
+Enable MT25QU512ABB8E12 FLASH connected to XSPI.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250704140823.163572-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../dts/renesas/r9a09g057h44-rzv2h-evk.dts    | 55 +++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+index 81b9bcbd440b..3a413837c58f 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+@@ -340,6 +340,18 @@ vbus {
+ 			pinmux = <RZV2H_PORT_PINMUX(6, 6, 14)>; /* VBUS */
+ 		};
+ 	};
++
++	xspi_pins: xspi0 {
++		ctrl {
++			pins = "XSPI0_RESET0N", "XSPI0_CS0N", "XSPI0_CKP";
++			output-enable;
++		};
++
++		io {
++			pins = "XSPI0_IO0", "XSPI0_IO1", "XSPI0_IO2", "XSPI0_IO3";
++			renesas,output-impedance = <3>;
++		};
++	};
+ };
+ 
+ &qextal_clk {
+@@ -394,3 +406,46 @@ &usb2_phy1 {
+ &wdt1 {
+ 	status = "okay";
+ };
++
++&xspi {
++	pinctrl-0 = <&xspi_pins>;
++	pinctrl-names = "default";
++	/*
++	 * MT25QU512ABB8E12 flash chip is capable of running at 166MHz
++	 * clock frequency. Set the clock frequency to the maximum 133MHz
++	 * supported by the RZ/V2H SoC.
++	 */
++	assigned-clocks = <&cpg CPG_CORE R9A09G057_SPI_CLK_SPI>;
++	assigned-clock-rates = <133333334>;
++	status = "okay";
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		vcc-supply = <&reg_1p8v>;
++		m25p,fast-read;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "bl2";
++				reg = <0x00000000 0x00060000>;
++			};
++
++			partition@60000 {
++				label = "fip";
++				reg = <0x00060000 0x1fa0000>;
++			};
++
++			partition@2000000 {
++				label = "user";
++				reg = <0x2000000 0x2000000>;
++			};
++		};
++	};
++};

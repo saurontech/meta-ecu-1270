@@ -1,0 +1,94 @@
+From c47c91a966edaddf52974d63960d103c4a4fe088 Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Wed, 15 Apr 2026 13:20:56 +0000
+Subject: [PATCH 328/497] arm64: dts: renesas: r9a09g057: Add RSPI nodes
+
+commit c494de2e00fb06d5b62708a91d7dda701abc52f4 upstream.
+
+Add nodes for the RSPI IPs found in the Renesas RZ/V2H(P) SoC.
+
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250624192304.338979-7-fabrizio.castro.jz@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g057.dtsi | 63 ++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+index c296b717df76..34c2a50a9925 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+@@ -682,6 +682,69 @@ channel5 {
+ 			};
+ 		};
+ 
++		rspi0: spi@12800000 {
++			compatible = "renesas,r9a09g057-rspi";
++			reg = <0x0 0x12800000 0x0 0x400>;
++			interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 107 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 500 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 501 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_MOD 0x54>,
++				 <&cpg CPG_MOD 0x55>,
++				 <&cpg CPG_MOD 0x56>;
++			clock-names = "pclk", "pclk_sfr", "tclk";
++			resets = <&cpg 0x7b>, <&cpg 0x7c>;
++			reset-names = "presetn", "tresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		rspi1: spi@12800400 {
++			compatible = "renesas,r9a09g057-rspi";
++			reg = <0x0 0x12800400 0x0 0x400>;
++			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 110 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 502 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 503 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_MOD 0x57>,
++				 <&cpg CPG_MOD 0x58>,
++				 <&cpg CPG_MOD 0x59>;
++			clock-names = "pclk", "pclk_sfr", "tclk";
++			resets = <&cpg 0x7d>, <&cpg 0x7e>;
++			reset-names = "presetn", "tresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		rspi2: spi@12800800 {
++			compatible = "renesas,r9a09g057-rspi";
++			reg = <0x0 0x12800800 0x0 0x400>;
++			interrupts = <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 113 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 504 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 505 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "idle", "error", "end", "rx", "tx";
++			clocks = <&cpg CPG_MOD 0x5a>,
++				 <&cpg CPG_MOD 0x5b>,
++				 <&cpg CPG_MOD 0x5c>;
++			clock-names = "pclk", "pclk_sfr", "tclk";
++			resets = <&cpg 0x7f>, <&cpg 0x80>;
++			reset-names = "presetn", "tresetn";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		i2c0: i2c@14400400 {
+ 			compatible = "renesas,riic-r9a09g057";
+ 			reg = <0 0x14400400 0 0x400>;

@@ -1,0 +1,58 @@
+From 36e7a6ca3dc5af0e1ac939c35896fb37a7ce70cc Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Mon, 3 Nov 2025 12:38:06 +0100
+Subject: [PATCH 182/192] arm64: dts: renesas: r9a09g047: Enable Tx coe support
+
+[ Upstream commit da7326322d31eb60fea27be30ca013d1e9b0a86c ]
+
+The GBETH IPs found on RZ/G3E SoC family are compatible with the stmmac
+driver.  They have a MAC HW feature register used by this driver to
+enable respective features.  While the register advertises Tx coe
+support, it was not enabled by the driver due to the
+'snps,force_thresh_dma_mode' dtsi property.
+
+Switch from 'snps,force_thresh_dma_mode' to 'snps,force_sf_dma_mode' to
+enable Tx checksum offload support on both GBETH IPs.  While at it, also
+switch from 'snps,fixed-burst' to 'snps,mixed-burst' and remove
+'snps,no-pbl-x8' for optimal DMA configuration.  This improvement
+results in a measurable TCP Tx performance gain, increasing throughput
+by 20Mbps.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250814153456.268208-1-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index e4fac7e0d764..b55b113d1f11 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -722,9 +722,8 @@ eth0: ethernet@15c30000 {
+ 			snps,perfect-filter-entries = <128>;
+ 			rx-fifo-depth = <8192>;
+ 			tx-fifo-depth = <8192>;
+-			snps,fixed-burst;
+-			snps,no-pbl-x8;
+-			snps,force_thresh_dma_mode;
++			snps,mixed-burst;
++			snps,force_sf_dma_mode;
+ 			snps,axi-config = <&stmmac_axi_setup>;
+ 			snps,mtl-rx-config = <&mtl_rx_setup0>;
+ 			snps,mtl-tx-config = <&mtl_tx_setup0>;
+@@ -823,9 +822,8 @@ eth1: ethernet@15c40000 {
+ 			snps,perfect-filter-entries = <128>;
+ 			rx-fifo-depth = <8192>;
+ 			tx-fifo-depth = <8192>;
+-			snps,fixed-burst;
+-			snps,no-pbl-x8;
+-			snps,force_thresh_dma_mode;
++			snps,mixed-burst;
++			snps,force_sf_dma_mode;
+ 			snps,axi-config = <&stmmac_axi_setup>;
+ 			snps,mtl-rx-config = <&mtl_rx_setup1>;
+ 			snps,mtl-tx-config = <&mtl_tx_setup1>;

@@ -1,0 +1,536 @@
+From 82cce519f45e24348532f5dca614c28ebe9090d1 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:44 +0200
+Subject: [PATCH 366/643] media: rzg2l-cru: Add support for RZ/G3E SoC
+
+commit 1d1e564fce1bc361af1a1980a7f915a0475a008a upstream.
+
+The CRU block on the Renesas RZ/G3E SoC is similar to the one found on
+the Renesas RZ/G2L SoC, with the following differences:
+
+- Additional registers rzg3e_cru_regs.
+- A different irq handler rzg3e_cru_irq.
+- A different rzg3e_cru_csi2_setup.
+- A different max input width.
+- Additional stride register.
+
+Introduce rzg3e_cru_info struct to handle differences between RZ/G2L
+and RZ/G3E and related RZ/G3E functions:
+
+ - rzg3e_cru_enable_interrupts()
+ - rzg3e_cru_enable_interrupts()
+ - rz3e_fifo_empty()
+ - rzg3e_cru_csi2_setup()
+ - rzg3e_cru_get_current_slot()
+
+Add then support for the RZ/G3E SoC CRU block with the new compatible
+string "renesas,r9a09g047-cru".
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-18-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+[Tommaso: Squashed the commits e5dd01ea9610("media: renesas: rzg2l-cru:
+	  Fix typo in rzg3e_fifo_empty name") and 095e5d400cbf("media:
+	  rzg2l-cru: Fix typo in rzg2l_cru_of_id_table struct") and
+	  9e6038904151("media: renesas: rzg2l-cru: Simplify FIFO empty
+	  check")]
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+
+media: renesas: rzg2l-cru: Simplify FIFO empty check
+
+commit 8b7b5e1bfb72c52dd2cfd82cc14dc4e66c6b94a9 upstream.
+
+Collapse FIFO empty helper into a single return statement by removing the
+redundant `if (amnfifopntr_w == amnfifopntr_r_y) return true;` path. Make
+`rzg2l_fifo_empty()` directly return `amnfifopntr_w == amnfifopntr_r_y`
+to improve readability without changing behavior.
+
+Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Closes: https://lore.kernel.org/all/aAtQThCibZCROETx@stanley.mountain/
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Tested-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250429091609.9947-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-core.c   |  60 ++++++-
+ .../renesas/rzg2l-cru/rzg2l-cru-regs.h        |  25 +++
+ .../platform/renesas/rzg2l-cru/rzg2l-cru.h    |  13 ++
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c  | 170 +++++++++++++++++-
+ 4 files changed, 263 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index 383b8eee22ba..ab8f76ccd9ba 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -318,6 +318,58 @@ static void rzg2l_cru_remove(struct platform_device *pdev)
+ 	rzg2l_cru_dma_unregister(cru);
+ }
+ 
++static const u16 rzg3e_cru_regs[] = {
++	[CRUnCTRL] = 0x0,
++	[CRUnIE] = 0x4,
++	[CRUnIE2] = 0x8,
++	[CRUnINTS] = 0xc,
++	[CRUnINTS2] = 0x10,
++	[CRUnRST] = 0x18,
++	[AMnMB1ADDRL] = 0x40,
++	[AMnMB1ADDRH] = 0x44,
++	[AMnMB2ADDRL] = 0x48,
++	[AMnMB2ADDRH] = 0x4c,
++	[AMnMB3ADDRL] = 0x50,
++	[AMnMB3ADDRH] = 0x54,
++	[AMnMB4ADDRL] = 0x58,
++	[AMnMB4ADDRH] = 0x5c,
++	[AMnMB5ADDRL] = 0x60,
++	[AMnMB5ADDRH] = 0x64,
++	[AMnMB6ADDRL] = 0x68,
++	[AMnMB6ADDRH] = 0x6c,
++	[AMnMB7ADDRL] = 0x70,
++	[AMnMB7ADDRH] = 0x74,
++	[AMnMB8ADDRL] = 0x78,
++	[AMnMB8ADDRH] = 0x7c,
++	[AMnMBVALID] = 0x88,
++	[AMnMADRSL] = 0x8c,
++	[AMnMADRSH] = 0x90,
++	[AMnAXIATTR] = 0xec,
++	[AMnFIFOPNTR] = 0xf8,
++	[AMnAXISTP] = 0x110,
++	[AMnAXISTPACK] = 0x114,
++	[AMnIS] = 0x128,
++	[ICnEN] = 0x1f0,
++	[ICnSVCNUM] = 0x1f8,
++	[ICnSVC] = 0x1fc,
++	[ICnIPMC_C0] = 0x200,
++	[ICnMS] = 0x2d8,
++	[ICnDMR] = 0x304,
++};
++
++static const struct rzg2l_cru_info rzg3e_cru_info = {
++	.max_width = 4095,
++	.max_height = 4095,
++	.image_conv = ICnIPMC_C0,
++	.has_stride = true,
++	.regs = rzg3e_cru_regs,
++	.irq_handler = rzg3e_cru_irq,
++	.enable_interrupts = rzg3e_cru_enable_interrupts,
++	.disable_interrupts = rzg3e_cru_disable_interrupts,
++	.fifo_empty = rzg3e_fifo_empty,
++	.csi_setup = rzg3e_cru_csi2_setup,
++};
++
+ static const u16 rzg2l_cru_regs[] = {
+ 	[CRUnCTRL] = 0x0,
+ 	[CRUnIE] = 0x4,
+@@ -351,7 +403,7 @@ static const u16 rzg2l_cru_regs[] = {
+ 	[ICnDMR] = 0x26c,
+ };
+ 
+-static const struct rzg2l_cru_info rzgl2_cru_info = {
++static const struct rzg2l_cru_info rzg2l_cru_info = {
+ 	.max_width = 2800,
+ 	.max_height = 4095,
+ 	.image_conv = ICnMC,
+@@ -364,9 +416,13 @@ static const struct rzg2l_cru_info rzgl2_cru_info = {
+ };
+ 
+ static const struct of_device_id rzg2l_cru_of_id_table[] = {
++	{
++		.compatible = "renesas,r9a09g047-cru",
++		.data = &rzg3e_cru_info,
++	},
+ 	{
+ 		.compatible = "renesas,rzg2l-cru",
+-		.data = &rzgl2_cru_info,
++		.data = &rzg2l_cru_info,
+ 	},
+ 	{ /* sentinel */ }
+ };
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h
+index fc0fd0c97c86..a5a57369ef0e 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru-regs.h
+@@ -14,8 +14,13 @@
+ 
+ #define CRUnIE_EFE			BIT(17)
+ 
++#define CRUnIE2_FSxE(x)			BIT(((x) * 3))
++#define CRUnIE2_FExE(x)			BIT(((x) * 3) + 1)
++
+ #define CRUnINTS_SFS			BIT(16)
+ 
++#define CRUnINTS2_FSxS(x)		BIT(((x) * 3))
++
+ #define CRUnRST_VRESETN			BIT(0)
+ 
+ /* Memory Bank Base Address (Lower) Register for CRU Image Data */
+@@ -32,7 +37,14 @@
+ #define AMnAXIATTR_AXILEN		(0xf)
+ 
+ #define AMnFIFOPNTR_FIFOWPNTR		GENMASK(7, 0)
++#define AMnFIFOPNTR_FIFOWPNTR_B0	AMnFIFOPNTR_FIFOWPNTR
++#define AMnFIFOPNTR_FIFOWPNTR_B1	GENMASK(15, 8)
+ #define AMnFIFOPNTR_FIFORPNTR_Y		GENMASK(23, 16)
++#define AMnFIFOPNTR_FIFORPNTR_B0	AMnFIFOPNTR_FIFORPNTR_Y
++#define AMnFIFOPNTR_FIFORPNTR_B1	GENMASK(31, 24)
++
++#define AMnIS_IS_MASK			GENMASK(14, 7)
++#define AMnIS_IS(x)			((x) << 7)
+ 
+ #define AMnAXISTP_AXI_STOP		BIT(0)
+ 
+@@ -40,6 +52,11 @@
+ 
+ #define ICnEN_ICEN			BIT(0)
+ 
++#define ICnSVC_SVC0(x)			(x)
++#define ICnSVC_SVC1(x)			((x) << 4)
++#define ICnSVC_SVC2(x)			((x) << 8)
++#define ICnSVC_SVC3(x)			((x) << 12)
++
+ #define ICnMC_CSCTHR			BIT(5)
+ #define ICnMC_INF(x)			((x) << 16)
+ #define ICnMC_VCSEL(x)			((x) << 22)
+@@ -52,7 +69,9 @@
+ enum rzg2l_cru_common_regs {
+ 	CRUnCTRL,	/* CRU Control */
+ 	CRUnIE,		/* CRU Interrupt Enable */
++	CRUnIE2,	/* CRU Interrupt Enable(2) */
+ 	CRUnINTS,	/* CRU Interrupt Status */
++	CRUnINTS2,	/* CRU Interrupt Status(2) */
+ 	CRUnRST,	/* CRU Reset */
+ 	AMnMB1ADDRL,	/* Bank 1 Address (Lower) for CRU Image Data */
+ 	AMnMB1ADDRH,	/* Bank 1 Address (Higher) for CRU Image Data */
+@@ -72,12 +91,18 @@ enum rzg2l_cru_common_regs {
+ 	AMnMB8ADDRH,    /* Bank 8 Address (Higher) for CRU Image Data */
+ 	AMnMBVALID,	/* Memory Bank Enable for CRU Image Data */
+ 	AMnMBS,		/* Memory Bank Status for CRU Image Data */
++	AMnMADRSL,	/* VD Memory Address Lower Status Register */
++	AMnMADRSH,	/* VD Memory Address Higher Status Register */
+ 	AMnAXIATTR,	/* AXI Master Transfer Setting Register for CRU Image Data */
+ 	AMnFIFOPNTR,	/* AXI Master FIFO Pointer for CRU Image Data */
+ 	AMnAXISTP,	/* AXI Master Transfer Stop for CRU Image Data */
+ 	AMnAXISTPACK,	/* AXI Master Transfer Stop Status for CRU Image Data */
++	AMnIS,		/* Image Stride Setting Register */
+ 	ICnEN,		/* CRU Image Processing Enable */
++	ICnSVCNUM,	/* CRU SVC Number Register */
++	ICnSVC,		/* CRU VC Select Register */
+ 	ICnMC,		/* CRU Image Processing Main Control */
++	ICnIPMC_C0,	/* CRU Image Converter Main Control 0 */
+ 	ICnMS,		/* CRU Module Status */
+ 	ICnDMR,		/* CRU Data Output Mode */
+ 	RZG2L_CRU_MAX_REG,
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index ccaba5220f1c..56feda6e6207 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -85,6 +85,7 @@ struct rzg2l_cru_info {
+ 	unsigned int max_height;
+ 	u16 image_conv;
+ 	const u16 *regs;
++	bool has_stride;
+ 	irqreturn_t (*irq_handler)(int irq, void *data);
+ 	void (*enable_interrupts)(struct rzg2l_cru_dev *cru);
+ 	void (*disable_interrupts)(struct rzg2l_cru_dev *cru);
+@@ -108,6 +109,8 @@ struct rzg2l_cru_info {
+  * @vdev:		V4L2 video device associated with CRU
+  * @v4l2_dev:		V4L2 device
+  * @num_buf:		Holds the current number of buffers enabled
++ * @svc_channel:	SVC0/1/2/3 to use for RZ/G3E
++ * @buf_addr:		Memory addresses where current video data is written.
+  * @notifier:		V4L2 asynchronous subdevs notifier
+  *
+  * @ip:			Image processing subdev info
+@@ -144,6 +147,9 @@ struct rzg2l_cru_dev {
+ 	struct v4l2_device v4l2_dev;
+ 	u8 num_buf;
+ 
++	u8 svc_channel;
++	dma_addr_t buf_addr[RZG2L_CRU_HW_BUFFER_DEFAULT];
++
+ 	struct v4l2_async_notifier notifier;
+ 
+ 	struct rzg2l_cru_ip ip;
+@@ -175,6 +181,7 @@ void rzg2l_cru_dma_unregister(struct rzg2l_cru_dev *cru);
+ int rzg2l_cru_video_register(struct rzg2l_cru_dev *cru);
+ void rzg2l_cru_video_unregister(struct rzg2l_cru_dev *cru);
+ irqreturn_t rzg2l_cru_irq(int irq, void *data);
++irqreturn_t rzg3e_cru_irq(int irq, void *data);
+ 
+ const struct v4l2_format_info *rzg2l_cru_format_from_pixel(u32 format);
+ 
+@@ -188,10 +195,16 @@ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_index_to_fmt(u32 index);
+ 
+ void rzg2l_cru_enable_interrupts(struct rzg2l_cru_dev *cru);
+ void rzg2l_cru_disable_interrupts(struct rzg2l_cru_dev *cru);
++void rzg3e_cru_enable_interrupts(struct rzg2l_cru_dev *cru);
++void rzg3e_cru_disable_interrupts(struct rzg2l_cru_dev *cru);
+ 
+ bool rzg2l_fifo_empty(struct rzg2l_cru_dev *cru);
++bool rzg3e_fifo_empty(struct rzg2l_cru_dev *cru);
+ void rzg2l_cru_csi2_setup(struct rzg2l_cru_dev *cru,
+ 			  const struct rzg2l_cru_ip_format *ip_fmt,
+ 			  u8 csi_vc);
++void rzg3e_cru_csi2_setup(struct rzg2l_cru_dev *cru,
++			  const struct rzg2l_cru_ip_format *ip_fmt,
++			  u8 csi_vc);
+ 
+ #endif
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 91ff4206d822..3bf43b8067d0 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -31,6 +31,9 @@
+ #define RZG2L_CRU_DEFAULT_FIELD		V4L2_FIELD_NONE
+ #define RZG2L_CRU_DEFAULT_COLORSPACE	V4L2_COLORSPACE_SRGB
+ 
++#define RZG2L_CRU_STRIDE_MAX		32640
++#define RZG2L_CRU_STRIDE_ALIGN		128
++
+ struct rzg2l_cru_buffer {
+ 	struct vb2_v4l2_buffer vb;
+ 	struct list_head list;
+@@ -184,6 +187,8 @@ static void rzg2l_cru_set_slot_addr(struct rzg2l_cru_dev *cru,
+ 	/* Currently, we just use the buffer in 32 bits address */
+ 	rzg2l_cru_write(cru, AMnMBxADDRL(slot), addr);
+ 	rzg2l_cru_write(cru, AMnMBxADDRH(slot), 0);
++
++	cru->buf_addr[slot] = addr;
+ }
+ 
+ /*
+@@ -224,6 +229,7 @@ static void rzg2l_cru_fill_hw_slot(struct rzg2l_cru_dev *cru, int slot)
+ 
+ static void rzg2l_cru_initialize_axi(struct rzg2l_cru_dev *cru)
+ {
++	const struct rzg2l_cru_info *info = cru->info;
+ 	unsigned int slot;
+ 	u32 amnaxiattr;
+ 
+@@ -236,12 +242,39 @@ static void rzg2l_cru_initialize_axi(struct rzg2l_cru_dev *cru)
+ 	for (slot = 0; slot < cru->num_buf; slot++)
+ 		rzg2l_cru_fill_hw_slot(cru, slot);
+ 
++	if (info->has_stride) {
++		u32 stride = cru->format.bytesperline;
++		u32 amnis;
++
++		stride /= RZG2L_CRU_STRIDE_ALIGN;
++		amnis = rzg2l_cru_read(cru, AMnIS) & ~AMnIS_IS_MASK;
++		rzg2l_cru_write(cru, AMnIS, amnis | AMnIS_IS(stride));
++	}
++
+ 	/* Set AXI burst max length to recommended setting */
+ 	amnaxiattr = rzg2l_cru_read(cru, AMnAXIATTR) & ~AMnAXIATTR_AXILEN_MASK;
+ 	amnaxiattr |= AMnAXIATTR_AXILEN;
+ 	rzg2l_cru_write(cru, AMnAXIATTR, amnaxiattr);
+ }
+ 
++void rzg3e_cru_csi2_setup(struct rzg2l_cru_dev *cru,
++			  const struct rzg2l_cru_ip_format *ip_fmt,
++			  u8 csi_vc)
++{
++	const struct rzg2l_cru_info *info = cru->info;
++	u32 icnmc = ICnMC_INF(ip_fmt->datatype);
++
++	icnmc |= rzg2l_cru_read(cru, info->image_conv) & ~ICnMC_INF_MASK;
++
++	/* Set virtual channel CSI2 */
++	icnmc |= ICnMC_VCSEL(csi_vc);
++
++	rzg2l_cru_write(cru, ICnSVCNUM, csi_vc);
++	rzg2l_cru_write(cru, ICnSVC, ICnSVC_SVC0(0) | ICnSVC_SVC1(1) |
++			ICnSVC_SVC2(2) | ICnSVC_SVC3(3));
++	rzg2l_cru_write(cru, info->image_conv, icnmc);
++}
++
+ void rzg2l_cru_csi2_setup(struct rzg2l_cru_dev *cru,
+ 			  const struct rzg2l_cru_ip_format *ip_fmt,
+ 			  u8 csi_vc)
+@@ -290,6 +323,19 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 	return 0;
+ }
+ 
++bool rzg3e_fifo_empty(struct rzg2l_cru_dev *cru)
++{
++	u32 amnfifopntr = rzg2l_cru_read(cru, AMnFIFOPNTR);
++
++	if ((((amnfifopntr & AMnFIFOPNTR_FIFORPNTR_B1) >> 24) ==
++	     ((amnfifopntr & AMnFIFOPNTR_FIFOWPNTR_B1) >> 8)) &&
++	    (((amnfifopntr & AMnFIFOPNTR_FIFORPNTR_B0) >> 16) ==
++	     (amnfifopntr & AMnFIFOPNTR_FIFOWPNTR_B0)))
++		return true;
++
++	return false;
++}
++
+ bool rzg2l_fifo_empty(struct rzg2l_cru_dev *cru)
+ {
+ 	u32 amnfifopntr, amnfifopntr_w, amnfifopntr_r_y;
+@@ -299,8 +345,6 @@ bool rzg2l_fifo_empty(struct rzg2l_cru_dev *cru)
+ 	amnfifopntr_w = amnfifopntr & AMnFIFOPNTR_FIFOWPNTR;
+ 	amnfifopntr_r_y =
+ 		(amnfifopntr & AMnFIFOPNTR_FIFORPNTR_Y) >> 16;
+-	if (amnfifopntr_w == amnfifopntr_r_y)
+-		return true;
+ 
+ 	return amnfifopntr_w == amnfifopntr_r_y;
+ }
+@@ -401,6 +445,20 @@ static int rzg2l_cru_get_virtual_channel(struct rzg2l_cru_dev *cru)
+ 	return fd.entry[0].bus.csi2.vc;
+ }
+ 
++void rzg3e_cru_enable_interrupts(struct rzg2l_cru_dev *cru)
++{
++	rzg2l_cru_write(cru, CRUnIE2, CRUnIE2_FSxE(cru->svc_channel));
++	rzg2l_cru_write(cru, CRUnIE2, CRUnIE2_FExE(cru->svc_channel));
++}
++
++void rzg3e_cru_disable_interrupts(struct rzg2l_cru_dev *cru)
++{
++	rzg2l_cru_write(cru, CRUnIE, 0);
++	rzg2l_cru_write(cru, CRUnIE2, 0);
++	rzg2l_cru_write(cru, CRUnINTS, rzg2l_cru_read(cru, CRUnINTS));
++	rzg2l_cru_write(cru, CRUnINTS2, rzg2l_cru_read(cru, CRUnINTS2));
++}
++
+ void rzg2l_cru_enable_interrupts(struct rzg2l_cru_dev *cru)
+ {
+ 	rzg2l_cru_write(cru, CRUnIE, CRUnIE_EFE);
+@@ -423,6 +481,7 @@ int rzg2l_cru_start_image_processing(struct rzg2l_cru_dev *cru)
+ 	if (ret < 0)
+ 		return ret;
+ 	csi_vc = ret;
++	cru->svc_channel = csi_vc;
+ 
+ 	spin_lock_irqsave(&cru->qlock, flags);
+ 
+@@ -601,6 +660,104 @@ irqreturn_t rzg2l_cru_irq(int irq, void *data)
+ 	return IRQ_RETVAL(handled);
+ }
+ 
++static int rzg3e_cru_get_current_slot(struct rzg2l_cru_dev *cru)
++{
++	u64 amnmadrs;
++	int slot;
++
++	/*
++	 * When AMnMADRSL is read, AMnMADRSH of the higher-order
++	 * address also latches the address.
++	 *
++	 * AMnMADRSH must be read after AMnMADRSL has been read.
++	 */
++	amnmadrs = rzg2l_cru_read(cru, AMnMADRSL);
++	amnmadrs |= (u64)rzg2l_cru_read(cru, AMnMADRSH) << 32;
++
++	/* Ensure amnmadrs is within this buffer range */
++	for (slot = 0; slot < cru->num_buf; slot++) {
++		if (amnmadrs >= cru->buf_addr[slot] &&
++		    amnmadrs < cru->buf_addr[slot] + cru->format.sizeimage)
++			return slot;
++	}
++
++	dev_err(cru->dev, "Invalid MB address 0x%llx (out of range)\n", amnmadrs);
++	return -EINVAL;
++}
++
++irqreturn_t rzg3e_cru_irq(int irq, void *data)
++{
++	struct rzg2l_cru_dev *cru = data;
++	u32 irq_status;
++	int slot;
++
++	scoped_guard(spinlock, &cru->qlock) {
++		irq_status = rzg2l_cru_read(cru, CRUnINTS2);
++		if (!irq_status)
++			return IRQ_NONE;
++
++		dev_dbg(cru->dev, "CRUnINTS2 0x%x\n", irq_status);
++
++		rzg2l_cru_write(cru, CRUnINTS2, rzg2l_cru_read(cru, CRUnINTS2));
++
++		/* Nothing to do if capture status is 'RZG2L_CRU_DMA_STOPPED' */
++		if (cru->state == RZG2L_CRU_DMA_STOPPED) {
++			dev_dbg(cru->dev, "IRQ while state stopped\n");
++			return IRQ_HANDLED;
++		}
++
++		if (cru->state == RZG2L_CRU_DMA_STOPPING) {
++			if (irq_status & CRUnINTS2_FSxS(0) ||
++			    irq_status & CRUnINTS2_FSxS(1) ||
++			    irq_status & CRUnINTS2_FSxS(2) ||
++			    irq_status & CRUnINTS2_FSxS(3))
++				dev_dbg(cru->dev, "IRQ while state stopping\n");
++			return IRQ_HANDLED;
++		}
++
++		slot = rzg3e_cru_get_current_slot(cru);
++		if (slot < 0)
++			return IRQ_HANDLED;
++
++		dev_dbg(cru->dev, "Current written slot: %d\n", slot);
++		cru->buf_addr[slot] = 0;
++
++		/*
++		 * To hand buffers back in a known order to userspace start
++		 * to capture first from slot 0.
++		 */
++		if (cru->state == RZG2L_CRU_DMA_STARTING) {
++			if (slot != 0) {
++				dev_dbg(cru->dev, "Starting sync slot: %d\n", slot);
++				return IRQ_HANDLED;
++			}
++			dev_dbg(cru->dev, "Capture start synced!\n");
++			cru->state = RZG2L_CRU_DMA_RUNNING;
++		}
++
++		/* Capture frame */
++		if (cru->queue_buf[slot]) {
++			struct vb2_v4l2_buffer *buf = cru->queue_buf[slot];
++
++			buf->field = cru->format.field;
++			buf->sequence = cru->sequence;
++			buf->vb2_buf.timestamp = ktime_get_ns();
++			vb2_buffer_done(&buf->vb2_buf, VB2_BUF_STATE_DONE);
++			cru->queue_buf[slot] = NULL;
++		} else {
++			/* Scratch buffer was used, dropping frame. */
++			dev_dbg(cru->dev, "Dropping frame %u\n", cru->sequence);
++		}
++
++		cru->sequence++;
++
++		/* Prepare for next frame */
++		rzg2l_cru_fill_hw_slot(cru, slot);
++	}
++
++	return IRQ_HANDLED;
++}
++
+ static int rzg2l_cru_start_streaming_vq(struct vb2_queue *vq, unsigned int count)
+ {
+ 	struct rzg2l_cru_dev *cru = vb2_get_drv_priv(vq);
+@@ -784,7 +941,14 @@ static void rzg2l_cru_format_align(struct rzg2l_cru_dev *cru,
+ 	v4l_bound_align_image(&pix->width, 320, info->max_width, 1,
+ 			      &pix->height, 240, info->max_height, 2, 0);
+ 
+-	pix->bytesperline = pix->width * fmt->bpp;
++	if (info->has_stride) {
++		u32 stride = clamp(pix->bytesperline, pix->width * fmt->bpp,
++				   RZG2L_CRU_STRIDE_MAX);
++		pix->bytesperline = round_up(stride, RZG2L_CRU_STRIDE_ALIGN);
++	} else {
++		pix->bytesperline = pix->width * fmt->bpp;
++	}
++
+ 	pix->sizeimage = pix->bytesperline * pix->height;
+ 
+ 	dev_dbg(cru->dev, "Format %ux%u bpl: %u size: %u\n",

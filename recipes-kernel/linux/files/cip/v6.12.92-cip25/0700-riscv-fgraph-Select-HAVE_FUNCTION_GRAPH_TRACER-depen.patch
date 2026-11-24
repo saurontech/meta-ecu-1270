@@ -1,0 +1,43 @@
+From eda3d0d1b56bf2d6311ac3ebdd8efb6e3696cafb Mon Sep 17 00:00:00 2001
+From: Pu Lehui <pulehui@huawei.com>
+Date: Tue, 26 May 2026 19:26:35 +0000
+Subject: [PATCH 700/928] riscv: fgraph: Select HAVE_FUNCTION_GRAPH_TRACER
+ depends on HAVE_DYNAMIC_FTRACE_WITH_ARGS
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+commit e8eb8e1bdae94b9e003f5909519fd311d0936890 upstream.
+
+Currently, fgraph on riscv relies on the infrastructure of
+DYNAMIC_FTRACE_WITH_ARGS. However, DYNAMIC_FTRACE_WITH_ARGS may be
+turned off on riscv, which will cause the enabled fgraph to be abnormal.
+Therefore, let's select HAVE_FUNCTION_GRAPH_TRACER depends on
+HAVE_DYNAMIC_FTRACE_WITH_ARGS.
+
+Fixes: a3ed4157b7d8 ("fgraph: Replace fgraph_ret_regs with ftrace_regs")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202503160820.dvqMpH0g-lkp@intel.com/
+Signed-off-by: Pu Lehui <pulehui@huawei.com>
+Reviewed-by: Björn Töpel <bjorn@rivosinc.com>
+Link: https://lore.kernel.org/r/20250317031214.4138436-1-pulehui@huaweicloud.com
+Signed-off-by: Alexandre Ghiti <alexghiti@rivosinc.com>
+Signed-off-by: Gyokhan Kochmarla <gyokhan@amazon.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/riscv/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/riscv/Kconfig b/arch/riscv/Kconfig
+index 9e8667a523d5..1c7575816795 100644
+--- a/arch/riscv/Kconfig
++++ b/arch/riscv/Kconfig
+@@ -143,7 +143,7 @@ config RISCV
+ 	select HAVE_DYNAMIC_FTRACE_WITH_DIRECT_CALLS
+ 	select HAVE_DYNAMIC_FTRACE_WITH_ARGS if HAVE_DYNAMIC_FTRACE
+ 	select HAVE_FTRACE_MCOUNT_RECORD if !XIP_KERNEL
+-	select HAVE_FUNCTION_GRAPH_TRACER
++	select HAVE_FUNCTION_GRAPH_TRACER if HAVE_DYNAMIC_FTRACE_WITH_ARGS
+ 	select HAVE_FUNCTION_GRAPH_FREGS
+ 	select HAVE_FUNCTION_TRACER if !XIP_KERNEL && !PREEMPTION
+ 	select HAVE_EBPF_JIT if MMU

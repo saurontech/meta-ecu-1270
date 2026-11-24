@@ -1,0 +1,77 @@
+From d765bba11fcebd4609bb1ce50ae0a8b34dbdadd9 Mon Sep 17 00:00:00 2001
+From: Damien Le Moal <dlemoal@kernel.org>
+Date: Thu, 14 May 2026 13:58:36 -0400
+Subject: [PATCH 119/163] block: reorganize struct blk_zone_wplug
+
+[ Upstream commit ca1a897fb266c4b23b5ecb99fe787ed18559057d ]
+
+Reorganize the fields of struct blk_zone_wplug to remove a hole after
+the wp_offset field and avoid having the bio_work structure split
+between 2 cache lines.
+
+No functional changes.
+
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Stable-dep-of: b7d4ffb51037 ("block: fix zone write plug removal")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ block/blk-zoned.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index c9b5b590400a..5eaf185004df 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -41,6 +41,11 @@ static const char *const zone_cond_name[] = {
+ /*
+  * Per-zone write plug.
+  * @node: hlist_node structure for managing the plug using a hash table.
++ * @bio_list: The list of BIOs that are currently plugged.
++ * @bio_work: Work struct to handle issuing of plugged BIOs
++ * @rcu_head: RCU head to free zone write plugs with an RCU grace period.
++ * @disk: The gendisk the plug belongs to.
++ * @lock: Spinlock to atomically manipulate the plug.
+  * @ref: Zone write plug reference counter. A zone write plug reference is
+  *       always at least 1 when the plug is hashed in the disk plug hash table.
+  *       The reference is incremented whenever a new BIO needing plugging is
+@@ -50,27 +55,22 @@ static const char *const zone_cond_name[] = {
+  *       reference is dropped whenever the zone of the zone write plug is reset,
+  *       finished and when the zone becomes full (last write BIO to the zone
+  *       completes).
+- * @lock: Spinlock to atomically manipulate the plug.
+  * @flags: Flags indicating the plug state.
+  * @zone_no: The number of the zone the plug is managing.
+  * @wp_offset: The zone write pointer location relative to the start of the zone
+  *             as a number of 512B sectors.
+- * @bio_list: The list of BIOs that are currently plugged.
+- * @bio_work: Work struct to handle issuing of plugged BIOs
+- * @rcu_head: RCU head to free zone write plugs with an RCU grace period.
+- * @disk: The gendisk the plug belongs to.
+  */
+ struct blk_zone_wplug {
+ 	struct hlist_node	node;
+-	refcount_t		ref;
+-	spinlock_t		lock;
+-	unsigned int		flags;
+-	unsigned int		zone_no;
+-	unsigned int		wp_offset;
+ 	struct bio_list		bio_list;
+ 	struct work_struct	bio_work;
+ 	struct rcu_head		rcu_head;
+ 	struct gendisk		*disk;
++	spinlock_t		lock;
++	refcount_t		ref;
++	unsigned int		flags;
++	unsigned int		zone_no;
++	unsigned int		wp_offset;
+ };
+ 
+ static inline unsigned int disk_zone_wplugs_hash_size(struct gendisk *disk)

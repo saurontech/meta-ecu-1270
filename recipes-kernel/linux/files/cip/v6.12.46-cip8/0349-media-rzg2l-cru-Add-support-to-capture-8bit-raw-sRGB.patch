@@ -1,0 +1,76 @@
+From ca48378b16665d8f193a815f65faa22c7ec5d06a Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:27 +0200
+Subject: [PATCH 349/643] media: rzg2l-cru: Add support to capture 8bit raw
+ sRGB
+
+commit 0477b0866cd92a71c36b08a62a092924ac3191a7 upstream.
+
+Add support to capture 8bit Bayer formats.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Link: https://lore.kernel.org/r/20241018133446.223516-22-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-csi2.c   |  4 +++
+ .../platform/renesas/rzg2l-cru/rzg2l-ip.c     | 28 +++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+index e21142d3b67d..84230926875a 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-csi2.c
+@@ -188,6 +188,10 @@ struct rzg2l_csi2_format {
+ 
+ static const struct rzg2l_csi2_format rzg2l_csi2_formats[] = {
+ 	{ .code = MEDIA_BUS_FMT_UYVY8_1X16, .bpp = 16 },
++	{ .code = MEDIA_BUS_FMT_SBGGR8_1X8, .bpp = 8, },
++	{ .code = MEDIA_BUS_FMT_SGBRG8_1X8, .bpp = 8, },
++	{ .code = MEDIA_BUS_FMT_SGRBG8_1X8, .bpp = 8, },
++	{ .code = MEDIA_BUS_FMT_SRGGB8_1X8, .bpp = 8, },
+ };
+ 
+ static inline struct rzg2l_csi2 *sd_to_csi2(struct v4l2_subdev *sd)
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+index ad470de440ad..982c996cc777 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-ip.c
+@@ -18,6 +18,34 @@ static const struct rzg2l_cru_ip_format rzg2l_cru_ip_formats[] = {
+ 		.bpp = 2,
+ 		.icndmr = ICnDMR_YCMODE_UYVY,
+ 	},
++	{
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.format = V4L2_PIX_FMT_SBGGR8,
++		.datatype = MIPI_CSI2_DT_RAW8,
++		.bpp = 1,
++		.icndmr = 0,
++	},
++	{
++		.code = MEDIA_BUS_FMT_SGBRG8_1X8,
++		.format = V4L2_PIX_FMT_SGBRG8,
++		.datatype = MIPI_CSI2_DT_RAW8,
++		.bpp = 1,
++		.icndmr = 0,
++	},
++	{
++		.code = MEDIA_BUS_FMT_SGRBG8_1X8,
++		.format = V4L2_PIX_FMT_SGRBG8,
++		.datatype = MIPI_CSI2_DT_RAW8,
++		.bpp = 1,
++		.icndmr = 0,
++	},
++	{
++		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
++		.format = V4L2_PIX_FMT_SRGGB8,
++		.datatype = MIPI_CSI2_DT_RAW8,
++		.bpp = 1,
++		.icndmr = 0,
++	},
+ };
+ 
+ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_code_to_fmt(unsigned int code)

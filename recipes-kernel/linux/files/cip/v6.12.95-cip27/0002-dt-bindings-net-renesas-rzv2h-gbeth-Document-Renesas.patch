@@ -1,0 +1,192 @@
+From c37297c3e97ffec2e6c99b3619350cecda24ae57 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:21 +0100
+Subject: [PATCH 002/286] dt-bindings: net: renesas,rzv2h-gbeth: Document
+ Renesas RZ/G3L SoC
+
+[ Upstream commit 3ac2aa31b489eb4e0e820757f336aa1ad41ed0e2 ]
+
+Add device tree binding support for the Gigabit Ethernet (GBETH) IP on
+Renesas RZ/G3L SoC. This SoC uses different Synopsys DesignWare MAC
+version 5.30 compared to RZ/G3E.
+
+RZ/G3L requires an extra clock compared to RZ/G3E and has pps interrupts.
+
+Add a new compatible string "renesas,r9a08g046-gbeth" for RZ/G3L SoC and
+update the schema to handle hardware differences between SoC variants.
+
+Extend the base snps,dwmac.yaml schema to accommodate the PPS interrupts.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20260131161250.5047-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/net/renesas,rzv2h-gbeth.yaml     | 77 ++++++++++++++++---
+ .../devicetree/bindings/net/snps,dwmac.yaml   |  3 +
+ 2 files changed, 69 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+index bd53ab300f50..fb60f745a1ff 100644
+--- a/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
++++ b/Documentation/devicetree/bindings/net/renesas,rzv2h-gbeth.yaml
+@@ -26,6 +26,9 @@ select:
+ properties:
+   compatible:
+     oneOf:
++      - items:
++          - const: renesas,r9a08g046-gbeth # RZ/G3L
++          - const: snps,dwmac-5.30a
+       - items:
+           - enum:
+               - renesas,r9a09g047-gbeth # RZ/G3E
+@@ -47,13 +50,17 @@ properties:
+   clocks:
+     oneOf:
+       - items:
+-          - description: CSR clock
+-          - description: AXI system clock
++          - description: CSR/Register access clock
++          - description: AXI system/Main clock
+           - description: PTP clock
+           - description: TX clock
+           - description: RX clock
+           - description: TX clock phase-shifted by 180 degrees
+           - description: RX clock phase-shifted by 180 degrees
++          - description: RMII clock
++
++        minItems: 7
++
+       - items:
+           - description: CSR clock
+           - description: AXI system clock
+@@ -69,6 +76,10 @@ properties:
+           - const: rx
+           - const: tx-180
+           - const: rx-180
++          - const: rmii
++
++        minItems: 7
++
+       - items:
+           - const: stmmaceth
+           - const: pclk
+@@ -88,6 +99,22 @@ properties:
+           - const: tx-queue-1
+           - const: tx-queue-2
+           - const: tx-queue-3
++      - items:
++          - const: macirq
++          - const: eth_wake_irq
++          - const: eth_lpi
++          - const: rx-queue-0
++          - const: rx-queue-1
++          - const: rx-queue-2
++          - const: rx-queue-3
++          - const: tx-queue-0
++          - const: tx-queue-1
++          - const: tx-queue-2
++          - const: tx-queue-3
++          - const: ptp-pps-0
++          - const: ptp-pps-1
++          - const: ptp-pps-2
++          - const: ptp-pps-3
+       - items:
+           - const: macirq
+           - const: eth_wake_irq
+@@ -135,6 +162,27 @@ required:
+ allOf:
+   - $ref: snps,dwmac.yaml#
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a08g046-gbeth
++    then:
++      properties:
++        clocks:
++          minItems: 8
++
++        clock-names:
++          minItems: 8
++
++        interrupts:
++          minItems: 15
++          maxItems: 15
++
++        interrupt-names:
++          minItems: 15
++          maxItems: 15
++
+   - if:
+       properties:
+         compatible:
+@@ -163,12 +211,26 @@ allOf:
+       required:
+         - reset-names
+     else:
++      properties:
++        resets:
++          maxItems: 1
++
++        pcs-handle: false
++
++        reset-names: false
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,rzv2h-gbeth
++    then:
+       properties:
+         clocks:
+-          minItems: 7
++          maxItems: 7
+ 
+         clock-names:
+-          minItems: 7
++          maxItems: 7
+ 
+         interrupts:
+           minItems: 11
+@@ -178,13 +240,6 @@ allOf:
+           minItems: 11
+           maxItems: 11
+ 
+-        resets:
+-          maxItems: 1
+-
+-        pcs-handle: false
+-
+-        reset-names: false
+-
+ unevaluatedProperties: false
+ 
+ examples:
+diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+index 68f8da626d47..4ae68ab70dee 100644
+--- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+@@ -71,6 +71,7 @@ properties:
+         - qcom,sc8280xp-ethqos
+         - qcom,sm8150-ethqos
+         - renesas,r9a06g032-gmac
++        - renesas,r9a08g046-gbeth
+         - renesas,r9a09g077-gbeth
+         - renesas,rzn1-gmac
+         - renesas,rzv2h-gbeth
+@@ -127,6 +128,8 @@ properties:
+           pattern: '^rx-queue-[0-7]$'
+         - description: Per channel transmit completion interrupt
+           pattern: '^tx-queue-[0-7]$'
++        - description: PPS interrupt
++          pattern: '^ptp-pps-[0-3]$'
+ 
+   clocks:
+     minItems: 1

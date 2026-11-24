@@ -1,0 +1,85 @@
+From 5ca2c8c64d9569c50cf8a9d215fc2867a4fe7fd8 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 13 Jun 2025 13:16:12 +0300
+Subject: [PATCH 125/246] arm64: dts: renesas: r9a08g045: Add ADC node
+
+commit 78f2c089d0797fbf677a415aeeba8061b442027b upstream.
+
+Add the device tree node for the ADC IP available on the Renesas RZ/G3S
+SoC.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20241206111337.726244-15-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 53 ++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 1707d47a09df..d1e228b439df 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -191,6 +191,59 @@ rtc: rtc@1004ec00 {
+ 			status = "disabled";
+ 		};
+ 
++		adc: adc@10058000 {
++			compatible = "renesas,r9a08g045-adc";
++			reg = <0 0x10058000 0 0x1000>;
++			interrupts = <GIC_SPI 312 IRQ_TYPE_EDGE_RISING>;
++			clocks = <&cpg CPG_MOD R9A08G045_ADC_ADCLK>,
++				 <&cpg CPG_MOD R9A08G045_ADC_PCLK>;
++			clock-names = "adclk", "pclk";
++			resets = <&cpg R9A08G045_ADC_PRESETN>,
++				 <&cpg R9A08G045_ADC_ADRST_N>;
++			reset-names = "presetn", "adrst-n";
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			#io-channel-cells = <1>;
++			status = "disabled";
++
++			channel@0 {
++				reg = <0>;
++			};
++
++			channel@1 {
++				reg = <1>;
++			};
++
++			channel@2 {
++				reg = <2>;
++			};
++
++			channel@3 {
++				reg = <3>;
++			};
++
++			channel@4 {
++				reg = <4>;
++			};
++
++			channel@5 {
++				reg = <5>;
++			};
++
++			channel@6 {
++				reg = <6>;
++			};
++
++			channel@7 {
++				reg = <7>;
++			};
++
++			channel@8 {
++				reg = <8>;
++			};
++		};
++
+ 		vbattb: clock-controller@1005c000 {
+ 			compatible = "renesas,r9a08g045-vbattb";
+ 			reg = <0 0x1005c000 0 0x1000>;

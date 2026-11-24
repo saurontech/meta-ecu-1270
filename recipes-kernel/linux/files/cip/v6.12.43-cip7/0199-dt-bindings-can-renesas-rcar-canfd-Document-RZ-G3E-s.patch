@@ -1,0 +1,159 @@
+From 2388dd7b54897bd8f9fbd2554704c0de57e00dcd Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:16 +0100
+Subject: [PATCH 199/246] dt-bindings: can: renesas,rcar-canfd: Document RZ/G3E
+ support
+
+commit e623c6e56bdf776b001313934709f9ff38b7dda6 upstream.
+
+Document support for the CAN-FD Interface on the RZ/G3E (R9A09G047) SoC,
+which supports up to six channels.
+
+The CAN-FD module on RZ/G3E is very similar to the one on both R-Car V4H
+and RZ/G2L, but differs in some hardware parameters:
+ * No external clock, but instead has ram clock.
+ * Support up to 6 channels.
+ * 20 interrupts.
+
+Reviewed-by: "Rob Herring (Arm)" <robh@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/net/can/renesas,rcar-canfd.yaml  | 76 +++++++++++++++++--
+ 1 file changed, 70 insertions(+), 6 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+index 4a83498b2a8b..f4ac21c68427 100644
+--- a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
++++ b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+@@ -42,6 +42,8 @@ properties:
+               - renesas,r9a07g054-canfd    # RZ/V2L
+           - const: renesas,rzg2l-canfd     # RZ/G2L family
+ 
++      - const: renesas,r9a09g047-canfd     # RZ/G3E
++
+   reg:
+     maxItems: 1
+ 
+@@ -59,6 +61,19 @@ properties:
+           - description: CAN1 error interrupt
+           - description: CAN1 transmit interrupt
+           - description: CAN1 transmit/receive FIFO receive completion interrupt
++          - description: CAN2 error interrupt
++          - description: CAN2 transmit interrupt
++          - description: CAN2 transmit/receive FIFO receive completion interrupt
++          - description: CAN3 error interrupt
++          - description: CAN3 transmit interrupt
++          - description: CAN3 transmit/receive FIFO receive completion interrupt
++          - description: CAN4 error interrupt
++          - description: CAN4 transmit interrupt
++          - description: CAN4 transmit/receive FIFO receive completion interrupt
++          - description: CAN5 error interrupt
++          - description: CAN5 transmit interrupt
++          - description: CAN5 transmit/receive FIFO receive completion interrupt
++        minItems: 8
+ 
+   interrupt-names:
+     oneOf:
+@@ -74,15 +89,33 @@ properties:
+           - const: ch1_err
+           - const: ch1_rec
+           - const: ch1_trx
++          - const: ch2_err
++          - const: ch2_rec
++          - const: ch2_trx
++          - const: ch3_err
++          - const: ch3_rec
++          - const: ch3_trx
++          - const: ch4_err
++          - const: ch4_rec
++          - const: ch4_trx
++          - const: ch5_err
++          - const: ch5_rec
++          - const: ch5_trx
++        minItems: 8
+ 
+   clocks:
+     maxItems: 3
+ 
+   clock-names:
+-    items:
+-      - const: fck
+-      - const: canfd
+-      - const: can_clk
++    oneOf:
++      - items:
++          - const: fck
++          - const: canfd
++          - const: can_clk
++      - items:
++          - const: fck
++          - const: ram_clk
++          - const: can_clk
+ 
+   power-domains:
+     maxItems: 1
+@@ -145,11 +178,9 @@ allOf:
+     then:
+       properties:
+         interrupts:
+-          minItems: 8
+           maxItems: 8
+ 
+         interrupt-names:
+-          minItems: 8
+           maxItems: 8
+ 
+         resets:
+@@ -183,6 +214,30 @@ allOf:
+         resets:
+           maxItems: 1
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g047-canfd
++    then:
++      properties:
++        interrupts:
++          minItems: 20
++
++        interrupt-names:
++          minItems: 20
++
++        resets:
++          minItems: 2
++          maxItems: 2
++
++        reset-names:
++          minItems: 2
++          maxItems: 2
++
++      required:
++        - reset-names
++
+   - if:
+       properties:
+         compatible:
+@@ -203,6 +258,15 @@ allOf:
+       patternProperties:
+         "^channel[4-7]$": false
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g047-canfd
++    then:
++      patternProperties:
++        "^channel[6-7]$": false
++
+ unevaluatedProperties: false
+ 
+ examples:

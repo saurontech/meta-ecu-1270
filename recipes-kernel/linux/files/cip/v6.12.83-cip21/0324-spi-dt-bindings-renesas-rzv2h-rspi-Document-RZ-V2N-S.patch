@@ -1,0 +1,37 @@
+From a03b96ca14257f3319c9a297f0cbff56a1deeb53 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 15 Apr 2026 13:20:52 +0000
+Subject: [PATCH 324/497] spi: dt-bindings: renesas,rzv2h-rspi: Document RZ/V2N
+ SoC support
+
+commit 043cc033451530f81d7fe791dcc29874f6a147fd upstream.
+
+Document the RSPI controller on the Renesas RZ/V2N SoC. The block is
+compatible with the RSPI implementation found on the RZ/V2H(P) family.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251126131619.136605-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+index 4331df3e3d47..069557a587b5 100644
+--- a/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
++++ b/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml
+@@ -15,6 +15,9 @@ properties:
+       - enum:
+           - renesas,r9a09g057-rspi # RZ/V2H(P)
+           - renesas,r9a09g077-rspi # RZ/T2H
++      - items:
++          - const: renesas,r9a09g056-rspi # RZ/V2N
++          - const: renesas,r9a09g057-rspi
+       - items:
+           - const: renesas,r9a09g087-rspi # RZ/N2H
+           - const: renesas,r9a09g077-rspi # RZ/T2H

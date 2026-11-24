@@ -1,0 +1,79 @@
+From 4547a9f6f599c1ca5d4e097fe5c66cca97bf3e20 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:58:51 +0000
+Subject: [PATCH 828/851] arm64: dts: renesas: r9a09g077: Add USB2.0 support
+
+commit a777631037d0f5e55d50e59e5f2179381eb91fbb upstream.
+
+Add EHCI, OHCI, PHY and HSUSB nodes to RZ/T2H (R9A09G077) SoC DTSI.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250821161946.1096033-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[PL: resolve merge conflict]
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 47 ++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index 2c9bff718cbc..2f5625c34539 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -437,6 +437,53 @@ adc2: adc@80008000 {
+ 			status = "disabled";
+ 		};
+ 
++		ohci: usb@92040000 {
++			compatible = "generic-ohci";
++			reg = <0 0x92040000 0 0x100>;
++			interrupts = <GIC_SPI 586 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 408>;
++			phys = <&usb2_phy 1>;
++			phy-names = "usb";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ehci: usb@92040100 {
++			compatible = "generic-ehci";
++			reg = <0 0x92040100 0 0x100>;
++			interrupts = <GIC_SPI 586 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 408>;
++			phys = <&usb2_phy 2>;
++			phy-names = "usb";
++			companion = <&ohci>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		usb2_phy: usb-phy@92040200 {
++			compatible = "renesas,usb2-phy-r9a09g077";
++			reg = <0 0x92040200 0 0x700>;
++			interrupts = <GIC_SPI 586 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 408>,
++				 <&cpg CPG_CORE R9A09G077_USB_CLK>;
++			#phy-cells = <1>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		hsusb: usb@92041000 {
++			compatible = "renesas,usbhs-r9a09g077";
++			reg = <0 0x92041000 0 0x1000>;
++			interrupts = <GIC_SPI 587 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 588 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 589 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 408>;
++			phys = <&usb2_phy 3>;
++			phy-names = "usb";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
+ 		sdhi0: mmc@92080000  {
+ 			compatible = "renesas,sdhi-r9a09g077",
+ 				     "renesas,sdhi-r9a09g057";

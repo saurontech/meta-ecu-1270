@@ -1,0 +1,47 @@
+From eb10969b9838dc79725fb2350179aa205fc823d7 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:40 +0000
+Subject: [PATCH 070/838] can: rcar_canfd: Invert reset assert order
+
+[ Upstream commit 41c13eaf39932fc79aa1ac245a9b97090fe23d5e ]
+
+The two resets are asserted during cleanup in the same order as they
+were deasserted during probe.  Invert the order to restore symmetry.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol@kernel.org>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251124102837.106973-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index e781363bcc4e..cf1f478a87f3 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -2201,8 +2201,8 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+ fail_clk:
+ 	clk_disable_unprepare(gpriv->clkp);
+ fail_reset:
+-	reset_control_assert(gpriv->rstc1);
+ 	reset_control_assert(gpriv->rstc2);
++	reset_control_assert(gpriv->rstc1);
+ fail_dev:
+ 	return err;
+ }
+@@ -2223,8 +2223,8 @@ static void rcar_canfd_remove(struct platform_device *pdev)
+ 	/* Enter global sleep mode */
+ 	rcar_canfd_set_bit(gpriv->base, RCANFD_GCTR, RCANFD_GCTR_GSLPR);
+ 	clk_disable_unprepare(gpriv->clkp);
+-	reset_control_assert(gpriv->rstc1);
+ 	reset_control_assert(gpriv->rstc2);
++	reset_control_assert(gpriv->rstc1);
+ }
+ 
+ static int __maybe_unused rcar_canfd_suspend(struct device *dev)

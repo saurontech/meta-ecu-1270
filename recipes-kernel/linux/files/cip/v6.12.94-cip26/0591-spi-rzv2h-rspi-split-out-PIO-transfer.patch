@@ -1,0 +1,68 @@
+From 9698e4477796a3a2bede005355d096991a688eb7 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:54 +0200
+Subject: [PATCH 591/600] spi: rzv2h-rspi: split out PIO transfer
+
+commit 1e5e10df8b9be71ca64435cbe7c96b189e5ee293 upstream.
+
+In preparation for implementing DMA support, split out the PIO transfer
+code into its own function.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-10-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index b31ef2f31f1b..9f5bc047b485 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -219,17 +219,14 @@ static int rzv2h_rspi_receive(struct rzv2h_rspi_priv *rspi, void *rxbuf,
+ 	return 0;
+ }
+ 
+-static int rzv2h_rspi_transfer_one(struct spi_controller *controller,
++static int rzv2h_rspi_transfer_pio(struct rzv2h_rspi_priv *rspi,
+ 				   struct spi_device *spi,
+-				   struct spi_transfer *transfer)
++				   struct spi_transfer *transfer,
++				   unsigned int words_to_transfer)
+ {
+-	struct rzv2h_rspi_priv *rspi = spi_controller_get_devdata(controller);
+-	unsigned int words_to_transfer, i;
++	unsigned int i;
+ 	int ret = 0;
+ 
+-	transfer->effective_speed_hz = rspi->freq;
+-	words_to_transfer = transfer->len / rspi->bytes_per_word;
+-
+ 	for (i = 0; i < words_to_transfer; i++) {
+ 		rzv2h_rspi_clear_all_irqs(rspi);
+ 
+@@ -240,6 +237,22 @@ static int rzv2h_rspi_transfer_one(struct spi_controller *controller,
+ 			break;
+ 	}
+ 
++	return ret;
++}
++
++static int rzv2h_rspi_transfer_one(struct spi_controller *controller,
++				   struct spi_device *spi,
++				   struct spi_transfer *transfer)
++{
++	struct rzv2h_rspi_priv *rspi = spi_controller_get_devdata(controller);
++	unsigned int words_to_transfer;
++	int ret;
++
++	transfer->effective_speed_hz = rspi->freq;
++	words_to_transfer = transfer->len / rspi->bytes_per_word;
++
++	ret = rzv2h_rspi_transfer_pio(rspi, spi, transfer, words_to_transfer);
++
+ 	rzv2h_rspi_clear_all_irqs(rspi);
+ 
+ 	return ret;

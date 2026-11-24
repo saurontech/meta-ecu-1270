@@ -1,0 +1,39 @@
+From 536feb5a4171c9d6126edcb86d86fec8aec72265 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:45:48 +0100
+Subject: [PATCH 225/246] dt-bindings: clock: renesas,r9a09g047-cpg: Add XSPI
+ and GBETH PTP core clocks
+
+commit f21923f3f410f84528b5e7bdcbe4afdc6f07010c upstream.
+
+Add definitions for XSPI core clock and Gigabit Ethernet PTP reference
+core clocks in the R9A09G047 CPG DT bindings header file.
+
+The clk_spi is modelled as a fixed divider clock with parent clk_spix2 and
+factor two as both parent and child share same gating bit.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250424081400.135028-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ include/dt-bindings/clock/renesas,r9a09g047-cpg.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g047-cpg.h b/include/dt-bindings/clock/renesas,r9a09g047-cpg.h
+index 1d031bf6bf03..a27132f9a6c8 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g047-cpg.h
++++ b/include/dt-bindings/clock/renesas,r9a09g047-cpg.h
+@@ -17,5 +17,8 @@
+ #define R9A09G047_CM33_CLK0			6
+ #define R9A09G047_CST_0_SWCLKTCK		7
+ #define R9A09G047_IOTOP_0_SHCLK			8
++#define R9A09G047_SPI_CLK_SPI			9
++#define R9A09G047_GBETH_0_CLK_PTP_REF_I		10
++#define R9A09G047_GBETH_1_CLK_PTP_REF_I		11
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G047_CPG_H__ */

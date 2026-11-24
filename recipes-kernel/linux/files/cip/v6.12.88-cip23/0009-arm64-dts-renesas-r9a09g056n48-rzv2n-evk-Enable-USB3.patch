@@ -1,0 +1,59 @@
+From 3c2e5f49110d7e9a66442cbefa2689fd11106942 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 4 May 2026 06:49:43 +0000
+Subject: [PATCH 009/432] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable
+ USB3.0 PHY and xHCI controller
+
+commit f221ce9f7c13ce2c1c9e4fd79743d18fb098f19a upstream.
+
+Enable the USB3.0 (CH0) host controllers on the RZ/V2N Evaluation Kit.
+The CN4 connector on the EVK provides access to the USB3.0 channel.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251119110505.100253-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts   | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index e7bb4334ca47..6ed74e091d4b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -409,6 +409,11 @@ vbus {
+ 		};
+ 	};
+ 
++	usb3_pins: usb3 {
++		pinmux = <RZV2N_PORT_PINMUX(B, 0, 14)>, /* USB30_VBUSEN */
++			 <RZV2N_PORT_PINMUX(B, 1, 14)>; /* USB30_OVRCURN */
++	};
++
+ 	xspi_pins: xspi0 {
+ 		ctrl {
+ 			pins = "XSPI0_RESET0N", "XSPI0_CS0N", "XSPI0_CKP";
+@@ -459,10 +464,20 @@ &usb2_phy0 {
+ 	status = "okay";
+ };
+ 
++&usb3_phy {
++	status = "okay";
++};
++
+ &wdt1 {
+ 	status = "okay";
+ };
+ 
++&xhci {
++	pinctrl-0 = <&usb3_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &xspi {
+ 	pinctrl-0 = <&xspi_pins>;
+ 	pinctrl-names = "default";

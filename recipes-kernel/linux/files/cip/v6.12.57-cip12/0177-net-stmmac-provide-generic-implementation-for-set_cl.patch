@@ -1,0 +1,81 @@
+From 033ea983515ea2eb5ac9789cc1bd08cd08ee5b4e Mon Sep 17 00:00:00 2001
+From: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
+Date: Mon, 3 Nov 2025 12:38:01 +0100
+Subject: [PATCH 177/192] net: stmmac: provide generic implementation for
+ set_clk_tx_rate method
+
+[ Upstream commit 12bce6d5404ea30180536322c1ad31bc45a988d2 ]
+
+Provide a generic implementation for the set_clk_tx_rate method
+introduced by the previous patch, which is capable of configuring the
+MAC transmit clock for 10M, 100M and 1000M speeds for at least MII,
+GMII, RGMII and RMII interface modes.
+
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Link: https://patch.msgid.link/E1tna0K-0052sY-QF@rmk-PC.armlinux.org.uk
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac.h  |  2 ++
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c | 32 +++++++++++++++++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac.h b/drivers/net/ethernet/stmicro/stmmac/stmmac.h
+index ea135203ff2e..7a976aab322f 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac.h
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac.h
+@@ -421,6 +421,8 @@ int stmmac_reinit_queues(struct net_device *dev, u32 rx_cnt, u32 tx_cnt);
+ int stmmac_reinit_ringparam(struct net_device *dev, u32 rx_size, u32 tx_size);
+ int stmmac_bus_clks_config(struct stmmac_priv *priv, bool enabled);
+ void stmmac_fpe_apply(struct stmmac_priv *priv);
++int stmmac_set_clk_tx_rate(void *bsp_priv, struct clk *clk_tx_i,
++			   phy_interface_t interface, int speed);
+ 
+ static inline bool stmmac_xdp_is_enabled(struct stmmac_priv *priv)
+ {
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 2c2ba1dba80d..557d442c3713 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -179,6 +179,38 @@ int stmmac_bus_clks_config(struct stmmac_priv *priv, bool enabled)
+ }
+ EXPORT_SYMBOL_GPL(stmmac_bus_clks_config);
+ 
++/**
++ * stmmac_set_clk_tx_rate() - set the clock rate for the MAC transmit clock
++ * @bsp_priv: BSP private data structure (unused)
++ * @clk_tx_i: the transmit clock
++ * @interface: the selected interface mode
++ * @speed: the speed that the MAC will be operating at
++ *
++ * Set the transmit clock rate for the MAC, normally 2.5MHz for 10Mbps,
++ * 25MHz for 100Mbps and 125MHz for 1Gbps. This is suitable for at least
++ * MII, GMII, RGMII and RMII interface modes. Platforms can hook this into
++ * the plat_data->set_clk_tx_rate method directly, call it via their own
++ * implementation, or implement their own method should they have more
++ * complex requirements. It is intended to only be used in this method.
++ *
++ * plat_data->clk_tx_i must be filled in.
++ */
++int stmmac_set_clk_tx_rate(void *bsp_priv, struct clk *clk_tx_i,
++			   phy_interface_t interface, int speed)
++{
++	long rate = rgmii_clock(speed);
++
++	/* Silently ignore unsupported speeds as rgmii_clock() only
++	 * supports 10, 100 and 1000Mbps. We do not want to spit
++	 * errors for 2500 and higher speeds here.
++	 */
++	if (rate < 0)
++		return 0;
++
++	return clk_set_rate(clk_tx_i, rate);
++}
++EXPORT_SYMBOL_GPL(stmmac_set_clk_tx_rate);
++
+ /**
+  * stmmac_verify_args - verify the driver parameters.
+  * Description: it checks the driver parameters and set a default in case of

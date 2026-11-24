@@ -1,0 +1,68 @@
+From 20f07d0e6562c9253e0f41818e1f2425ec509240 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:19 +0100
+Subject: [PATCH 202/246] can: rcar_canfd: Update RCANFD_GERFL_ERR macro
+
+commit b75fcf2af2dbbc5f913cf1b9194ed01ce9c068b6 upstream.
+
+Replace the macro RCANFD_GERFL_EEF0_7->RCANFD_GERFL_EEF. The macros
+RCANFD_GERFL_EEF* in RCANFD_GERFL_ERR can be replaced by FIELD_PREP() and
+drop the redundant macro RCANFD_GERFL_EEF(ch).
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250417054320.14100-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 565a91c2ca83..d53aa71f11c4 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -21,6 +21,7 @@
+  * wherever it is modified to a readable name.
+  */
+ 
++#include <linux/bitfield.h>
+ #include <linux/bitmap.h>
+ #include <linux/bitops.h>
+ #include <linux/can/dev.h>
+@@ -74,18 +75,18 @@
+ #define RCANFD_GSTS_GNOPM		(BIT(0) | BIT(1) | BIT(2) | BIT(3))
+ 
+ /* RSCFDnCFDGERFL / RSCFDnGERFL */
+-#define RCANFD_GERFL_EEF0_7		GENMASK(23, 16)
+-#define RCANFD_GERFL_EEF(ch)		BIT(16 + (ch))
++#define RCANFD_GERFL_EEF		GENMASK(23, 16)
+ #define RCANFD_GERFL_CMPOF		BIT(3)	/* CAN FD only */
+ #define RCANFD_GERFL_THLES		BIT(2)
+ #define RCANFD_GERFL_MES		BIT(1)
+ #define RCANFD_GERFL_DEF		BIT(0)
+ 
+ #define RCANFD_GERFL_ERR(gpriv, x) \
+-	((x) & (reg_gen4(gpriv, RCANFD_GERFL_EEF0_7, \
+-			 RCANFD_GERFL_EEF(0) | RCANFD_GERFL_EEF(1)) | \
+-		RCANFD_GERFL_MES | \
+-		((gpriv)->fdmode ? RCANFD_GERFL_CMPOF : 0)))
++({\
++	typeof(gpriv) (_gpriv) = (gpriv); \
++	((x) & ((FIELD_PREP(RCANFD_GERFL_EEF, (_gpriv)->channels_mask)) | \
++		RCANFD_GERFL_MES | ((_gpriv)->fdmode ? RCANFD_GERFL_CMPOF : 0))); \
++})
+ 
+ /* AFL Rx rules registers */
+ 
+@@ -938,7 +939,7 @@ static void rcar_canfd_global_error(struct net_device *ndev)
+ 	u32 ridx = ch + RCANFD_RFFIFO_IDX;
+ 
+ 	gerfl = rcar_canfd_read(priv->base, RCANFD_GERFL);
+-	if (gerfl & RCANFD_GERFL_EEF(ch)) {
++	if (gerfl & FIELD_PREP(RCANFD_GERFL_EEF, BIT(ch))) {
+ 		netdev_dbg(ndev, "Ch%u: ECC Error flag\n", ch);
+ 		stats->tx_dropped++;
+ 	}

@@ -1,0 +1,39 @@
+From 18c64054aefa819fd8d6f9abe5b3b02b9722e696 Mon Sep 17 00:00:00 2001
+From: Sasha Levin <sashal@kernel.org>
+Date: Wed, 16 Sep 2026 12:28:52 -0400
+Subject: [PATCH 2687/2868] Revert "arm64: dts: qcom: sm8350: Fix the PCIe
+ iommu-map entries"
+
+This reverts commit 2fd6aabfdf27f49551ed9edcb845dd3c66e4fae5.
+
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sm8350.dtsi | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8350.dtsi b/arch/arm64/boot/dts/qcom/sm8350.dtsi
+index 6f175791de90..1870ec4176da 100644
+--- a/arch/arm64/boot/dts/qcom/sm8350.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8350.dtsi
+@@ -1571,8 +1571,8 @@ pcie0: pcie@1c00000 {
+ 				      "aggre1",
+ 				      "aggre0";
+ 
+-			iommu-map = <0x0   &apps_smmu 0x1c00 0x0 0x1>,
+-				    <0x100 &apps_smmu 0x1c01 0x0 0x1>;
++			iommu-map = <0x0   &apps_smmu 0x1c00 0x1>,
++				    <0x100 &apps_smmu 0x1c01 0x1>;
+ 
+ 			resets = <&gcc GCC_PCIE_0_BCR>;
+ 			reset-names = "pci";
+@@ -1678,8 +1678,8 @@ pcie1: pcie@1c08000 {
+ 				      "ddrss_sf_tbu",
+ 				      "aggre1";
+ 
+-			iommu-map = <0x0   &apps_smmu 0x1c80 0x0 0x1>,
+-				    <0x100 &apps_smmu 0x1c81 0x0 0x1>;
++			iommu-map = <0x0   &apps_smmu 0x1c80 0x1>,
++				    <0x100 &apps_smmu 0x1c81 0x1>;
+ 
+ 			resets = <&gcc GCC_PCIE_1_BCR>;
+ 			reset-names = "pci";

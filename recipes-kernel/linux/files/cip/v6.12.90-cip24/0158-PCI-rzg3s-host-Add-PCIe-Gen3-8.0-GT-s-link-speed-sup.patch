@@ -1,0 +1,92 @@
+From 1cf81629e8b435171ba75cc0aea564d1eae1fb18 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Thu, 14 May 2026 09:39:31 +0000
+Subject: [PATCH 158/163] PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed
+ support
+
+[ Upstream commit 5e9a5af5c9a2797a5e41e8ee565ce8108588f956 ]
+
+Extend the link speed configuration to support Gen3 (8.0 GT/s) in
+addition to Gen2 (5.0 GT/s). This is required for RZ/G3E PCIe host
+support, which is Gen3 capable.
+
+Instead of relying on DT max-link-speed for configuration, read the
+hardware capabilities from the PCI_EXP_LNKCAP register to determine the
+maximum supported speed. The DT max-link-speed property is now only used
+as an optional limit when explicitly specified, which aligns with PCIe
+subsystem expectations.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N EVK
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20260306143423.19562-12-john.madieu.xa@bp.renesas.com
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 26 ++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index b3fade8443db..39828d8f4e0c 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1026,8 +1026,9 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ {
+ 	u32 remote_supported_link_speeds, max_supported_link_speeds;
+ 	u32 cs2, tmp, pcie_cap = RZG3S_PCI_CFG_PCIEC;
+-	u32 cur_link_speed, link_speed;
++	u32 cur_link_speed, link_speed, hw_max_speed;
+ 	u8 ltssm_state_l0 = 0xc;
++	u32 lnkcap;
+ 	int ret;
+ 	u16 ls;
+ 
+@@ -1047,7 +1048,22 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	ls = readw_relaxed(host->pcie + pcie_cap + PCI_EXP_LNKSTA);
+ 	cs2 = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
+ 
+-	switch (pcie_link_speed[host->max_link_speed]) {
++	/* Read hardware supported link speed from Link Capabilities Register */
++	lnkcap = readl_relaxed(host->pcie + pcie_cap + PCI_EXP_LNKCAP);
++	hw_max_speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, lnkcap);
++
++	/*
++	 * Use DT max-link-speed only as a limit. If specified and lower
++	 * than hardware capability, cap to that value.
++	 */
++	if (host->max_link_speed > 0 && host->max_link_speed < hw_max_speed)
++		hw_max_speed = host->max_link_speed;
++
++	switch (pcie_link_speed[hw_max_speed]) {
++	case PCIE_SPEED_8_0GT:
++		max_supported_link_speeds = GENMASK(PCI_EXP_LNKSTA_CLS_8_0GB - 1, 0);
++		link_speed = PCI_EXP_LNKCTL2_TLS_8_0GT;
++		break;
+ 	case PCIE_SPEED_5_0GT:
+ 		max_supported_link_speeds = GENMASK(PCI_EXP_LNKSTA_CLS_5_0GB - 1, 0);
+ 		link_speed = PCI_EXP_LNKCTL2_TLS_5_0GT;
+@@ -1063,10 +1079,10 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	remote_supported_link_speeds &= max_supported_link_speeds;
+ 
+ 	/*
+-	 * Return if max link speed is already set or the connected device
++	 * Return if target link speed is already set or the connected device
+ 	 * doesn't support it.
+ 	 */
+-	if (cur_link_speed == host->max_link_speed ||
++	if (cur_link_speed == hw_max_speed ||
+ 	    remote_supported_link_speeds != max_supported_link_speeds)
+ 		return 0;
+ 
+@@ -1654,8 +1670,6 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	host->pcie = host->axi + RZG3S_PCI_CFG_BASE;
+ 
+ 	host->max_link_speed = of_pci_get_max_link_speed(np);
+-	if (host->max_link_speed < 0)
+-		host->max_link_speed = 2;
+ 
+ 	ret = rzg3s_pcie_host_parse_port(host);
+ 	if (ret)

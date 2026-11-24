@@ -1,0 +1,78 @@
+From 91f2394e70af92778065d53812530e6dd8e77a71 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:07 +0000
+Subject: [PATCH 018/838] arm64: dts: renesas: r9a09g077: Add I2C controller
+ nodes
+
+commit 1335a89bbc8ac5b0310db9457018c261816e61cc upstream.
+
+The Renesas RZ/T2H ("R9A09G077") SoC includes three I2C (RIIC) channels.
+Add device tree nodes for all three I2C controllers to the RZ/T2H SoC
+DTSI.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250707153533.287832-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 45 ++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index 107b7e6b7164..d034a78c8e01 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -90,6 +90,51 @@ sci0: serial@80005000 {
+ 			status = "disabled";
+ 		};
+ 
++		i2c0: i2c@80088000 {
++			compatible = "renesas,riic-r9a09g077";
++			reg = <0 0x80088000 0 0x400>;
++			interrupts = <GIC_SPI 614 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 615 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 616 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 617 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eei", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 100>;
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		i2c1: i2c@80088400 {
++			compatible = "renesas,riic-r9a09g077";
++			reg = <0 0x80088400 0 0x400>;
++			interrupts = <GIC_SPI 618 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 619 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 620 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 621 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eei", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 101>;
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		i2c2: i2c@81008000 {
++			compatible = "renesas,riic-r9a09g077";
++			reg = <0 0x81008000 0 0x400>;
++			interrupts = <GIC_SPI 622 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 623 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 624 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 625 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eei", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 601>;
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		cpg: clock-controller@80280000 {
+ 			compatible = "renesas,r9a09g077-cpg-mssr";
+ 			reg = <0 0x80280000 0 0x1000>,

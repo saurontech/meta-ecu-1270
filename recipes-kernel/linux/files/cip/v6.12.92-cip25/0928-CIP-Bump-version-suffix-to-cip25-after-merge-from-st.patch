@@ -1,0 +1,18 @@
+From d43ccea178aeee0ab91f6e050ffb04eacac67b41 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Tue, 9 Jun 2026 09:04:00 +0900
+Subject: [PATCH 928/928] CIP: Bump version suffix to -cip25 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index ddd0de2ae0e3..9e63432b2e14 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip24
++-cip25

@@ -1,0 +1,42 @@
+From 100ffab9f8bd7a553a5bb6a2094273449441ce9f Mon Sep 17 00:00:00 2001
+From: Robert Beckett <bob.beckett@collabora.com>
+Date: Fri, 20 Mar 2026 19:22:08 +0000
+Subject: [PATCH 071/432] nvme: respect NVME_QUIRK_DISABLE_WRITE_ZEROES when
+ wzsl is set
+
+commit 40f0496b617b431f8d2dd94d7f785c1121f8a68a upstream.
+
+The NVM Command Set Identify Controller data may report a non-zero
+Write Zeroes Size Limit (wzsl). When present, nvme_init_non_mdts_limits()
+unconditionally overrides max_zeroes_sectors from wzsl, even if
+NVME_QUIRK_DISABLE_WRITE_ZEROES previously set it to zero.
+
+This effectively re-enables write zeroes for devices that need it
+disabled, defeating the quirk. Several Kingston OM* drives rely on
+this quirk to avoid firmware issues with write zeroes commands.
+
+Check for the quirk before applying the wzsl override.
+
+Fixes: 5befc7c26e5a ("nvme: implement non-mdts command limits")
+Cc: stable@vger.kernel.org
+Signed-off-by: Robert Beckett <bob.beckett@collabora.com>
+Assisted-by: claude-opus-4-6-v1
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/nvme/host/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index de4b9e9db45d..122de4e35d45 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -3169,7 +3169,7 @@ static int nvme_init_non_mdts_limits(struct nvme_ctrl *ctrl)
+ 
+ 	ctrl->dmrl = id->dmrl;
+ 	ctrl->dmrsl = le32_to_cpu(id->dmrsl);
+-	if (id->wzsl)
++	if (id->wzsl && !(ctrl->quirks & NVME_QUIRK_DISABLE_WRITE_ZEROES))
+ 		ctrl->max_zeroes_sectors = nvme_mps_to_sectors(ctrl, id->wzsl);
+ 
+ free_data:

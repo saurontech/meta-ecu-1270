@@ -1,0 +1,178 @@
+From 4627b6c718ebab2038eb27d49df4e97aafcf0be8 Mon Sep 17 00:00:00 2001
+From: Judith Mendez <jm@ti.com>
+Date: Fri, 22 Aug 2025 10:16:14 -0400
+Subject: [PATCH] arm64: dts: ti: k3-am6*: Remove disable-wp for eMMC
+
+[ Upstream commit ef839ba8142f14513ba396a033110526b7008096 ]
+
+Remove disable-wp flag for eMMC nodes since this flag is
+only applicable to SD according to the binding doc
+(mmc/mmc-controller-common.yaml).
+
+For eMMC, this flag should be ignored but lets remove
+anyways to cleanup sdhci nodes.
+
+Signed-off-by: Judith Mendez <jm@ti.com>
+Reviewed-by: Moteen Shah <m-shah@ti.com>
+Link: https://lore.kernel.org/r/20250429151454.4160506-4-jm@ti.com
+Signed-off-by: Nishanth Menon <nm@ti.com>
+Stable-dep-of: a0b8da04153e ("arm64: dts: ti: k3-am62*: Move eMMC pinmux to top level board file")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts                      | 1 -
+ arch/arm64/boot/dts/ti/k3-am62-phycore-som.dtsi               | 1 -
+ arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts                | 1 -
+ arch/arm64/boot/dts/ti/k3-am625-sk.dts                        | 1 -
+ arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts                    | 1 -
+ arch/arm64/boot/dts/ti/k3-am62a-phycore-som.dtsi              | 1 -
+ arch/arm64/boot/dts/ti/k3-am62a7-sk.dts                       | 1 -
+ arch/arm64/boot/dts/ti/k3-am62p5-sk.dts                       | 1 -
+ arch/arm64/boot/dts/ti/k3-am642-evm.dts                       | 1 -
+ arch/arm64/boot/dts/ti/k3-am654-base-board.dts                | 1 -
+ arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-common.dtsi | 1 -
+ arch/arm64/boot/dts/ti/k3-am69-sk.dts                         | 1 -
+ 12 files changed, 12 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts b/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts
+index 5a14dc2ba665..41eac53a6658 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am62-lp-sk.dts
+@@ -130,7 +130,6 @@ &sdhci0 {
+ 	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+-	disable-wp;
+ };
+ 
+ &sdhci1 {
+diff --git a/arch/arm64/boot/dts/ti/k3-am62-phycore-som.dtsi b/arch/arm64/boot/dts/ti/k3-am62-phycore-som.dtsi
+index 2ef4cbaec789..9e3250afd459 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62-phycore-som.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am62-phycore-som.dtsi
+@@ -361,7 +361,6 @@ serial_flash: flash@0 {
+ &sdhci0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+-	disable-wp;
+ 	non-removable;
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts b/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts
+index 268a164f9601..c690a68dcdfd 100644
+--- a/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts
++++ b/arch/arm64/boot/dts/ti/k3-am625-beagleplay.dts
+@@ -849,7 +849,6 @@ &sdhci0 {
+ 	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&emmc_pins_default>;
+-	disable-wp;
+ 	status = "okay";
+ };
+ 
+diff --git a/arch/arm64/boot/dts/ti/k3-am625-sk.dts b/arch/arm64/boot/dts/ti/k3-am625-sk.dts
+index 6aafa8addc67..7b5853bcbc98 100644
+--- a/arch/arm64/boot/dts/ti/k3-am625-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am625-sk.dts
+@@ -172,7 +172,6 @@ &sdhci0 {
+ 	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+-	disable-wp;
+ };
+ 
+ &sdhci1 {
+diff --git a/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts b/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts
+index 6f9f932ca7c3..518e2c33fed5 100644
+--- a/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am6254xxl-sk.dts
+@@ -169,7 +169,6 @@ &sdhci0 {
+ 	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+-	disable-wp;
+ };
+ 
+ &sdhci1 {
+diff --git a/arch/arm64/boot/dts/ti/k3-am62a-phycore-som.dtsi b/arch/arm64/boot/dts/ti/k3-am62a-phycore-som.dtsi
+index a5aceaa39670..960a409d6fea 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62a-phycore-som.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am62a-phycore-som.dtsi
+@@ -324,7 +324,6 @@ serial_flash: flash@0 {
+ &sdhci0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+-	disable-wp;
+ 	non-removable;
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/ti/k3-am62a7-sk.dts b/arch/arm64/boot/dts/ti/k3-am62a7-sk.dts
+index b4b3bedbd829..ea10f9f74f65 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62a7-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am62a7-sk.dts
+@@ -673,7 +673,6 @@ &sdhci0 {
+ 	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&main_mmc0_pins_default>;
+-	disable-wp;
+ };
+ 
+ &sdhci1 {
+diff --git a/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts b/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts
+index b5f1499bac13..441730041bd2 100644
+--- a/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am62p5-sk.dts
+@@ -608,7 +608,6 @@ &sdhci0 {
+ 	status = "okay";
+ 	non-removable;
+ 	ti,driver-strength-ohm = <50>;
+-	disable-wp;
+ 	bootph-all;
+ };
+ 
+diff --git a/arch/arm64/boot/dts/ti/k3-am642-evm.dts b/arch/arm64/boot/dts/ti/k3-am642-evm.dts
+index 0bc42c8f179e..3c320f4b0f12 100644
+--- a/arch/arm64/boot/dts/ti/k3-am642-evm.dts
++++ b/arch/arm64/boot/dts/ti/k3-am642-evm.dts
+@@ -604,7 +604,6 @@ &sdhci0 {
+ 	status = "okay";
+ 	non-removable;
+ 	ti,driver-strength-ohm = <50>;
+-	disable-wp;
+ 	bootph-all;
+ };
+ 
+diff --git a/arch/arm64/boot/dts/ti/k3-am654-base-board.dts b/arch/arm64/boot/dts/ti/k3-am654-base-board.dts
+index aa7139cc8a92..c30425960398 100644
+--- a/arch/arm64/boot/dts/ti/k3-am654-base-board.dts
++++ b/arch/arm64/boot/dts/ti/k3-am654-base-board.dts
+@@ -456,7 +456,6 @@ &sdhci0 {
+ 	bus-width = <8>;
+ 	non-removable;
+ 	ti,driver-strength-ohm = <50>;
+-	disable-wp;
+ };
+ 
+ /*
+diff --git a/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-common.dtsi b/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-common.dtsi
+index ae842b85b70d..12af6cb7f65c 100644
+--- a/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-common.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-common.dtsi
+@@ -50,5 +50,4 @@ &sdhci0 {
+ 	bus-width = <8>;
+ 	non-removable;
+ 	ti,driver-strength-ohm = <50>;
+-	disable-wp;
+ };
+diff --git a/arch/arm64/boot/dts/ti/k3-am69-sk.dts b/arch/arm64/boot/dts/ti/k3-am69-sk.dts
+index 0798a7f52306..b0047884e0a9 100644
+--- a/arch/arm64/boot/dts/ti/k3-am69-sk.dts
++++ b/arch/arm64/boot/dts/ti/k3-am69-sk.dts
+@@ -950,7 +950,6 @@ &main_sdhci0 {
+ 	status = "okay";
+ 	non-removable;
+ 	ti,driver-strength-ohm = <50>;
+-	disable-wp;
+ };
+ 
+ &main_sdhci1 {

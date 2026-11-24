@@ -1,0 +1,48 @@
+From 6e40ebb999c2c3d2fbb3cacb61f0384ee6e69075 Mon Sep 17 00:00:00 2001
+From: Yang Yang <n05ec@lzu.edu.cn>
+Date: Fri, 20 Mar 2026 11:20:40 +0100
+Subject: [PATCH 682/851] batman-adv: avoid OGM aggregation when skb tailroom
+ is insufficient
+
+commit 0d4aef630be9d5f9c1227d07669c26c4383b5ad0 upstream.
+
+When OGM aggregation state is toggled at runtime, an existing forwarded
+packet may have been allocated with only packet_len bytes, while a later
+packet can still be selected for aggregation. Appending in this case can
+hit skb_put overflow conditions.
+
+Reject aggregation when the target skb tailroom cannot accommodate the new
+packet. The caller then falls back to creating a new forward packet
+instead of appending.
+
+Fixes: c6c8fea29769 ("net: Add batman-adv meshing protocol")
+Cc: stable@vger.kernel.org
+Reported-by: Yifan Wu <yifanwucs@gmail.com>
+Reported-by: Juefei Pu <tomapufckgml@gmail.com>
+Signed-off-by: Yuan Tan <tanyuan98@outlook.com>
+Signed-off-by: Xin Liu <bird@lzu.edu.cn>
+Signed-off-by: Ao Zhou <n05ec@lzu.edu.cn>
+Signed-off-by: Yang Yang <n05ec@lzu.edu.cn>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+[ Adjust context ]
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ net/batman-adv/bat_iv_ogm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
+index 209180b4c268..c31edbd7c2ab 100644
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -464,6 +464,9 @@ batadv_iv_ogm_can_aggregate(const struct batadv_ogm_packet *new_bat_ogm_packet,
+ 	    !time_after_eq(aggregation_end_time, forw_packet->send_time))
+ 		return false;
+ 
++	if (skb_tailroom(forw_packet->skb) < packet_len)
++		return false;
++
+ 	if (aggregated_bytes > BATADV_MAX_AGGREGATION_BYTES)
+ 		return false;
+ 

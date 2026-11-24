@@ -1,0 +1,111 @@
+From b016ed4d7d8facc95428b3099d25c0794d18cc1e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:07 +0100
+Subject: [PATCH 019/399] arm64: dts: renesas: Add pinctrl reset-names for
+ RZ/G2L and RZ/V2H family SoCs
+
+[ Upstream commit 998dd840cc7a54df214bc1a3751d5ad334e7dad1 ]
+
+Add reset-names properties to the pin control nodes for
+RZ/{G2L,G2UL,G3E,G3S} and RZ/{V2H,V2L,V2N} SoCs.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260317101627.174491-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g043.dtsi | 1 +
+ arch/arm64/boot/dts/renesas/r9a07g044.dtsi | 1 +
+ arch/arm64/boot/dts/renesas/r9a07g054.dtsi | 1 +
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 1 +
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 1 +
+ arch/arm64/boot/dts/renesas/r9a09g056.dtsi | 1 +
+ arch/arm64/boot/dts/renesas/r9a09g057.dtsi | 1 +
+ 7 files changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g043.dtsi b/arch/arm64/boot/dts/renesas/r9a07g043.dtsi
+index ff5f6b9c1e74..ce2023c01baa 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g043.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g043.dtsi
+@@ -604,6 +604,7 @@ pinctrl: pinctrl@11030000 {
+ 			resets = <&cpg R9A07G043_GPIO_RSTN>,
+ 				 <&cpg R9A07G043_GPIO_PORT_RESETN>,
+ 				 <&cpg R9A07G043_GPIO_SPARE_RESETN>;
++			reset-names = "rstn", "port", "spare";
+ 		};
+ 
+ 		dmac: dma-controller@11820000 {
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
+index 90f4d9d8c62a..e04cd730352e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
+@@ -902,6 +902,7 @@ pinctrl: pinctrl@11030000 {
+ 			resets = <&cpg R9A07G044_GPIO_RSTN>,
+ 				 <&cpg R9A07G044_GPIO_PORT_RESETN>,
+ 				 <&cpg R9A07G044_GPIO_SPARE_RESETN>;
++			reset-names = "rstn", "port", "spare";
+ 		};
+ 
+ 		irqc: interrupt-controller@110a0000 {
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g054.dtsi b/arch/arm64/boot/dts/renesas/r9a07g054.dtsi
+index 19b5c083d601..079c4fd405ad 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g054.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g054.dtsi
+@@ -910,6 +910,7 @@ pinctrl: pinctrl@11030000 {
+ 			resets = <&cpg R9A07G054_GPIO_RSTN>,
+ 				 <&cpg R9A07G054_GPIO_PORT_RESETN>,
+ 				 <&cpg R9A07G054_GPIO_SPARE_RESETN>;
++			reset-names = "rstn", "port", "spare";
+ 		};
+ 
+ 		irqc: interrupt-controller@110a0000 {
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index cb7dae9f7dd6..7a5f339728d5 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -497,6 +497,7 @@ pinctrl: pinctrl@11030000 {
+ 			resets = <&cpg R9A08G045_GPIO_RSTN>,
+ 				 <&cpg R9A08G045_GPIO_PORT_RESETN>,
+ 				 <&cpg R9A08G045_GPIO_SPARE_RESETN>;
++			reset-names = "rstn", "port", "spare";
+ 		};
+ 
+ 		irqc: interrupt-controller@11050000 {
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index 10b7b8a5c236..ec5e1132d9e1 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -265,6 +265,7 @@ pinctrl: pinctrl@10410000 {
+ 			interrupt-parent = <&icu>;
+ 			power-domains = <&cpg>;
+ 			resets = <&cpg 0xa5>, <&cpg 0xa6>;
++			reset-names = "main", "error";
+ 		};
+ 
+ 		cpg: clock-controller@10420000 {
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+index 9a244145c60d..03eeb06e0400 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+@@ -283,6 +283,7 @@ pinctrl: pinctrl@10410000 {
+ 			gpio-ranges = <&pinctrl 0 0 96>;
+ 			power-domains = <&cpg>;
+ 			resets = <&cpg 0xa5>, <&cpg 0xa6>;
++			reset-names = "main", "error";
+ 		};
+ 
+ 		cpg: clock-controller@10420000 {
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+index 7d0ee6ef4d20..0d36754ebe0c 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+@@ -265,6 +265,7 @@ pinctrl: pinctrl@10410000 {
+ 			interrupt-parent = <&icu>;
+ 			power-domains = <&cpg>;
+ 			resets = <&cpg 0xa5>, <&cpg 0xa6>;
++			reset-names = "main", "error";
+ 		};
+ 
+ 		cpg: clock-controller@10420000 {

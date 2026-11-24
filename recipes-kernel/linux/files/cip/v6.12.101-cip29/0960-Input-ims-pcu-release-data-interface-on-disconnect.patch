@@ -1,0 +1,33 @@
+From b65d6b6324245c2ea5505f344f5981e5abb4c72b Mon Sep 17 00:00:00 2001
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Date: Fri, 22 May 2026 10:22:55 -0700
+Subject: [PATCH 0960/1853] Input: ims-pcu - release data interface on
+ disconnect
+
+commit 441c510a649c8ddce38aa0311334ed8bb546b36c upstream.
+
+During probe the driver claims the data interface, but it never releases
+it. Release it in disconnect to avoid leaving it permanently claimed.
+
+Fixes: 628329d52474 ("Input: add IMS Passenger Control Unit driver")
+Cc: stable@vger.kernel.org
+Reported-by: Sashiko bot <sashiko-bot@kernel.org>
+Assisted-by: Gemini:gemini-3.1-pro
+Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/input/misc/ims-pcu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/input/misc/ims-pcu.c b/drivers/input/misc/ims-pcu.c
+index 2b3db353376d..c3de1547b4f0 100644
+--- a/drivers/input/misc/ims-pcu.c
++++ b/drivers/input/misc/ims-pcu.c
+@@ -2076,6 +2076,7 @@ static void ims_pcu_disconnect(struct usb_interface *intf)
+ 		ims_pcu_destroy_application_mode(pcu);
+ 
+ 	ims_pcu_buffers_free(pcu);
++	usb_driver_release_interface(&ims_pcu_driver, pcu->data_intf);
+ 	kfree(pcu);
+ }
+ 

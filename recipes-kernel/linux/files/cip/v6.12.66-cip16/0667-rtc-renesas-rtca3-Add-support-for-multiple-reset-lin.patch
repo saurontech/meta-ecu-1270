@@ -1,0 +1,37 @@
+From 0f750cc8c19c7dfce4c0e0246f848b8d2944e508 Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Fri, 9 Jan 2026 12:17:15 +0000
+Subject: [PATCH 667/838] rtc: renesas-rtca3: Add support for multiple reset
+ lines
+
+commit 6ada8e24238dd57b38faca503b09757e17819b05 upstream.
+
+Switch from devm_reset_control_get_shared() to
+devm_reset_control_array_get_shared() when retrieving resets.
+
+The RZ/V2H SoC requires two resets for the RTC block instead of one,
+so this will allow to handle multiple resets without additional changes.
+
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20251107210706.45044-3-ovidiu.panait.rb@renesas.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/rtc/rtc-renesas-rtca3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/rtc/rtc-renesas-rtca3.c b/drivers/rtc/rtc-renesas-rtca3.c
+index 09131a5a9c38..70f28980b9ce 100644
+--- a/drivers/rtc/rtc-renesas-rtca3.c
++++ b/drivers/rtc/rtc-renesas-rtca3.c
+@@ -726,7 +726,7 @@ static int rtca3_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	priv->rstc = devm_reset_control_get_shared(dev, NULL);
++	priv->rstc = devm_reset_control_array_get_shared(dev);
+ 	if (IS_ERR(priv->rstc))
+ 		return PTR_ERR(priv->rstc);
+ 

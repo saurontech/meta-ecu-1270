@@ -1,0 +1,37 @@
+From 684de1db32b114ce16df9c6a656620e473300c81 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 22 Nov 2024 12:45:37 +0000
+Subject: [PATCH 023/246] dt-bindings: serial: renesas: Document RZ/G3E
+ (r9a09g047) scif
+
+Commit d828c6726fe5642d1c71e9edbc4799c959b471cf upstream.
+
+Document scif bindings for the Renesas RZ/G3E (a.k.a r9a09g047) SoC.
+SCIF interface in Renesas RZ/G3E is similar to the one available in
+RZ/V2H.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://lore.kernel.org/r/20241122124558.149827-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/serial/renesas,scif.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/serial/renesas,scif.yaml b/Documentation/devicetree/bindings/serial/renesas,scif.yaml
+index 51d9fb0f4763..8e82999e6acb 100644
+--- a/Documentation/devicetree/bindings/serial/renesas,scif.yaml
++++ b/Documentation/devicetree/bindings/serial/renesas,scif.yaml
+@@ -83,6 +83,11 @@ properties:
+ 
+       - const: renesas,scif-r9a09g057       # RZ/V2H(P)
+ 
++      - items:
++          - enum:
++              - renesas,scif-r9a09g047      # RZ/G3E
++          - const: renesas,scif-r9a09g057   # RZ/V2H fallback
++
+   reg:
+     maxItems: 1
+ 

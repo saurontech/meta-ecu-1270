@@ -1,0 +1,78 @@
+From a87d12c33ab507904b56366184442f2cda46744b Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Thu, 8 Jan 2026 10:30:05 +0100
+Subject: [PATCH 671/838] bitops: add generic parity calculation for u8
+
+commit c320592f3f2a1e6a4e69e5db8e76fc66934a0a78 upstream.
+
+There are multiple open coded implementations for getting the parity of
+a byte in the kernel, even using different approaches. Take the pretty
+efficient version from SPD5118 driver and make it generally available by
+putting it into the bitops header. As long as there is just one parity
+calculation helper, the creation of a distinct 'parity.h' header was
+discarded. Also, the usage of hweight8() for architectures having a
+popcnt instruction is postponed until a use case within hot paths is
+desired. The motivation for this patch is the frequent use of odd parity
+in the I3C specification and to simplify drivers there.
+
+Changes compared to the original SPD5118 version are the addition of
+kernel documentation, switching the return type from bool to int, and
+renaming the argument of the function.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Guenter Roeck <linux@roeck-us.net>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Yury Norov <yury.norov@gmail.com>
+Reviewed-by: Kuan-Wei Chiu <visitorckw@gmail.com>
+Tested-by: Kuan-Wei Chiu <visitorckw@gmail.com>
+Link: https://lore.kernel.org/r/20250107090204.6593-2-wsa+renesas@sang-engineering.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ include/linux/bitops.h | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index 65d084abbc2c..9be2d50da09a 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -228,6 +228,37 @@ static inline int get_count_order_long(unsigned long l)
+ 	return (int)fls_long(--l);
+ }
+ 
++/**
++ * parity8 - get the parity of an u8 value
++ * @value: the value to be examined
++ *
++ * Determine the parity of the u8 argument.
++ *
++ * Returns:
++ * 0 for even parity, 1 for odd parity
++ *
++ * Note: This function informs you about the current parity. Example to bail
++ * out when parity is odd:
++ *
++ *	if (parity8(val) == 1)
++ *		return -EBADMSG;
++ *
++ * If you need to calculate a parity bit, you need to draw the conclusion from
++ * this result yourself. Example to enforce odd parity, parity bit is bit 7:
++ *
++ *	if (parity8(val) == 0)
++ *		val ^= BIT(7);
++ */
++static inline int parity8(u8 val)
++{
++	/*
++	 * One explanation of this algorithm:
++	 * https://funloop.org/codex/problem/parity/README.html
++	 */
++	val ^= val >> 4;
++	return (0x6996 >> (val & 0xf)) & 1;
++}
++
+ /**
+  * __ffs64 - find first set bit in a 64 bit word
+  * @word: The 64 bit word

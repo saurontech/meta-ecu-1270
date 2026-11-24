@@ -1,0 +1,18 @@
+From b07e307c89ed9b55ce626a6a4463a684ca26b5e9 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Date: Wed, 25 Jun 2025 13:54:15 +0900
+Subject: [PATCH 144/246] CIP: Bump version suffix to -cip3 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 21e806b58f25..0c9838ed9b88 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip2
++-cip3

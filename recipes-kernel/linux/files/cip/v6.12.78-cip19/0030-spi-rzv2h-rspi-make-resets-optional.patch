@@ -1,0 +1,35 @@
+From 0e829c11101fa503b731444a3ff37e88dc0b32d6 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:07 +0200
+Subject: [PATCH 030/851] spi: rzv2h-rspi: make resets optional
+
+commit aead5ae91e4cbadac817d15737eca3b531237448 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs don't have
+reset lines for the SPI peripheral, make them optional to prepare for
+adding support for them.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251119161434.595677-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index dcc431ba60a9..09b9362e9b1f 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -384,8 +384,8 @@ static int rzv2h_rspi_probe(struct platform_device *pdev)
+ 
+ 	rspi->resets[0].id = "presetn";
+ 	rspi->resets[1].id = "tresetn";
+-	ret = devm_reset_control_bulk_get_exclusive(dev, RSPI_RESET_NUM,
+-						    rspi->resets);
++	ret = devm_reset_control_bulk_get_optional_exclusive(dev, RSPI_RESET_NUM,
++							     rspi->resets);
+ 	if (ret)
+ 		return dev_err_probe(dev, ret, "cannot get resets\n");
+ 

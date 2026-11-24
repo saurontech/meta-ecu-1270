@@ -1,0 +1,65 @@
+From 8ec8a068f2f53c78284d097c35c48e35357326cd Mon Sep 17 00:00:00 2001
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+Date: Tue, 15 Oct 2024 14:36:33 +0100
+Subject: [PATCH 021/246] net: ravb: Enable IPv6 TX checksum offload for GbEth
+
+Commit 85c171509821af048a45b435e0fac36edba6a0cb upstream.
+
+The GbEth IP supports offloading IPv6 TCP, UDP & ICMPv6 checksums in the
+TX path.
+
+Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/ethernet/renesas/ravb.h      |  2 +-
+ drivers/net/ethernet/renesas/ravb_main.c | 15 +++++++++++----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index e1e55e677215..d7b3810ce21b 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -998,7 +998,7 @@ enum CSR1_BIT {
+ 	CSR1_TDHD	= 0x08000000,
+ };
+ 
+-#define CSR1_CSUM_ENABLE (CSR1_TTCP4 | CSR1_TUDP4)
++#define CSR1_CSUM_ENABLE (CSR1_TTCP4 | CSR1_TUDP4 | CSR1_TTCP6 | CSR1_TUDP6)
+ 
+ enum CSR2_BIT {
+ 	CSR2_RIP4	= 0x00000001,
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 02713c6e8c4d..5c76e07c09b2 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -2062,17 +2062,24 @@ static void ravb_tx_timeout_work(struct work_struct *work)
+ 
+ static bool ravb_can_tx_csum_gbeth(struct sk_buff *skb)
+ {
+-	struct iphdr *ip = ip_hdr(skb);
++	u8 inner_protocol;
+ 
+ 	/* TODO: Need to add support for VLAN tag 802.1Q */
+ 	if (skb_vlan_tag_present(skb))
+ 		return false;
+ 
+-	/* TODO: Need to add hardware checksum for IPv6 */
+-	if (skb->protocol != htons(ETH_P_IP))
++	switch (ntohs(skb->protocol)) {
++	case ETH_P_IP:
++		inner_protocol = ip_hdr(skb)->protocol;
++		break;
++	case ETH_P_IPV6:
++		inner_protocol = ipv6_hdr(skb)->nexthdr;
++		break;
++	default:
+ 		return false;
++	}
+ 
+-	switch (ip->protocol) {
++	switch (inner_protocol) {
+ 	case IPPROTO_TCP:
+ 	case IPPROTO_UDP:
+ 		return true;

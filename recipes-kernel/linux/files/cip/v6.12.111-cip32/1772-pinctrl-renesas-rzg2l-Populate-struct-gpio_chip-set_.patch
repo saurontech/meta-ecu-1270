@@ -1,0 +1,36 @@
+From 6fe6861701a269695ad7f016bc73c47f8d1072a3 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Tue, 15 Sep 2026 15:23:43 +0300
+Subject: [PATCH 1772/2868] pinctrl: renesas: rzg2l: Populate struct
+ gpio_chip::set_config
+
+commit 60a19a68779b1f24e3160c8e4317d0334a397687 upstream.
+
+Populate struct gpio_chip::set_config to allow various GPIO settings.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260515124008.2947838-3-claudiu.beznea@kernel.org
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index db8362951325..3f16b03c1ea1 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -3222,6 +3222,7 @@ static int rzg2l_gpio_register(struct rzg2l_pinctrl *pctrl)
+ 	chip->direction_output = rzg2l_gpio_direction_output;
+ 	chip->get = rzg2l_gpio_get;
+ 	chip->set = rzg2l_gpio_set;
++	chip->set_config = gpiochip_generic_config;
+ 	chip->label = name;
+ 	chip->parent = pctrl->dev;
+ 	chip->owner = THIS_MODULE;

@@ -1,0 +1,42 @@
+From 75a1ea301b5d9cba56617c5db6c3617d7149e6ab Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Fri, 3 Jul 2026 11:07:25 +0100
+Subject: [PATCH 265/286] irqchip/renesas-rzg2l: Simplify checks in
+ rzg2l_irqc_common_init()
+
+[ Upstream commit 0699e578e27910224ee09a55b824e5d494ce280f ]
+
+Both devm_pm_runtime_enable() and pm_runtime_resume_and_get()
+return 0 or a negative error code.
+
+Simplify the checks done with their respective return values
+accordingly.
+
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lore.kernel.org/all/20250212182034.366167-7-fabrizio.castro.jz@renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 1f0b83a00637..71635c6d9232 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -565,11 +565,11 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 	}
+ 
+ 	ret = devm_pm_runtime_enable(dev);
+-	if (ret < 0)
++	if (ret)
+ 		return dev_err_probe(dev, ret, "devm_pm_runtime_enable failed: %d\n", ret);
+ 
+ 	ret = pm_runtime_resume_and_get(dev);
+-	if (ret < 0)
++	if (ret)
+ 		return dev_err_probe(dev, ret, "pm_runtime_resume_and_get failed: %d\n", ret);
+ 
+ 	raw_spin_lock_init(&rzg2l_irqc_data->lock);

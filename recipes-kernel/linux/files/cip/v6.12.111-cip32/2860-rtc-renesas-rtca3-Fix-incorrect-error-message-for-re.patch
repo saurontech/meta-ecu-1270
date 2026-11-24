@@ -1,0 +1,36 @@
+From 6f21659f880f341c7b6c02cc5a2152daa70e5767 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 17 Sep 2026 10:16:14 +0100
+Subject: [PATCH 2860/2868] rtc: renesas-rtca3: Fix incorrect error message for
+ reset assert
+
+commit 09939630aad95fc3dc4cc2d94a5a96d7c4d6642f upstream.
+
+Update the message to "assert reset" to accurately reflect the
+operation being performed.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com> # on RZ/G3S
+Link: https://patch.msgid.link/20260602192559.1791344-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/rtc/rtc-renesas-rtca3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/rtc/rtc-renesas-rtca3.c b/drivers/rtc/rtc-renesas-rtca3.c
+index 77739a40419c..67ef34456288 100644
+--- a/drivers/rtc/rtc-renesas-rtca3.c
++++ b/drivers/rtc/rtc-renesas-rtca3.c
+@@ -702,7 +702,7 @@ static void rtca3_action(void *data)
+ 
+ 	ret = reset_control_assert(priv->rstc);
+ 	if (ret)
+-		dev_err(dev, "Failed to de-assert reset!");
++		dev_err(dev, "Failed to assert reset!");
+ 
+ 	ret = pm_runtime_put_sync(dev);
+ 	if (ret < 0)

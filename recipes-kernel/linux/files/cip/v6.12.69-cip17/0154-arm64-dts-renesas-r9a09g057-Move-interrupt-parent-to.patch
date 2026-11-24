@@ -1,0 +1,59 @@
+From da9fb145216bfbd10323fec2efefb9979f62a124 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 28 Jan 2026 13:26:48 +0000
+Subject: [PATCH 154/420] arm64: dts: renesas: r9a09g057: Move interrupt-parent
+ to root node
+
+commit 098da100b309be7f3698139ee60c7cfea6a13950 upstream.
+
+Move the "interrupt-parent = <&gic>" property from the soc node to the
+root node, and simplify "interrupts-extended = <&gic ...>" to
+"interrupts = <...>".
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/87ecrw8o87.wl-kuninori.morimoto.gx@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g057.dtsi | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+index 3eaa9b2698af..925df24693b3 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+@@ -12,6 +12,7 @@ / {
+ 	compatible = "renesas,r9a09g057";
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
++	interrupt-parent = <&gic>;
+ 
+ 	audio_extal_clk: audio-clk {
+ 		compatible = "fixed-clock";
+@@ -126,7 +127,6 @@ rtxin_clk: rtxin-clk {
+ 
+ 	soc: soc {
+ 		compatible = "simple-bus";
+-		interrupt-parent = <&gic>;
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 		ranges;
+@@ -1177,11 +1177,11 @@ stmmac_axi_setup: stmmac-axi-config {
+ 
+ 	timer {
+ 		compatible = "arm,armv8-timer";
+-		interrupts-extended = <&gic GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>,
+-				      <&gic GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>,
+-				      <&gic GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>,
+-				      <&gic GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>,
+-				      <&gic GIC_PPI 12 IRQ_TYPE_LEVEL_LOW>;
++		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>,
++			     <GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>,
++			     <GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>,
++			     <GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>,
++			     <GIC_PPI 12 IRQ_TYPE_LEVEL_LOW>;
+ 		interrupt-names = "sec-phys", "phys", "virt", "hyp-phys", "hyp-virt";
+ 	};
+ };

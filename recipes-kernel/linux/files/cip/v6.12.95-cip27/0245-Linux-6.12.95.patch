@@ -1,0 +1,39 @@
+From 296aabce459470a4c1b68ffd0c0c0920e563aaad Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Sat, 4 Jul 2026 13:43:36 +0200
+Subject: [PATCH 245/286] Linux 6.12.95
+
+Link: https://lore.kernel.org/r/20260702155118.667618796@linuxfoundation.org
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Salvatore Bonaccorso <carnil@debian.org>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Tested-by: Shung-Hsi Yu <shung-hsi.yu@suse.com>
+Tested-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+Tested-by: Pavel Machek (CIP) <pavel@nabladev.com>
+Link: https://lore.kernel.org/r/20260703072825.068705122@linuxfoundation.org
+Tested-by: Pavel Machek (CIP) <pavel@nabladev.com>
+Tested-by: Brett A C Sheffield <bacs@librecast.net>
+Tested-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+Tested-by: Mark Brown <broonie@kernel.org>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Ron Economos <re@w6rz.net>
+Tested-by: Miguel Ojeda <ojeda@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 3f5933a5c7e7..bcb9d2fd69a6 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ VERSION = 6
+ PATCHLEVEL = 12
+-SUBLEVEL = 94
++SUBLEVEL = 95
+ EXTRAVERSION =
+ NAME = Baby Opossum Posse
+ 

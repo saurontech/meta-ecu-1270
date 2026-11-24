@@ -1,0 +1,43 @@
+From 90ef353e6248653492f2a160099563595b440b9a Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Mon, 9 Mar 2026 07:51:04 +0000
+Subject: [PATCH 021/851] irqchip/renesas-rzv2h: Remove unneeded includes
+
+[ Upstream commit 41a5f82885e152c364e587ab30df4e582e96b73a ]
+
+The RZ/V2H ICU driver does not use clocks, of_address, or syscore.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lore.kernel.org/all/d4fbffc39af2eaa7bc50a0a97ffb3a22e3c4cb6a.1751446168.git.geert+renesas@glider.be
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index ea67da9459b7..6096199cce52 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -11,18 +11,15 @@
+ 
+ #include <linux/bitfield.h>
+ #include <linux/cleanup.h>
+-#include <linux/clk.h>
+ #include <linux/err.h>
+ #include <linux/io.h>
+ #include <linux/irqchip.h>
+ #include <linux/irqchip/irq-renesas-rzv2h.h>
+ #include <linux/irqdomain.h>
+-#include <linux/of_address.h>
+ #include <linux/of_platform.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include <linux/spinlock.h>
+-#include <linux/syscore_ops.h>
+ 
+ /* DT "interrupts" indexes */
+ #define ICU_IRQ_START				1

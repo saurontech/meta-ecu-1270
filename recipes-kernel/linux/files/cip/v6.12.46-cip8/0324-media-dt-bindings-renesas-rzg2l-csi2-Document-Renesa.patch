@@ -1,0 +1,123 @@
+From 01b28b8d767c9983fe7e23ef99dd6cfaf5119fcb Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:02 +0200
+Subject: [PATCH 324/643] media: dt-bindings: renesas,rzg2l-csi2: Document
+ Renesas RZ/V2H(P) SoC
+
+commit 52e39050616aa7e72ea0f6330501368d5f6925e1 upstream.
+
+The MIPI CSI-2 block on the Renesas RZ/V2H(P) SoC is similar to the one
+found on the Renesas RZ/G2L SoC, with the following differences:
+- A different D-PHY
+- Additional registers for the MIPI CSI-2 link
+- Only two clocks
+
+Add a new compatible string, `renesas,r9a09g057-csi2`, for the RZ/V2H(P)
+SoC.
+
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-2-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/media/renesas,rzg2l-csi2.yaml    | 59 ++++++++++++++-----
+ 1 file changed, 44 insertions(+), 15 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml b/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml
+index 7faa12fecd5b..1f9ee37584b3 100644
+--- a/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml
++++ b/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml
+@@ -17,12 +17,14 @@ description:
+ 
+ properties:
+   compatible:
+-    items:
+-      - enum:
+-          - renesas,r9a07g043-csi2       # RZ/G2UL
+-          - renesas,r9a07g044-csi2       # RZ/G2{L,LC}
+-          - renesas,r9a07g054-csi2       # RZ/V2L
+-      - const: renesas,rzg2l-csi2
++    oneOf:
++      - items:
++          - enum:
++              - renesas,r9a07g043-csi2 # RZ/G2UL
++              - renesas,r9a07g044-csi2 # RZ/G2{L,LC}
++              - renesas,r9a07g054-csi2 # RZ/V2L
++          - const: renesas,rzg2l-csi2
++      - const: renesas,r9a09g057-csi2 # RZ/V2H(P)
+ 
+   reg:
+     maxItems: 1
+@@ -31,16 +33,24 @@ properties:
+     maxItems: 1
+ 
+   clocks:
+-    items:
+-      - description: Internal clock for connecting CRU and MIPI
+-      - description: CRU Main clock
+-      - description: CRU Register access clock
++    oneOf:
++      - items:
++          - description: Internal clock for connecting CRU and MIPI
++          - description: CRU Main clock
++          - description: CRU Register access clock
++      - items:
++          - description: CRU Main clock
++          - description: CRU Register access clock
+ 
+   clock-names:
+-    items:
+-      - const: system
+-      - const: video
+-      - const: apb
++    oneOf:
++      - items:
++          - const: system
++          - const: video
++          - const: apb
++      - items:
++          - const: video
++          - const: apb
+ 
+   power-domains:
+     maxItems: 1
+@@ -48,7 +58,7 @@ properties:
+   resets:
+     items:
+       - description: CRU_PRESETN reset terminal
+-      - description: CRU_CMN_RSTB reset terminal
++      - description: D-PHY reset (CRU_CMN_RSTB or CRU_n_S_RESETN)
+ 
+   reset-names:
+     items:
+@@ -101,6 +111,25 @@ required:
+   - reset-names
+   - ports
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g057-csi2
++    then:
++      properties:
++        clocks:
++          maxItems: 2
++        clock-names:
++          maxItems: 2
++    else:
++      properties:
++        clocks:
++          minItems: 3
++        clock-names:
++          minItems: 3
++
+ additionalProperties: false
+ 
+ examples:

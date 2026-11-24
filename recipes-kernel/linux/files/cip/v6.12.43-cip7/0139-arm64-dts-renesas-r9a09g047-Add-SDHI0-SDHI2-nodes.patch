@@ -1,0 +1,92 @@
+From 2b4b4fd61d4af0272ea0c20a665c52c8b64e2e22 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:13 +0200
+Subject: [PATCH 139/246] arm64: dts: renesas: r9a09g047: Add SDHI0-SDHI2 nodes
+
+commit c4e4e22870acae3a3fe3fe0638f85175976dc906 upstream.
+
+Add SDHI0-SDHI2 nodes to RZ/G3E ("R9A09G047") SoC DTSI.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/20250206134047.67866-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 60 ++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index 133aa3272d3a..928757b52b4a 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -403,6 +403,66 @@ gic: interrupt-controller@14900000 {
+ 			interrupt-controller;
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW>;
+ 		};
++
++		sdhi0: mmc@15c00000  {
++			compatible = "renesas,sdhi-r9a09g047", "renesas,sdhi-r9a09g057";
++			reg = <0x0 0x15c00000 0 0x10000>;
++			interrupts = <GIC_SPI 735 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 736 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 0xa3>, <&cpg CPG_MOD 0xa5>,
++				 <&cpg CPG_MOD 0xa4>, <&cpg CPG_MOD 0xa6>;
++			clock-names = "core", "clkh", "cd", "aclk";
++			resets = <&cpg 0xa7>;
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			sdhi0_vqmmc: vqmmc-regulator {
++				regulator-name = "SDHI0-VQMMC";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				status = "disabled";
++			};
++		};
++
++		sdhi1: mmc@15c10000 {
++			compatible = "renesas,sdhi-r9a09g047", "renesas,sdhi-r9a09g057";
++			reg = <0x0 0x15c10000 0 0x10000>;
++			interrupts = <GIC_SPI 737 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 738 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 0xa7>, <&cpg CPG_MOD 0xa9>,
++				 <&cpg CPG_MOD 0xa8>, <&cpg CPG_MOD 0xaa>;
++			clock-names = "core", "clkh", "cd", "aclk";
++			resets = <&cpg 0xa8>;
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			sdhi1_vqmmc: vqmmc-regulator {
++				regulator-name = "SDHI1-VQMMC";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				status = "disabled";
++			};
++		};
++
++		sdhi2: mmc@15c20000 {
++			compatible = "renesas,sdhi-r9a09g047", "renesas,sdhi-r9a09g057";
++			reg = <0x0 0x15c20000 0 0x10000>;
++			interrupts = <GIC_SPI 739 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 740 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 0xab>, <&cpg CPG_MOD 0xad>,
++				 <&cpg CPG_MOD 0xac>, <&cpg CPG_MOD 0xae>;
++			clock-names = "core", "clkh", "cd", "aclk";
++			resets = <&cpg 0xa9>;
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			sdhi2_vqmmc: vqmmc-regulator {
++				regulator-name = "SDHI2-VQMMC";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				status = "disabled";
++			};
++		};
+ 	};
+ 
+ 	timer {

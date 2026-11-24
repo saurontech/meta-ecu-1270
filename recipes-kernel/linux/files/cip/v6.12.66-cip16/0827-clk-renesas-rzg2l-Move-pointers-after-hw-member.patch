@@ -1,0 +1,51 @@
+From ef47753054dd6e161c47218fb9362bcb4886dc4a Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:35:53 +0200
+Subject: [PATCH 827/838] clk: renesas: rzg2l: Move pointers after hw member
+
+commit a68ea80f85bbf7b69f69ef9e17e3e1be14d948c8 upstream.
+
+Reorder the pointer members in struct mstp_clock so they appear immediately
+after the hw member. This helps avoid potential padding and eliminates the
+need for any calculations in the to_mod_clock() macro. As struct clk_hw
+currently contains only pointers, placing it first also avoids padding.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20250514090415.4098534-3-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index e4f2d974f38a..dd94eca21b19 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1190,19 +1190,19 @@ rzg2l_cpg_register_core_clk(const struct cpg_core_clk *core,
+  * struct mstp_clock - MSTP gating clock
+  *
+  * @hw: handle between common and hardware-specific interfaces
++ * @priv: CPG/MSTP private data
++ * @sibling: pointer to the other coupled clock
+  * @off: register offset
+  * @bit: ON/MON bit
+  * @enabled: soft state of the clock, if it is coupled with another clock
+- * @priv: CPG/MSTP private data
+- * @sibling: pointer to the other coupled clock
+  */
+ struct mstp_clock {
+ 	struct clk_hw hw;
++	struct rzg2l_cpg_priv *priv;
++	struct mstp_clock *sibling;
+ 	u16 off;
+ 	u8 bit;
+ 	bool enabled;
+-	struct rzg2l_cpg_priv *priv;
+-	struct mstp_clock *sibling;
+ };
+ 
+ #define to_mod_clock(_hw) container_of(_hw, struct mstp_clock, hw)

@@ -1,0 +1,103 @@
+From a8a7f779d047002f8aa0500a6b3aefb666aac020 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:42 +0200
+Subject: [PATCH 364/643] media: rzg2l-cru: Add function pointer to check if
+ FIFO is empty
+
+commit 446c645f7fe480a4420072728faa1f261530b984 upstream.
+
+Add a `fifo_empty` function pointer to the `rzg2l_cru_info` structure and
+pass it as part of the OF data. On RZ/G3E and RZ/V2H(P) SoCs, checking if
+the FIFO is empty requires a different register configuration.
+
+Implement `rzg2l_fifo_empty()` and update the code to use it from the
+function pointer.
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-16-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../platform/renesas/rzg2l-cru/rzg2l-core.c   |  1 +
+ .../platform/renesas/rzg2l-cru/rzg2l-cru.h    |  3 +++
+ .../platform/renesas/rzg2l-cru/rzg2l-video.c  | 23 +++++++++++++------
+ 3 files changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+index 1522c3b10c73..ccdac9785014 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-core.c
+@@ -359,6 +359,7 @@ static const struct rzg2l_cru_info rzgl2_cru_info = {
+ 	.irq_handler = rzg2l_cru_irq,
+ 	.enable_interrupts = rzg2l_cru_enable_interrupts,
+ 	.disable_interrupts = rzg2l_cru_disable_interrupts,
++	.fifo_empty = rzg2l_fifo_empty,
+ };
+ 
+ static const struct of_device_id rzg2l_cru_of_id_table[] = {
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+index 3f694044d8cd..2e17bfef43ce 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-cru.h
+@@ -88,6 +88,7 @@ struct rzg2l_cru_info {
+ 	irqreturn_t (*irq_handler)(int irq, void *data);
+ 	void (*enable_interrupts)(struct rzg2l_cru_dev *cru);
+ 	void (*disable_interrupts)(struct rzg2l_cru_dev *cru);
++	bool (*fifo_empty)(struct rzg2l_cru_dev *cru);
+ };
+ 
+ /**
+@@ -185,4 +186,6 @@ const struct rzg2l_cru_ip_format *rzg2l_cru_ip_index_to_fmt(u32 index);
+ void rzg2l_cru_enable_interrupts(struct rzg2l_cru_dev *cru);
+ void rzg2l_cru_disable_interrupts(struct rzg2l_cru_dev *cru);
+ 
++bool rzg2l_fifo_empty(struct rzg2l_cru_dev *cru);
++
+ #endif
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index d5a9149baeca..ddd4c2ce12c5 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -290,9 +290,23 @@ static int rzg2l_cru_initialize_image_conv(struct rzg2l_cru_dev *cru,
+ 	return 0;
+ }
+ 
+-void rzg2l_cru_stop_image_processing(struct rzg2l_cru_dev *cru)
++bool rzg2l_fifo_empty(struct rzg2l_cru_dev *cru)
+ {
+ 	u32 amnfifopntr, amnfifopntr_w, amnfifopntr_r_y;
++
++	amnfifopntr = rzg2l_cru_read(cru, AMnFIFOPNTR);
++
++	amnfifopntr_w = amnfifopntr & AMnFIFOPNTR_FIFOWPNTR;
++	amnfifopntr_r_y =
++		(amnfifopntr & AMnFIFOPNTR_FIFORPNTR_Y) >> 16;
++	if (amnfifopntr_w == amnfifopntr_r_y)
++		return true;
++
++	return amnfifopntr_w == amnfifopntr_r_y;
++}
++
++void rzg2l_cru_stop_image_processing(struct rzg2l_cru_dev *cru)
++{
+ 	unsigned int retries = 0;
+ 	unsigned long flags;
+ 	u32 icnms;
+@@ -320,12 +334,7 @@ void rzg2l_cru_stop_image_processing(struct rzg2l_cru_dev *cru)
+ 
+ 	/* Wait until the FIFO becomes empty */
+ 	for (retries = 5; retries > 0; retries--) {
+-		amnfifopntr = rzg2l_cru_read(cru, AMnFIFOPNTR);
+-
+-		amnfifopntr_w = amnfifopntr & AMnFIFOPNTR_FIFOWPNTR;
+-		amnfifopntr_r_y =
+-			(amnfifopntr & AMnFIFOPNTR_FIFORPNTR_Y) >> 16;
+-		if (amnfifopntr_w == amnfifopntr_r_y)
++		if (cru->info->fifo_empty(cru))
+ 			break;
+ 
+ 		usleep_range(10, 20);

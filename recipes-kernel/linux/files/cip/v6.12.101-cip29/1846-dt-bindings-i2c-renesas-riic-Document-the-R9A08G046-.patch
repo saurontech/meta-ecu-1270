@@ -1,0 +1,32 @@
+From 04dd2efdd5994a50f178a4c239170a3664111166 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 3 Aug 2026 15:58:17 +0100
+Subject: [PATCH 1846/1853] dt-bindings: i2c: renesas,riic: Document the
+ R9A08G046 support
+
+[ Upstream commit 58ea47a30b7dd2053545d5e7cae37b640b0dc442 ]
+
+Document the Renesas RZ/G3L (R9A08G046) RIIC IP. This is compatible with
+the version available on Renesas RZ/V2H (R9A09G057).
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ Documentation/devicetree/bindings/i2c/renesas,riic.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+index 6876eade431b..ae1f71eadc66 100644
+--- a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
++++ b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+@@ -25,6 +25,7 @@ properties:
+       - items:
+           - enum:
+               - renesas,riic-r9a08g045   # RZ/G3S
++              - renesas,riic-r9a08g046   # RZ/G3L
+               - renesas,riic-r9a09g047   # RZ/G3E
+               - renesas,riic-r9a09g056   # RZ/V2N
+           - const: renesas,riic-r9a09g057   # RZ/V2H(P)

@@ -1,0 +1,64 @@
+From 55a88ab8a1314de7b92d1305b6b23ccc2dfa779b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Asbj=C3=B8rn=20Sloth=20T=C3=B8nnesen?= <ast@fiberby.net>
+Date: Sat, 28 Feb 2026 18:08:53 +0000
+Subject: [PATCH 632/851] io_uring/uring_cmd: fix too strict requirement on
+ ioctl
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit 600b665b903733bd60334e86031b157cc823ee55 ]
+
+Attempting SOCKET_URING_OP_SETSOCKOPT on an AF_NETLINK socket resulted
+in an -EOPNOTSUPP, as AF_NETLINK doesn't have an ioctl in its struct
+proto, but only in struct proto_ops.
+
+Prior to the blamed commit, io_uring_cmd_sock() only had two cmd_op
+operations, both requiring ioctl, thus the check was warranted.
+
+Since then, 4 new cmd_op operations have been added, none of which
+depend on ioctl. This patch moves the ioctl check, so it only applies
+to the original operations.
+
+AFAICT, the ioctl requirement was unintentional, and it wasn't
+visible in the blamed patch within 3 lines of context.
+
+Cc: stable@vger.kernel.org
+Fixes: a5d2f99aff6b ("io_uring/cmd: Introduce SOCKET_URING_OP_GETSOCKOPT")
+Signed-off-by: Asbjørn Sloth Tønnesen <ast@fiberby.net>
+Reviewed-by: Gabriel Krisman Bertazi <krisman@suse.de>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+[Asbjørn: function moved in commit 91db6edc573b; updated subject prefix]
+Signed-off-by: Asbjørn Sloth Tønnesen <ast@fiberby.net>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ io_uring/uring_cmd.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/io_uring/uring_cmd.c b/io_uring/uring_cmd.c
+index f927844c8ada..e5d0cc8a8a56 100644
+--- a/io_uring/uring_cmd.c
++++ b/io_uring/uring_cmd.c
+@@ -338,16 +338,19 @@ int io_uring_cmd_sock(struct io_uring_cmd *cmd, unsigned int issue_flags)
+ 	struct proto *prot = READ_ONCE(sk->sk_prot);
+ 	int ret, arg = 0;
+ 
+-	if (!prot || !prot->ioctl)
+-		return -EOPNOTSUPP;
+-
+ 	switch (cmd->cmd_op) {
+ 	case SOCKET_URING_OP_SIOCINQ:
++		if (!prot || !prot->ioctl)
++			return -EOPNOTSUPP;
++
+ 		ret = prot->ioctl(sk, SIOCINQ, &arg);
+ 		if (ret)
+ 			return ret;
+ 		return arg;
+ 	case SOCKET_URING_OP_SIOCOUTQ:
++		if (!prot || !prot->ioctl)
++			return -EOPNOTSUPP;
++
+ 		ret = prot->ioctl(sk, SIOCOUTQ, &arg);
+ 		if (ret)
+ 			return ret;

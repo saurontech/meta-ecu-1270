@@ -1,0 +1,45 @@
+From 707ba5bc8ea2007b0c96b9480a3581469d2aaab1 Mon Sep 17 00:00:00 2001
+From: "Diogo Ivo (Schneider Electric)" <diogo.ivo@bootlin.com>
+Date: Fri, 7 Aug 2026 13:06:58 +0200
+Subject: [PATCH 226/854] mmc: sdhci_am654: Reset command and data lines on
+ failed tuning
+
+commit 7197d9107d9545730153b82ea5a411c5208b443f upstream.
+
+The CMD/DATA reset after tuning should be performed regardless of
+whether tuning succeeded or failed, since tuning data may remain in
+the buffer in either case. Move the error return after the reset so
+that the controller is always cleaned up.
+
+Fixes: de31f6ab68a3 ("mmc: sdhci_am654: Reset Command and Data line after tuning")
+Cc: stable@vger.kernel.org
+Signed-off-by: Diogo Ivo (Schneider Electric) <diogo.ivo@bootlin.com>
+Reviewed-by: Judith Mendez <jm@ti.com>
+Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+Signed-off-by: Ulf Hansson <ulfh@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/mmc/host/sdhci_am654.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/mmc/host/sdhci_am654.c b/drivers/mmc/host/sdhci_am654.c
+index 1e8b22c342fc7..fd9ac72cfa768 100644
+--- a/drivers/mmc/host/sdhci_am654.c
++++ b/drivers/mmc/host/sdhci_am654.c
+@@ -418,15 +418,13 @@ static int sdhci_am654_execute_tuning(struct mmc_host *mmc, u32 opcode)
+ 	struct sdhci_host *host = mmc_priv(mmc);
+ 	int err = sdhci_execute_tuning(mmc, opcode);
+ 
+-	if (err)
+-		return err;
+ 	/*
+ 	 * Tuning data remains in the buffer after tuning.
+ 	 * Do a command and data reset to get rid of it
+ 	 */
+ 	sdhci_reset(host, SDHCI_RESET_CMD | SDHCI_RESET_DATA);
+ 
+-	return 0;
++	return err;
+ }
+ 
+ static u32 sdhci_am654_cqhci_irq(struct sdhci_host *host, u32 intmask)

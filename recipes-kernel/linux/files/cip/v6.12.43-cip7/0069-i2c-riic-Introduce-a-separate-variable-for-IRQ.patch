@@ -1,0 +1,46 @@
+From a5233a81ce7b2a2af011dbeda901da61e29165da Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 23 Apr 2025 22:04:51 +0100
+Subject: [PATCH 069/246] i2c: riic: Introduce a separate variable for IRQ
+
+commit 76dc16296124ec478ec9ac011f0b9b52462c88d5 upstream.
+
+Refactor the IRQ handling in riic_i2c_probe by introducing a local variable
+`irq` to store IRQ numbers instead of assigning them to `ret`. This change
+improves code readability and clarity.
+
+Suggested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/i2c/busses/i2c-riic.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index 2c982199782f..0df5a024140b 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -464,11 +464,13 @@ static int riic_i2c_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(riic_irqs); i++) {
+-		ret = platform_get_irq(pdev, riic_irqs[i].res_num);
+-		if (ret < 0)
+-			return ret;
++		int irq;
++
++		irq = platform_get_irq(pdev, riic_irqs[i].res_num);
++		if (irq < 0)
++			return irq;
+ 
+-		ret = devm_request_irq(dev, ret, riic_irqs[i].isr,
++		ret = devm_request_irq(dev, irq, riic_irqs[i].isr,
+ 				       0, riic_irqs[i].name, riic);
+ 		if (ret) {
+ 			dev_err(dev, "failed to request irq %s\n", riic_irqs[i].name);

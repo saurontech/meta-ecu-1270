@@ -1,0 +1,45 @@
+From 301416ebb21967c19bce6336b92eba343f7dd1e9 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:22 +0100
+Subject: [PATCH 205/246] can: rcar_canfd: Update RCANFD_GAFLCFG macro
+
+commit a2427e44942bb772cf4e416df45b569a0e35b1cb upstream.
+
+Update RCANFD_GAFLCFG macro by replacing the parameter ch->w, where w is
+the GAFLCFG index used in the hardware manual.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-9-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 6b87c1548f68..fded4da50103 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -290,7 +290,7 @@
+ /* RSCFDnCFDGAFLECTR / RSCFDnGAFLECTR */
+ #define RCANFD_GAFLECTR			(0x0098)
+ /* RSCFDnCFDGAFLCFG / RSCFDnGAFLCFG */
+-#define RCANFD_GAFLCFG(ch)		(0x009c + (0x04 * ((ch) / 2)))
++#define RCANFD_GAFLCFG(w)		(0x009c + (0x04 * (w)))
+ /* RSCFDnCFDRMNB / RSCFDnRMNB */
+ #define RCANFD_RMNB			(0x00a4)
+ /* RSCFDnCFDRMND / RSCFDnRMND */
+@@ -678,8 +678,9 @@ static void rcar_canfd_setrnc(struct rcar_canfd_global *gpriv, unsigned int ch,
+ {
+ 	unsigned int shift = reg_gen4(gpriv, 16, 24) - (ch & 1) * reg_gen4(gpriv, 16, 8);
+ 	u32 rnc = num_rules << shift;
++	unsigned int w = ch / 2;
+ 
+-	rcar_canfd_set_bit(gpriv->base, RCANFD_GAFLCFG(ch), rnc);
++	rcar_canfd_set_bit(gpriv->base, RCANFD_GAFLCFG(w), rnc);
+ }
+ 
+ static void rcar_canfd_set_mode(struct rcar_canfd_global *gpriv)

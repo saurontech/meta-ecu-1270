@@ -1,0 +1,40 @@
+From 59dbe2a6f51046848f5d9d5585b6bfadd84786f8 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:11 +0000
+Subject: [PATCH 022/838] arm64: dts: renesas: rzt2h-n2h-evk-common: Enable
+ EEPROM on I2C0
+
+commit 0176c9e82e1080952828b3badcdccf51206a8189 upstream.
+
+Enable support for the R1EX24016 EEPROM connected to I2C0 on the
+Renesas RZ/T2H and RZ/N2H Evaluation Kits.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250820200659.2048755-7-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+index 06300f806685..1b7e16ffe6b6 100644
+--- a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+@@ -25,6 +25,14 @@ &extal_clk {
+ 	clock-frequency = <25000000>;
+ };
+ 
++&i2c0 {
++	eeprom: eeprom@50 {
++		compatible = "renesas,r1ex24016", "atmel,24c16";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
++};
++
+ &pinctrl {
+ 	/*
+ 	 * SCI0 Pin Configuration:

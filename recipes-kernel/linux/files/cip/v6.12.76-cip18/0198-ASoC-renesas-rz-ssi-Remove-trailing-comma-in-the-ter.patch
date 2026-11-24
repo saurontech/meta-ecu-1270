@@ -1,0 +1,35 @@
+From c96c27dab336d95959d404e6d6f31cccf6e1e90f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 26 Feb 2026 19:28:39 +0000
+Subject: [PATCH 0198/1190] ASoC: renesas: rz-ssi: Remove trailing comma in the
+ terminator entry
+
+[ Upstream commit a472f0b157832fc91c83179b1628d8f660c84c82 ]
+
+Remove trailing comma in the terminator entry for OF table. While at it,
+add a space between the braces and comment block.
+
+Reviewed-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251114075856.4751-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ sound/soc/sh/rz-ssi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/sh/rz-ssi.c b/sound/soc/sh/rz-ssi.c
+index c5658fe0aaea..7ffe26c17433 100644
+--- a/sound/soc/sh/rz-ssi.c
++++ b/sound/soc/sh/rz-ssi.c
+@@ -1252,7 +1252,7 @@ static void rz_ssi_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id rz_ssi_of_match[] = {
+ 	{ .compatible = "renesas,rz-ssi", },
+-	{/* Sentinel */},
++	{ /* Sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, rz_ssi_of_match);
+ 

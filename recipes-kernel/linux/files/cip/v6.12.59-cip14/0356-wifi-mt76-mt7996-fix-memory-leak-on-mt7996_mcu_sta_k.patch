@@ -1,0 +1,33 @@
+From da91687f01f4640f89eb05f6bc782f002195d1b7 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Mon, 15 Sep 2025 09:59:00 +0200
+Subject: [PATCH 356/768] wifi: mt76: mt7996: fix memory leak on
+ mt7996_mcu_sta_key_tlv error
+
+[ Upstream commit 7c0f63fe37a5da2c13fc35c89053b31be8ead895 ]
+
+Free the allocated skb on error
+
+Link: https://patch.msgid.link/20250915075910.47558-5-nbd@nbd.name
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 5f5544b6214c..8738e4b64542 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -2283,8 +2283,10 @@ int mt7996_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 		return PTR_ERR(skb);
+ 
+ 	ret = mt7996_mcu_sta_key_tlv(wcid, skb, key, cmd);
+-	if (ret)
++	if (ret) {
++		dev_kfree_skb(skb);
+ 		return ret;
++	}
+ 
+ 	return mt76_mcu_skb_send_msg(dev, skb, mcu_cmd, true);
+ }

@@ -1,0 +1,18 @@
+From 8b714c505b491852ae2b1d290a0c377f95d7f8ed Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Date: Fri, 8 Aug 2025 09:49:50 +0900
+Subject: [PATCH 223/246] CIP: Bump version suffix to -cip6 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index f6c9e0a9a498..8b900f831287 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip5
++-cip6

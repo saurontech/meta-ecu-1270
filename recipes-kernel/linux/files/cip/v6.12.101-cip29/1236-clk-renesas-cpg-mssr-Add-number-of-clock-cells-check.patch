@@ -1,0 +1,35 @@
+From f9ca8c107c0029844f8001fb7248a8cb3b10f957 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Sat, 1 Aug 2026 10:14:32 +0100
+Subject: [PATCH 1236/1853] clk: renesas: cpg-mssr: Add number of clock cells
+ check
+
+[ Upstream commit 7f0c422c7fbfd9294ff9321ada0c63561e5c6ea0 ]
+
+The number of clock cells is not validated in the clock provider's
+clk_src_get() callback.  Add the missing check.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/46e010659ffdffd5e3541369f3b65d43ebe236ec.1777562043.git.geert+renesas@glider.be
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/clk/renesas/renesas-cpg-mssr.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/renesas-cpg-mssr.c b/drivers/clk/renesas/renesas-cpg-mssr.c
+index e4d42e24485d..ab4a1263b9fb 100644
+--- a/drivers/clk/renesas/renesas-cpg-mssr.c
++++ b/drivers/clk/renesas/renesas-cpg-mssr.c
+@@ -378,6 +378,9 @@ struct clk *cpg_mssr_clk_src_twocell_get(struct of_phandle_args *clkspec,
+ 	struct clk *clk;
+ 	int range_check;
+ 
++	if (clkspec->args_count != 2)
++		return ERR_PTR(-EINVAL);
++
+ 	switch (clkspec->args[0]) {
+ 	case CPG_CORE:
+ 		type = "core";

@@ -1,0 +1,39 @@
+From c9d5e44cbb89e47c72de5fa92c72eb85ba3d1e93 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:02 +0100
+Subject: [PATCH 185/246] clk: renesas: rzv2h: Update error message
+
+commit 43961f7ee3f31c97209157bd19420ea8a65b1181 upstream.
+
+Update the error message in `rzv2h_mod_clock_endisable()` to provide
+clearer debugging information. Instead of printing only the register
+address, include both the `GET_CLK_ON_OFFSET(reg)` offset and the
+corresponding `clk` name (`%pC`). This enhances readability and aids
+in debugging clock enable failures.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250211105603.195905-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 5eed2d92782e..6226f1b14d03 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -543,8 +543,8 @@ static int rzv2h_mod_clock_endisable(struct clk_hw *hw, bool enable)
+ 	error = readl_poll_timeout_atomic(priv->base + reg, value,
+ 					  value & bitmask, 0, 10);
+ 	if (error)
+-		dev_err(dev, "Failed to enable CLK_ON %p\n",
+-			priv->base + reg);
++		dev_err(dev, "Failed to enable CLK_ON 0x%x/%pC\n",
++			GET_CLK_ON_OFFSET(clock->on_index), hw->clk);
+ 
+ 	return error;
+ }

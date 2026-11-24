@@ -1,0 +1,65 @@
+From 02d61341bcb3d9c12a6fddaea17be3ec236bfa79 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:51 +0200
+Subject: [PATCH 588/600] spi: rzv2h-rspi: set MUST_RX/MUST_TX
+
+commit 6f9026b5a18acdf190d1622831b100aacfca0eb3 upstream.
+
+In preparation for implementing DMA support, set MUST_RX and MUST_TX
+flags on the controller so that we always receive non-NULL buffers.
+
+The PIO mode already handles this manually by checking if rx_buf/tx_buf
+are set on the transfer, and doing a dummy read/write if not.
+
+DMA will not be able to implement this special handling, and although
+the SPI controller advertises support for transmit-only or receive-only
+transfers via SPCR's register TXMD bitfield, it does not seem to work.
+
+Remove the special handling for PIO and let the SPI controller core
+handle it.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-7-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index 50fd7ddef58d..f0bbbd21c763 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -113,11 +113,7 @@ struct rzv2h_rspi_priv {
+ static inline void rzv2h_rspi_tx_##type(struct rzv2h_rspi_priv *rspi,	\
+ 					const void *txbuf,		\
+ 					unsigned int index) {		\
+-	type buf = 0;							\
+-									\
+-	if (txbuf)							\
+-		buf = ((type *)txbuf)[index];				\
+-									\
++	type buf = ((type *)txbuf)[index];				\
+ 	func(buf, rspi->base + RSPI_SPDR);				\
+ }
+ 
+@@ -126,9 +122,7 @@ static inline void rzv2h_rspi_rx_##type(struct rzv2h_rspi_priv *rspi,	\
+ 					void *rxbuf,			\
+ 					unsigned int index) {		\
+ 	type buf = func(rspi->base + RSPI_SPDR);			\
+-									\
+-	if (rxbuf)							\
+-		((type *)rxbuf)[index] = buf;				\
++	((type *)rxbuf)[index] = buf;					\
+ }
+ 
+ RZV2H_RSPI_TX(writel, u32)
+@@ -596,6 +590,7 @@ static int rzv2h_rspi_probe(struct platform_device *pdev)
+ 
+ 	controller->mode_bits = SPI_CPHA | SPI_CPOL | SPI_CS_HIGH |
+ 				SPI_LSB_FIRST | SPI_LOOP;
++	controller->flags = SPI_CONTROLLER_MUST_RX | SPI_CONTROLLER_MUST_TX;
+ 	controller->bits_per_word_mask = SPI_BPW_RANGE_MASK(4, 32);
+ 	controller->prepare_message = rzv2h_rspi_prepare_message;
+ 	controller->unprepare_message = rzv2h_rspi_unprepare_message;

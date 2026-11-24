@@ -1,0 +1,135 @@
+From deb6bd0b641d1cd00738bff30f7f5d90cd0fa384 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 8 Jul 2026 11:12:35 +0300
+Subject: [PATCH 1229/1853] phy: renesas: rcar-gen3-usb2: Add suspend/resume
+ support
+
+commit 942a7a6bf4c6a8661324539f686a34c9448610bd upstream.
+
+The Renesas RZ/G3S supports a power saving mode where power to most of the
+SoC components is turned off. The USB PHY is among these components.
+Because of this the settings applied in driver probe need to be executed
+also on resume path. On suspend path only reset signal need to be asserted.
+Add suspend/resume support.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://patch.msgid.link/20251119120418.686224-3-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 57 +++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index 6127c0b4b944..1628ede79f9a 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -132,6 +132,7 @@ struct rcar_gen3_chan {
+ 	struct device *dev;	/* platform_device's device */
+ 	const struct rcar_gen3_phy_drv_data *phy_data;
+ 	struct extcon_dev *extcon;
++	struct reset_control *rstc;
+ 	struct rcar_gen3_phy rphys[NUM_OF_PHYS];
+ 	struct regulator *vbus;
+ 	struct work_struct work;
+@@ -778,38 +779,24 @@ static void rcar_gen3_reset_assert(void *data)
+ static int rcar_gen3_phy_usb2_init_bus(struct rcar_gen3_chan *channel)
+ {
+ 	struct device *dev = channel->dev;
+-	struct reset_control *rstc;
+ 	int ret;
+ 	u32 val;
+ 
+ 	if (!channel->phy_data->init_bus)
+ 		return 0;
+ 
+-	rstc = devm_reset_control_array_get_shared(dev);
+-	if (IS_ERR(rstc))
+-		return PTR_ERR(rstc);
+-
+ 	ret = pm_runtime_resume_and_get(dev);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = reset_control_deassert(rstc);
+-	if (ret)
+-		goto rpm_put;
+-
+-	ret = devm_add_action_or_reset(dev, rcar_gen3_reset_assert, rstc);
+-	if (ret)
+-		goto rpm_put;
+-
+ 	val = readl(channel->base + USB2_AHB_BUS_CTR);
+ 	val &= ~USB2_AHB_BUS_CTR_MBL_MASK;
+ 	val |= USB2_AHB_BUS_CTR_MBL_INCR4;
+ 	writel(val, channel->base + USB2_AHB_BUS_CTR);
+ 
+-rpm_put:
+ 	pm_runtime_put(dev);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static int rcar_gen3_phy_usb2_probe(struct platform_device *pdev)
+@@ -849,6 +836,18 @@ static int rcar_gen3_phy_usb2_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	channel->rstc = devm_reset_control_array_get_optional_shared(dev);
++	if (IS_ERR(channel->rstc))
++		return PTR_ERR(channel->rstc);
++
++	ret = reset_control_deassert(channel->rstc);
++	if (ret)
++		return ret;
++
++	ret = devm_add_action_or_reset(dev, rcar_gen3_reset_assert, channel->rstc);
++	if (ret)
++		return ret;
++
+ 	/*
+ 	 * devm_phy_create() will call pm_runtime_enable(&phy->dev);
+ 	 * And then, phy-core will manage runtime pm for this device.
+@@ -937,10 +936,38 @@ static void rcar_gen3_phy_usb2_remove(struct platform_device *pdev)
+ 	pm_runtime_disable(&pdev->dev);
+ };
+ 
++static int rcar_gen3_phy_usb2_suspend(struct device *dev)
++{
++	struct rcar_gen3_chan *channel = dev_get_drvdata(dev);
++
++	return reset_control_assert(channel->rstc);
++}
++
++static int rcar_gen3_phy_usb2_resume(struct device *dev)
++{
++	struct rcar_gen3_chan *channel = dev_get_drvdata(dev);
++	int ret;
++
++	ret = reset_control_deassert(channel->rstc);
++	if (ret)
++		return ret;
++
++	ret = rcar_gen3_phy_usb2_init_bus(channel);
++	if (ret)
++		reset_control_assert(channel->rstc);
++
++	return ret;
++}
++
++static DEFINE_SIMPLE_DEV_PM_OPS(rcar_gen3_phy_usb2_pm_ops,
++				rcar_gen3_phy_usb2_suspend,
++				rcar_gen3_phy_usb2_resume);
++
+ static struct platform_driver rcar_gen3_phy_usb2_driver = {
+ 	.driver = {
+ 		.name		= "phy_rcar_gen3_usb2",
+ 		.of_match_table	= rcar_gen3_phy_usb2_match_table,
++		.pm		= pm_ptr(&rcar_gen3_phy_usb2_pm_ops),
+ 	},
+ 	.probe	= rcar_gen3_phy_usb2_probe,
+ 	.remove_new = rcar_gen3_phy_usb2_remove,

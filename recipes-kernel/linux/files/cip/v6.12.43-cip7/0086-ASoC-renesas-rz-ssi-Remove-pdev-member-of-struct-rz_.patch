@@ -1,0 +1,40 @@
+From b888e523fc678259f6f9dbafc1e76b289113b417 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:31:44 +0300
+Subject: [PATCH 086/246] ASoC: renesas: rz-ssi: Remove pdev member of struct
+ rz_ssi_priv
+
+commit a73710a25808a585a2bf0a8325eb16fd6a2f370c upstream.
+
+Remove the pdev member of struct rz_ssi_priv as it is not used.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20241210170953.2936724-8-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ sound/soc/sh/rz-ssi.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/sound/soc/sh/rz-ssi.c b/sound/soc/sh/rz-ssi.c
+index 97147faa6b2f..bcb9656853d5 100644
+--- a/sound/soc/sh/rz-ssi.c
++++ b/sound/soc/sh/rz-ssi.c
+@@ -99,7 +99,6 @@ struct rz_ssi_stream {
+ 
+ struct rz_ssi_priv {
+ 	void __iomem *base;
+-	struct platform_device *pdev;
+ 	struct reset_control *rstc;
+ 	struct device *dev;
+ 	struct clk *sfr_clk;
+@@ -1047,7 +1046,6 @@ static int rz_ssi_probe(struct platform_device *pdev)
+ 	if (!ssi)
+ 		return -ENOMEM;
+ 
+-	ssi->pdev = pdev;
+ 	ssi->dev = &pdev->dev;
+ 	ssi->base = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
+ 	if (IS_ERR(ssi->base))

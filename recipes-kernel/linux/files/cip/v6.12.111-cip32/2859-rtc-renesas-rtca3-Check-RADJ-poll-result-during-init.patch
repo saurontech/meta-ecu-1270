@@ -1,0 +1,37 @@
+From 6de09c9620d76ff9c4e1b22af922d664fd46770e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 17 Sep 2026 10:16:13 +0100
+Subject: [PATCH 2859/2868] rtc: renesas-rtca3: Check RADJ poll result during
+ initial setup
+
+commit fafb016d081200c7652e84202f8ba5951e659a53 upstream.
+
+In rtca3_initial_setup(), the driver clears the RTCA3_RADJ register and
+waits for it to reach zero using readb_poll_timeout(). Check the return
+value of readb_poll_timeout() and propagate the error if the poll fails.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com> # on RZ/G3S
+Link: https://patch.msgid.link/20260602192559.1791344-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/rtc/rtc-renesas-rtca3.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/rtc/rtc-renesas-rtca3.c b/drivers/rtc/rtc-renesas-rtca3.c
+index 78d2418501b3..77739a40419c 100644
+--- a/drivers/rtc/rtc-renesas-rtca3.c
++++ b/drivers/rtc/rtc-renesas-rtca3.c
+@@ -634,6 +634,8 @@ static int rtca3_initial_setup(struct clk *clk, struct rtca3_priv *priv)
+ 	writeb(0, priv->base + RTCA3_RADJ);
+ 	ret = readb_poll_timeout(priv->base + RTCA3_RADJ, tmp, !tmp, 10,
+ 				 RTCA3_DEFAULT_TIMEOUT_US);
++	if (ret)
++		return ret;
+ 
+ 	/* Start the RTC and enable automatic time error adjustment. */
+ 	mask = RTCA3_RCR2_START | RTCA3_RCR2_AADJE;

@@ -1,0 +1,54 @@
+From ea34bde390a860ffeb0653e01ab8f08fb8f90415 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 17 Jun 2026 10:35:02 +0200
+Subject: [PATCH 599/600] arm64: dts: renesas: r9a09g047e57-smarc: Enable RSPI0
+
+commit 19ca423f61b66ee3328b6a2f35fbb3ff2c8566f5 upstream.
+
+Enable RSPI0 on the RZ/G3E SMARC EVK, where it is accessible on the
+PMOD0 connector.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/b634c10e632fed07b5652c11de060deca27ead90.1771344527.git.tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts      | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 3e24e916874f..9be57785d9d5 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -183,6 +183,13 @@ rsci9_pins: rsci9 {
+ 		bias-pull-up;
+ 	};
+ 
++	rspi0_pins: rspi0 {
++		pinmux = <RZG3E_PORT_PINMUX(M, 4, 2)>, /* MISOA */
++			 <RZG3E_PORT_PINMUX(M, 5, 2)>, /* MOSIA */
++			 <RZG3E_PORT_PINMUX(M, 6, 2)>, /* RSPCKA */
++			 <RZG3E_PORT_PINMUX(M, 7, 2)>; /* SSLA0 */
++	};
++
+ 	scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";
+ 		renesas,output-impedance = <1>;
+@@ -250,6 +257,15 @@ &rsci9 {
+ };
+ #endif
+ 
++&rspi0 {
++	pinctrl-0 = <&rspi0_pins>;
++	pinctrl-names = "default";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	status = "okay";
++};
++
+ &scif0 {
+ 	pinctrl-0 = <&scif_pins>;
+ 	pinctrl-names = "default";

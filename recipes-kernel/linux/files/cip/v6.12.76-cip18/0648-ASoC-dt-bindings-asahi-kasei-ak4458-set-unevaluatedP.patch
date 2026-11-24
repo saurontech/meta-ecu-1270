@@ -1,0 +1,36 @@
+From cbebce4ddfabb165207bee5d6851cab0c9cbcc5b Mon Sep 17 00:00:00 2001
+From: Shengjiu Wang <shengjiu.wang@nxp.com>
+Date: Thu, 12 Feb 2026 10:18:27 +0800
+Subject: [PATCH 0648/1190] ASoC: dt-bindings: asahi-kasei,ak4458: set
+ unevaluatedProperties:false
+
+commit 50a634f1d795721ce68583c78ba493f1d7aa8bc2 upstream.
+
+When including the dai-common.yaml, and allow '#sound-dai-cells' and
+"sound-name-prefix' to be used, should use unevaluatedProperties:false
+according to writing-bindings.rst.
+
+Fixes: 8d7de4a014f5 ("ASoC: dt-bindings: asahi-kasei,ak4458: Reference common DAI properties")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shengjiu Wang <shengjiu.wang@nxp.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260212021829.3244736-2-shengjiu.wang@nxp.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Documentation/devicetree/bindings/sound/asahi-kasei,ak4458.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/sound/asahi-kasei,ak4458.yaml b/Documentation/devicetree/bindings/sound/asahi-kasei,ak4458.yaml
+index 4477f84b7acc..08c64084ed31 100644
+--- a/Documentation/devicetree/bindings/sound/asahi-kasei,ak4458.yaml
++++ b/Documentation/devicetree/bindings/sound/asahi-kasei,ak4458.yaml
+@@ -56,7 +56,7 @@ allOf:
+       properties:
+         dsd-path: false
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |

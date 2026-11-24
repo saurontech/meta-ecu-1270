@@ -1,0 +1,48 @@
+From 7cb8b87c4ea36a15bd0ee82cdfdb4a2a8d0dc104 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:10 +0100
+Subject: [PATCH 022/399] arm64: dts: renesas: r9a08g046: Add pincontrol node
+
+[ Upstream commit ea82a68bb33691ea16188b6b9bef15cde874a193 ]
+
+Add pincontrol node to RZ/G3L ("R9A08G046") SoC DTSI and set the icu as
+the interrupt-parent of the pin controller to route GPIO interrupts
+through the IA55 interrupt controller.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430125342.439755-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g046.dtsi | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+index 232a0e299df7..0cedf5a38291 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g046.dtsi
+@@ -204,10 +204,21 @@ sysc: system-controller@11020000 {
+ 		};
+ 
+ 		pinctrl: pinctrl@11030000 {
++			compatible = "renesas,r9a08g046-pinctrl";
+ 			reg = <0 0x11030000 0 0x10000>;
+ 			gpio-controller;
+ 			#gpio-cells = <2>;
+-			/* placeholder */
++			gpio-ranges = <&pinctrl 0 0 232>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			interrupt-parent = <&icu>;
++			clocks = <&cpg CPG_MOD R9A08G046_GPIO_HCLK>;
++			power-domains = <&cpg>;
++			resets = <&cpg R9A08G046_GPIO_RSTN>,
++				 <&cpg R9A08G046_GPIO_PORT_RESETN>,
++				 <&cpg R9A08G046_GPIO_SPARE_RESETN>;
++			reset-names = "rstn", "port", "spare";
++			renesas,clonech = <&sysc 0xe2c>;
+ 		};
+ 
+ 		icu: interrupt-controller@11050000 {

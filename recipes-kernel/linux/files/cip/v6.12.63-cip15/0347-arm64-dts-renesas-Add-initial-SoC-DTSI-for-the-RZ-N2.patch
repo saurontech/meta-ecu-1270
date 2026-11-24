@@ -1,0 +1,160 @@
+From 88cdfdbeb66b2f29960f8922a08ab00a95945a8a Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:51 +0000
+Subject: [PATCH 347/724] arm64: dts: renesas: Add initial SoC DTSI for the
+ RZ/N2H SoC
+
+commit 4b3d31f0b81fefae5874467081496467af0f05a7 upstream.
+
+Add the initial SoC DTSI for the Renesas RZ/N2H ("R9A09G087") SoC, below
+is the list of blocks added:
+  - EXT CLKs
+  - 4x CA55
+  - SCIF
+  - CPG
+  - GIC
+  - ARMv8 Timer
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250617171957.162145-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-32-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g087.dtsi | 124 +++++++++++++++++++++
+ 1 file changed, 124 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087.dtsi b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+new file mode 100644
+index 000000000000..e57a91adcb68
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a09g087.dtsi
+@@ -0,0 +1,124 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/N2H SoC
++ *
++ * Copyright (C) 2025 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++
++/ {
++	compatible = "renesas,r9a09g087";
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		cpu0: cpu@0 {
++			compatible = "arm,cortex-a55";
++			reg = <0>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++		};
++
++		cpu1: cpu@100 {
++			compatible = "arm,cortex-a55";
++			reg = <0x100>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++		};
++
++		cpu2: cpu@200 {
++			compatible = "arm,cortex-a55";
++			reg = <0x200>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++		};
++
++		cpu3: cpu@300 {
++			compatible = "arm,cortex-a55";
++			reg = <0x300>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++		};
++
++		L3_CA55: cache-controller-0 {
++			compatible = "cache";
++			cache-unified;
++			cache-size = <0x100000>;
++			cache-level = <3>;
++		};
++	};
++
++	extal_clk: extal {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by the board */
++		clock-frequency = <0>;
++	};
++
++	psci {
++		compatible = "arm,psci-1.0", "arm,psci-0.2";
++		method = "smc";
++	};
++
++	soc: soc {
++		compatible = "simple-bus";
++		interrupt-parent = <&gic>;
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		sci0: serial@80005000 {
++			compatible = "renesas,r9a09g087-rsci", "renesas,r9a09g077-rsci";
++			reg = <0 0x80005000 0 0x400>;
++			interrupts = <GIC_SPI 590 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 591 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 592 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 593 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD 8>, <&cpg CPG_CORE R9A09G087_CLK_PCLKM>;
++			clock-names = "operation", "bus";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		cpg: clock-controller@80280000 {
++			compatible = "renesas,r9a09g087-cpg-mssr";
++			reg = <0 0x80280000 0 0x1000>,
++			      <0 0x81280000 0 0x9000>;
++			clocks = <&extal_clk>;
++			clock-names = "extal";
++			#clock-cells = <2>;
++			#reset-cells = <1>;
++			#power-domain-cells = <0>;
++		};
++
++		gic: interrupt-controller@83000000 {
++			compatible = "arm,gic-v3";
++			reg = <0x0 0x83000000 0 0x40000>,
++			      <0x0 0x83040000 0 0x160000>;
++			#interrupt-cells = <3>;
++			#address-cells = <0>;
++			interrupt-controller;
++			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW>;
++		};
++	};
++
++	timer {
++		compatible = "arm,armv8-timer";
++		interrupts-extended = <&gic GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 12 IRQ_TYPE_LEVEL_LOW>;
++		interrupt-names = "sec-phys", "phys", "virt", "hyp-phys", "hyp-virt";
++	};
++};

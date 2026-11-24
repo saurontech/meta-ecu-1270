@@ -1,0 +1,33 @@
+From 891320c628d5b0bda30ecea51db5edab4862d546 Mon Sep 17 00:00:00 2001
+From: Yosry Ahmed <yosry@kernel.org>
+Date: Tue, 3 Mar 2026 00:34:04 +0000
+Subject: [PATCH 136/432] KVM: nSVM: Clear GIF on nested #VMEXIT(INVALID)
+
+commit f85a6ce06e4a0d49652f57967a649ab09e06287c upstream.
+
+According to the APM, GIF is set to 0 on any #VMEXIT, including
+an #VMEXIT(INVALID) due to failed consistency checks. Clear GIF on
+consistency check failures.
+
+Fixes: 3d6368ef580a ("KVM: SVM: Add VMRUN handler")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yosry Ahmed <yosry@kernel.org>
+Link: https://patch.msgid.link/20260303003421.2185681-11-yosry@kernel.org
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ arch/x86/kvm/svm/nested.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/kvm/svm/nested.c b/arch/x86/kvm/svm/nested.c
+index 4c1b2057e060..634a512ed76f 100644
+--- a/arch/x86/kvm/svm/nested.c
++++ b/arch/x86/kvm/svm/nested.c
+@@ -886,6 +886,7 @@ int nested_svm_vmrun(struct kvm_vcpu *vcpu)
+ 		vmcb12->control.exit_code_hi = -1u;
+ 		vmcb12->control.exit_info_1  = 0;
+ 		vmcb12->control.exit_info_2  = 0;
++		svm_set_gif(svm, false);
+ 		goto out;
+ 	}
+ 

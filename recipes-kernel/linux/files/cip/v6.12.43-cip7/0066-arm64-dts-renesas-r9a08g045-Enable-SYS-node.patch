@@ -1,0 +1,32 @@
+From 8dde623f3f5cd60f9545b4f770a70aff8cddfbc4 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 23 Apr 2025 19:13:58 +0100
+Subject: [PATCH 066/246] arm64: dts: renesas: r9a08g045: Enable SYS node
+
+commit 495af7647560c2b3a9c3107ea81dfd7d7c8a38c0 upstream.
+
+Enable the System Controller.  It is needed for SoC identification.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250123170508.13578-8-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index be8a0a768c65..40e0b9f2b0b4 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -206,7 +206,6 @@ sysc: system-controller@11020000 {
+ 				     <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+ 			interrupt-names = "lpm_int", "ca55stbydone_int",
+ 					  "cm33stbyr_int", "ca55_deny";
+-			status = "disabled";
+ 		};
+ 
+ 		pinctrl: pinctrl@11030000 {

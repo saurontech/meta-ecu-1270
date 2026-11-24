@@ -1,0 +1,38 @@
+From 0e0433377fbba38f32a00024bb118d73f5dbc449 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Tue, 5 May 2026 20:18:15 -0700
+Subject: [PATCH 2072/2868] sparc64: uprobes: add missing break
+
+[ Upstream commit 5b0eee4cd812bd6547eea393cb9b5c0322f26c88 ]
+
+Missing fallthrough causes failure with newer compilers:
+
+arch/sparc/kernel/uprobes.c:284:2: error: unannotated fall-through between switch labels [-Werror,-Wimplicit-fallthrough]
+  284 |         default:
+      |         ^
+arch/sparc/kernel/uprobes.c:284:2: note: insert 'break;' to avoid fall-through
+  284 |         default:
+      |         ^
+      |         break;
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Reviewed-by: Masami Hiramatsu (Google) <mhiramat@kernel.org>
+Reviewed-by: Andreas Larsson <andreas@gaisler.com>
+Signed-off-by: Andreas Larsson <andreas@gaisler.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/sparc/kernel/uprobes.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/sparc/kernel/uprobes.c b/arch/sparc/kernel/uprobes.c
+index 305017bec164..c8cac64e9988 100644
+--- a/arch/sparc/kernel/uprobes.c
++++ b/arch/sparc/kernel/uprobes.c
+@@ -280,6 +280,7 @@ int arch_uprobe_exception_notify(struct notifier_block *self,
+ 	case DIE_SSTEP:
+ 		if (uprobe_post_sstep_notifier(args->regs))
+ 			ret = NOTIFY_STOP;
++		break;
+ 
+ 	default:
+ 		break;

@@ -1,0 +1,42 @@
+From 7d0f411992c3b39d2b95fab4825ab0d8ab7028d4 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 14 Jul 2026 11:18:30 +0100
+Subject: [PATCH 001/399] arm64: dts: renesas: r9a07g043: Add max-frequency to
+ SDHI nodes
+
+[ Upstream commit f82892de7f4878f54a4035be06f3acc6e6449616 ]
+
+Add the max-frequency property set to 133333333 Hz (133.33 MHz) to both
+SDHI0 and SDHI1 MMC controller nodes in the RZ/{G2UL,Five} (r9a07g043)
+device tree, increasing performance by ca. 33%.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260520115144.60067-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g043.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g043.dtsi b/arch/arm64/boot/dts/renesas/r9a07g043.dtsi
+index 593c66b27ad1..ff5f6b9c1e74 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g043.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g043.dtsi
+@@ -655,6 +655,7 @@ sdhi0: mmc@11c00000 {
+ 				 <&cpg CPG_MOD R9A07G043_SDHI0_IMCLK2>,
+ 				 <&cpg CPG_MOD R9A07G043_SDHI0_ACLK>;
+ 			clock-names = "core", "clkh", "cd", "aclk";
++			max-frequency = <133333333>;
+ 			resets = <&cpg R9A07G043_SDHI0_IXRST>;
+ 			power-domains = <&cpg>;
+ 			status = "disabled";
+@@ -671,6 +672,7 @@ sdhi1: mmc@11c10000 {
+ 				 <&cpg CPG_MOD R9A07G043_SDHI1_IMCLK2>,
+ 				 <&cpg CPG_MOD R9A07G043_SDHI1_ACLK>;
+ 			clock-names = "core", "clkh", "cd", "aclk";
++			max-frequency = <133333333>;
+ 			resets = <&cpg R9A07G043_SDHI1_IXRST>;
+ 			power-domains = <&cpg>;
+ 			status = "disabled";

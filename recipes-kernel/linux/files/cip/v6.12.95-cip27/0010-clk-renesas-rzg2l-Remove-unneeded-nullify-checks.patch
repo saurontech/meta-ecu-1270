@@ -1,0 +1,47 @@
+From 3bfc258eba1ad07a61d8720cc9aa59f8a1f2d3b6 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 30 Jun 2026 12:47:29 +0100
+Subject: [PATCH 010/286] clk: renesas: rzg2l: Remove unneeded nullify checks
+
+[ Upstream commit 653395e63d53723f29b8cc1aa6bc4cbb873c7b7b ]
+
+RZ/G2L family clock drivers never had a need to nullify clocks.
+Remove the unneeded checks.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/64702c33396dde2689b44d3e326aa1727ef1557a.1740126560.git.geert+renesas@glider.be
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/rzg2l-cpg.c | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzg2l-cpg.c b/drivers/clk/renesas/rzg2l-cpg.c
+index 7d9d41f4f439..0852fb27e039 100644
+--- a/drivers/clk/renesas/rzg2l-cpg.c
++++ b/drivers/clk/renesas/rzg2l-cpg.c
+@@ -1238,11 +1238,6 @@ rzg2l_cpg_register_core_clk(const struct cpg_core_clk *core,
+ 	WARN_DEBUG(id >= priv->num_core_clks);
+ 	WARN_DEBUG(PTR_ERR(priv->clks[id]) != -ENOENT);
+ 
+-	if (!core->name) {
+-		/* Skip NULLified clock */
+-		return;
+-	}
+-
+ 	switch (core->type) {
+ 	case CLK_TYPE_IN:
+ 		clk = of_clk_get_by_name(priv->dev->of_node, core->name);
+@@ -1672,11 +1667,6 @@ rzg2l_cpg_register_mod_clk(const struct rzg2l_mod_clk *mod,
+ 	WARN_DEBUG(mod->parent >= priv->num_core_clks + priv->num_mod_clks);
+ 	WARN_DEBUG(PTR_ERR(priv->clks[id]) != -ENOENT);
+ 
+-	if (!mod->name) {
+-		/* Skip NULLified clock */
+-		return;
+-	}
+-
+ 	parent = priv->clks[mod->parent];
+ 	if (IS_ERR(parent)) {
+ 		clk = parent;

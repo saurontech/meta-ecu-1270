@@ -1,0 +1,59 @@
+From 73b9cfa1bba04d6969b61660232aaacfe7523186 Mon Sep 17 00:00:00 2001
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Date: Mon, 29 Dec 2025 08:41:31 +0000
+Subject: [PATCH 046/838] net: stmmac: Fix VLAN 0 deletion in
+ vlan_del_hw_rx_fltr()
+
+commit d9db25723677c3741a0cf3643f7f7429fc983921 upstream.
+
+When the "rx-vlan-filter" feature is enabled on a network device, the 8021q
+module automatically adds a VLAN 0 hardware filter when the device is
+brought administratively up.
+
+For stmmac, this causes vlan_add_hw_rx_fltr() to create a new entry for
+VID 0 in the mac_device_info->vlan_filter array, in the following format:
+
+    VLAN_TAG_DATA_ETV | VLAN_TAG_DATA_VEN | vid
+
+Here, VLAN_TAG_DATA_VEN indicates that the hardware filter is enabled for
+that VID.
+
+However, on the delete path, vlan_del_hw_rx_fltr() searches the vlan_filter
+array by VID only, without verifying whether a VLAN entry is enabled. As a
+result, when the 8021q module attempts to remove VLAN 0, the function may
+mistakenly match a zero-initialized slot rather than the actual VLAN 0
+entry, causing incorrect deletions and leaving stale entries in the
+hardware table.
+
+Fix this by verifying that the VLAN entry's enable bit (VLAN_TAG_DATA_VEN)
+is set before matching and deleting by VID. This ensures only active VLAN
+entries are removed and avoids leaving stale entries in the VLAN filter
+table, particularly for VLAN ID 0.
+
+Fixes: ed64639bc1e08 ("net: stmmac: Add support for VLAN Rx filtering")
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Maxime Chevallier <maxime.chevallier@bootlin.com>
+Link: https://patch.msgid.link/20251113112721.70500-2-ovidiu.panait.rb@renesas.com
+Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+[OP: Applied the fix in dwmac4_del_hw_vlan_rx_fltr() function]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c b/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c
+index e65a65666cc1..4a409ccfb2c7 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c
+@@ -570,7 +570,8 @@ static int dwmac4_del_hw_vlan_rx_fltr(struct net_device *dev,
+ 
+ 	/* Extended Rx VLAN Filter Enable */
+ 	for (i = 0; i < hw->num_vlan; i++) {
+-		if ((hw->vlan_filter[i] & GMAC_VLAN_TAG_DATA_VID) == vid) {
++		if ((hw->vlan_filter[i] & GMAC_VLAN_TAG_DATA_VEN) &&
++		    (hw->vlan_filter[i] & GMAC_VLAN_TAG_DATA_VID) == vid) {
+ 			ret = dwmac4_write_vlan_filter(dev, hw, i, 0);
+ 
+ 			if (!ret)

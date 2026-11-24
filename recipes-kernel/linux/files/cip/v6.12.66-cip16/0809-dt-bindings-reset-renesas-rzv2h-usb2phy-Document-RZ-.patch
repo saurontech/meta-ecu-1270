@@ -1,0 +1,44 @@
+From e45e678e7a805aeeefd2da1a59f0ae6e8b3c1efc Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 19 Jan 2026 12:51:43 +0000
+Subject: [PATCH 809/838] dt-bindings: reset: renesas,rzv2h-usb2phy: Document
+ RZ/V2N SoC support
+
+commit fd4a06a2e1661893c5353f8b01bf6ae44cbe094d upstream.
+
+Document support for the USB2PHY reset controller found on the Renesas
+RZ/V2N (R9A09G056) SoC. The reset controller IP is functionally identical
+to that on the RZ/V2H(P) SoC, so no driver changes are needed. The existing
+`renesas,r9a09g057-usb2phy-reset` compatible will be used as a fallback
+for the RZ/V2N SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://lore.kernel.org/r/20250528133031.167647-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../bindings/reset/renesas,rzv2h-usb2phy-reset.yaml        | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/reset/renesas,rzv2h-usb2phy-reset.yaml b/Documentation/devicetree/bindings/reset/renesas,rzv2h-usb2phy-reset.yaml
+index c79f61c2373b..c1b800a10b53 100644
+--- a/Documentation/devicetree/bindings/reset/renesas,rzv2h-usb2phy-reset.yaml
++++ b/Documentation/devicetree/bindings/reset/renesas,rzv2h-usb2phy-reset.yaml
+@@ -15,7 +15,12 @@ description:
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g057-usb2phy-reset     # RZ/V2H(P)
++    oneOf:
++      - items:
++          - const: renesas,r9a09g056-usb2phy-reset # RZ/V2N
++          - const: renesas,r9a09g057-usb2phy-reset
++
++      - const: renesas,r9a09g057-usb2phy-reset # RZ/V2H(P)
+ 
+   reg:
+     maxItems: 1

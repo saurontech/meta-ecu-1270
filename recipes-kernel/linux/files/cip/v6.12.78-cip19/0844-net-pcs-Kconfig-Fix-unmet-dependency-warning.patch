@@ -1,0 +1,44 @@
+From 5e7e44df0579d15461d1026c3104ae953de78289 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 16 Mar 2026 14:59:07 +0000
+Subject: [PATCH 844/851] net: pcs: Kconfig: Fix unmet dependency warning
+
+commit dfc85640796b414385e50c932eb2b8ce4d38ce72 upstream.
+
+Fix the Kconfig dependencies for PCS_RZN1_MIIC to avoid the unmet direct
+dependency warning when enabling DWMAC_RENESAS_GBETH. The PCS driver is
+used on multiple Renesas SoCs including RZ/N1, RZ/N2H and RZ/T2H, but the
+existing condition only allowed ARCH_RZN1, ARCH_R9A09G077, or
+ARCH_R9A09G087. This conflicted with the GBETH/GMAC driver which selects
+PCS_RZN1_MIIC under ARCH_RENESAS.
+
+Update the dependency to ARCH_RENESAS || COMPILE_TEST so that the PCS
+driver is available on all Renesas platforms.
+
+Fixes: 08f89e42121d ("net: pcs: rzn1-miic: Add RZ/T2H MIIC support")
+Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+Closes: https://lore.kernel.org/all/aMlgg_QpJOEDGcEA@monster/
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250916162335.3339558-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/net/pcs/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/pcs/Kconfig b/drivers/net/pcs/Kconfig
+index 76dbc11d9575..ecbc3530e780 100644
+--- a/drivers/net/pcs/Kconfig
++++ b/drivers/net/pcs/Kconfig
+@@ -28,7 +28,7 @@ config PCS_MTK_LYNXI
+ config PCS_RZN1_MIIC
+ 	tristate "Renesas RZ/N1, RZ/N2H, RZ/T2H MII converter"
+ 	depends on OF
+-	depends on ARCH_RZN1 || ARCH_R9A09G077 || ARCH_R9A09G087 || COMPILE_TEST
++	depends on ARCH_RENESAS || COMPILE_TEST
+ 	help
+ 	  This module provides a driver for the MII converter available on
+ 	  Renesas RZ/N1, RZ/N2H, and RZ/T2H SoCs. This PCS converts MII to

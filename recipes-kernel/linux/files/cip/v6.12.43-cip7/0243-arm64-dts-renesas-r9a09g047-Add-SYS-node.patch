@@ -1,0 +1,39 @@
+From ec0657019a9769fad3125dc80f24846c1f92134a Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Wed, 20 Aug 2025 09:46:07 +0100
+Subject: [PATCH 243/246] arm64: dts: renesas: r9a09g047: Add SYS node
+
+commit 13e9b03263dcdc760aa65c4298271746b180f113 upstream.
+
+Add a node for the System Controller to the RZ/G3E (R9A09G047) SoC DTSI,
+as it is also required for SoC identification.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250123170508.13578-9-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index bfdb03e69540..876f70fed433 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -273,6 +273,13 @@ cpg: clock-controller@10420000 {
+ 			#power-domain-cells = <0>;
+ 		};
+ 
++		sys: system-controller@10430000 {
++			compatible = "renesas,r9a09g047-sys";
++			reg = <0 0x10430000 0 0x10000>;
++			clocks = <&cpg CPG_CORE R9A09G047_SYS_0_PCLK>;
++			resets = <&cpg 0x30>;
++		};
++
+ 		scif0: serial@11c01400 {
+ 			compatible = "renesas,scif-r9a09g047", "renesas,scif-r9a09g057";
+ 			reg = <0 0x11c01400 0 0x400>;

@@ -1,0 +1,58 @@
+From 44c0eb8fe8b4b7f28b80edb8c45faf9e43880697 Mon Sep 17 00:00:00 2001
+From: Yunxiang Li <Yunxiang.Li@amd.com>
+Date: Tue, 22 Sep 2026 17:23:23 -0400
+Subject: [PATCH 795/854] drm: add drm_memory_stats_is_zero
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit fd265d9e0c3358e6b9fe244d8f5d2824fda1c0dc ]
+
+Add a helper to check if the memory stats is zero, this will be used to
+check for memory accounting errors.
+
+Signed-off-by: Yunxiang Li <Yunxiang.Li@amd.com>
+Reviewed-by: Christian König <christian.koenig@amd.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20241219151411.1150-2-Yunxiang.Li@amd.com
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Stable-dep-of: 636139603b99 ("drm/amdgpu: hold a runtime PM reference for P2P dma-buf attachments")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/gpu/drm/drm_file.c | 10 ++++++++++
+ include/drm/drm_file.h     |  1 +
+ 2 files changed, 11 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
+index e2cf118ff01d3..99ffbea8b6a8d 100644
+--- a/drivers/gpu/drm/drm_file.c
++++ b/drivers/gpu/drm/drm_file.c
+@@ -840,6 +840,16 @@ static void print_size(struct drm_printer *p, const char *stat,
+ 	drm_printf(p, "drm-%s-%s:\t%llu%s\n", stat, region, sz, units[u]);
+ }
+ 
++int drm_memory_stats_is_zero(const struct drm_memory_stats *stats)
++{
++	return (stats->shared == 0 &&
++		stats->private == 0 &&
++		stats->resident == 0 &&
++		stats->purgeable == 0 &&
++		stats->active == 0);
++}
++EXPORT_SYMBOL(drm_memory_stats_is_zero);
++
+ /**
+  * drm_print_memory_stats - A helper to print memory stats
+  * @p: The printer to print output to
+diff --git a/include/drm/drm_file.h b/include/drm/drm_file.h
+index 2bc88d2d4a84e..92d0f9c5d788c 100644
+--- a/include/drm/drm_file.h
++++ b/include/drm/drm_file.h
+@@ -485,6 +485,7 @@ struct drm_memory_stats {
+ 
+ enum drm_gem_object_status;
+ 
++int drm_memory_stats_is_zero(const struct drm_memory_stats *stats);
+ void drm_print_memory_stats(struct drm_printer *p,
+ 			    const struct drm_memory_stats *stats,
+ 			    enum drm_gem_object_status supported_status,

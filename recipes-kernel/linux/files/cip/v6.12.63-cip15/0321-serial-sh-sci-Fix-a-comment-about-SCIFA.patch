@@ -1,0 +1,41 @@
+From df5173b500af18b580cf4f8024a2c86452d24712 Mon Sep 17 00:00:00 2001
+From: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:25 +0000
+Subject: [PATCH 321/724] serial: sh-sci: Fix a comment about SCIFA
+
+commit d004e3595718b8b55009c08ff59cf13be5490f59 upstream.
+
+The comment was correct when it was added, at that time RZ/T1 was
+the only SoC in the RZ/T line. Since then, further SoCs have been
+added with RZ/T names which do not use the same SCIFA register
+layout and so the comment is now misleading.
+
+So we update the comment to explicitly reference only RZ/T1 SoCs.
+
+Reviewed-by: Paul Barker <paul.barker.ct@bp.renesas.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250403212919.1137670-8-thierry.bultel.yh@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-6-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/tty/serial/sh-sci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index d4e7eb32abab..fff6056a483a 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -310,7 +310,7 @@ static const struct sci_port_params sci_port_params[SCIx_NR_REGTYPES] = {
+ 	},
+ 
+ 	/*
+-	 * The "SCIFA" that is in RZ/A2, RZ/G2L and RZ/T.
++	 * The "SCIFA" that is in RZ/A2, RZ/G2L and RZ/T1.
+ 	 * It looks like a normal SCIF with FIFO data, but with a
+ 	 * compressed address space. Also, the break out of interrupts
+ 	 * are different: ERI/BRI, RXI, TXI, TEI, DRI.

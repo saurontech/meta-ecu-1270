@@ -1,0 +1,42 @@
+From 415cd5ab28f8488a4fa112dd1915249cbc39bac5 Mon Sep 17 00:00:00 2001
+From: Nicolin Chen <nicolinc@nvidia.com>
+Date: Tue, 21 Jul 2026 13:12:50 -0400
+Subject: [PATCH 1717/1853] iommufd: Reject invalid read count in
+ iommufd_fault_fops_read()
+
+[ Upstream commit 47916a54eeb2a9e654512ee609f71bd5b29db702 ]
+
+The read count must be large enough to hold one fault or a group's faults.
+
+iommufd_fault_fops_read() does not validate the count, but returns 0 as if
+the read had succeeded while leaving the pending fault in the queue.
+
+Return -EINVAL in the undersize cases.
+
+Fixes: 07838f7fd529 ("iommufd: Add iommufd fault object")
+Link: https://patch.msgid.link/r/85c118a606fbedc5c132a1f5ec223a5ba23b92d2.1780343944.git.nicolinc@nvidia.com
+Cc: stable@vger.kernel.org
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+Reviewed-by: Pranjal Shrivastava <praan@google.com>
+Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/iommu/iommufd/fault.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/iommu/iommufd/fault.c b/drivers/iommu/iommufd/fault.c
+index 8226e28d79a5..6048d8a1c838 100644
+--- a/drivers/iommu/iommufd/fault.c
++++ b/drivers/iommu/iommufd/fault.c
+@@ -273,6 +273,9 @@ static ssize_t iommufd_fault_fops_read(struct file *filep, char __user *buf,
+ 		if (done >= count ||
+ 		    group->fault_count * fault_size > count - done) {
+ 			iommufd_fault_deliver_restore(fault, group);
++			/* Read count doesn't fit the first fault group */
++			if (done == 0)
++				rc = -EINVAL;
+ 			break;
+ 		}
+ 

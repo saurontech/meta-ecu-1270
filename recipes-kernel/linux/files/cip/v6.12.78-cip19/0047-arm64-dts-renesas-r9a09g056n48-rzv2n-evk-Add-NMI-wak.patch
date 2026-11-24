@@ -1,0 +1,54 @@
+From 4a8da9cdb192bf691ba3cad0a593aebd84931b4c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 10 Mar 2026 16:00:50 +0000
+Subject: [PATCH 047/851] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Add NMI
+ wakeup button support
+
+commit 41e60d92c88c0085511b38077dad2939bf63ddfc upstream.
+
+Add support for the NMI connected user pushbutton on the RZ/V2N EVK.
+The button is wired to the SoC NMI input and can be used to wake the
+system from low-power states.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251125224533.294235-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts     | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index 2846a1b23cd7..e7bb4334ca47 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -8,6 +8,7 @@
+ /dts-v1/;
+ 
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
+ #include "r9a09g056.dtsi"
+ 
+ / {
+@@ -44,6 +45,18 @@ hdmi_con_out: endpoint {
+ 		};
+ 	};
+ 
++	keys: keys {
++		compatible = "gpio-keys";
++
++		key-wakeup {
++			interrupts-extended = <&icu 0 IRQ_TYPE_EDGE_FALLING>;
++			linux,code = <KEY_WAKEUP>;
++			label = "NMI_SW";
++			debounce-interval = <20>;
++			wakeup-source;
++		};
++	};
++
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */

@@ -1,0 +1,25 @@
+From fabed2799db02d261e5ba5599f4c661a23a6d144 Mon Sep 17 00:00:00 2001
+From: Sasha Levin <sashal@kernel.org>
+Date: Wed, 16 Sep 2026 12:31:22 -0400
+Subject: [PATCH 2692/2868] Revert "nvme-apple: Reset q->sq_tail during queue
+ init"
+
+This reverts commit 7f2047888e37dbe3f185d8104b671959eddb98a3.
+
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/nvme/host/apple.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
+index db8c20a60064..1cc222fdbf22 100644
+--- a/drivers/nvme/host/apple.c
++++ b/drivers/nvme/host/apple.c
+@@ -1025,7 +1025,6 @@ static void apple_nvme_init_queue(struct apple_nvme_queue *q)
+ 	unsigned int depth = apple_nvme_queue_depth(q);
+ 	struct apple_nvme *anv = queue_to_apple_nvme(q);
+ 
+-	q->sq_tail = 0;
+ 	q->cq_head = 0;
+ 	q->cq_phase = 1;
+ 	if (anv->hw->has_lsq_nvmmu)

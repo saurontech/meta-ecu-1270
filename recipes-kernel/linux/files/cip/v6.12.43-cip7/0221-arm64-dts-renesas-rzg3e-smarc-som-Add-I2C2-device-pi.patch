@@ -1,0 +1,56 @@
+From 2505765ace174ea6804000fd0b4813b5b8a93dcd Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Mon, 28 Jul 2025 15:48:43 +0200
+Subject: [PATCH 221/246] arm64: dts: renesas: rzg3e-smarc-som: Add I2C2 device
+ pincontrol
+
+commit f7a98e256ee30f50de1e7b43cc383828834e8c9e upstream.
+
+Add a device node for I2C2 pincontrol.  Also enable the I2C2 device node
+with 1MHz clock frequency as it is connected to the RAA215300 PMIC on
+the RZ/G3E SoM.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250329121258.172099-2-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Message-ID: <20250728134844.1288347-2-tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+index e9327cf9077f..d93c846ad391 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+@@ -26,6 +26,7 @@ / {
+ 	compatible = "renesas,rzg3e-smarcm", "renesas,r9a09g047e57", "renesas,r9a09g047";
+ 
+ 	aliases {
++		i2c2 = &i2c2;
+ 		mmc0 = &sdhi0;
+ 		mmc2 = &sdhi2;
+ 	};
+@@ -74,7 +75,19 @@ &gpu {
+ 	mali-supply = <&reg_vdd0p8v_others>;
+ };
+ 
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <1000000>;
++	status = "okay";
++};
++
+ &pinctrl {
++	i2c2_pins: i2c {
++		pinmux = <RZG3E_PORT_PINMUX(3, 4, 1)>, /* SCL2 */
++			 <RZG3E_PORT_PINMUX(3, 5, 1)>; /* SDA2 */
++	};
++
+ 	sdhi0_emmc_pins: sd0-emmc {
+ 		sd0-ctrl {
+ 			pins = "SD0CLK", "SD0CMD";

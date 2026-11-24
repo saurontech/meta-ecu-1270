@@ -1,0 +1,31 @@
+From 40aa3dc02adbf65e9f6fed7c02c4bd556bdb83ce Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Wed, 23 Apr 2025 19:13:59 +0100
+Subject: [PATCH 067/246] arm64: dts: renesas: r9a09g057: Enable SYS node
+
+commit 0c507d15f09d72aecebd98deaa45029a2a0d8eef upstream.
+
+SoC identification needs the System Controller.  Enable it.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250123170508.13578-10-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g057.dtsi | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+index 1ad5a1b6917f..b1ddd9c7570a 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g057.dtsi
+@@ -118,7 +118,6 @@ sys: system-controller@10430000 {
+ 			reg = <0 0x10430000 0 0x10000>;
+ 			clocks = <&cpg CPG_CORE R9A09G057_SYS_0_PCLK>;
+ 			resets = <&cpg 0x30>;
+-			status = "disabled";
+ 		};
+ 
+ 		ostm0: timer@11800000 {

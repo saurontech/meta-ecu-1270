@@ -1,0 +1,32 @@
+From ead6e2f5211b2bd06f032f701c1c0187c0f73cc3 Mon Sep 17 00:00:00 2001
+From: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:05 +0200
+Subject: [PATCH 028/851] arm64: defconfig: Enable the RZ/V2H(P) RSPI driver
+
+commit abd7c0293816a5fa5766710d2e7b576384fdec4d upstream.
+
+Enable the Renesas RZ/V2H(P) RSPI driver for the benefit of
+RZ/V2H(P) based platforms.
+
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250624192304.338979-6-fabrizio.castro.jz@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index efa6efe31a9b..43ddc37d8015 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -566,6 +566,7 @@ CONFIG_SPI_ROCKCHIP=y
+ CONFIG_SPI_ROCKCHIP_SFC=m
+ CONFIG_SPI_RPCIF=m
+ CONFIG_SPI_RSPI=m
++CONFIG_SPI_RZV2H_RSPI=m
+ CONFIG_SPI_RZV2M_CSI=m
+ CONFIG_SPI_QCOM_QSPI=m
+ CONFIG_SPI_QUP=y

@@ -1,0 +1,37 @@
+From dd41b2ca9550cf872aeee070d59807ba2f11b2d9 Mon Sep 17 00:00:00 2001
+From: Dan Carpenter <dan.carpenter@linaro.org>
+Date: Wed, 8 Jul 2026 11:12:24 +0300
+Subject: [PATCH 1218/1853] reset: rzg2l-usbphy-ctrl: Fix a NULL vs IS_ERR()
+ bug in probe
+
+commit cea5d43b63b221522f8532a7894149f3d8d11f4b upstream.
+
+The devm_regmap_field_alloc() function never returns NULL, it returns
+error pointers.  Update the error checking to match.
+
+Fixes: 58128aa88867 ("reset: rzg2l-usbphy-ctrl: Add support for USB PWRRDY")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/reset/reset-rzg2l-usbphy-ctrl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/reset/reset-rzg2l-usbphy-ctrl.c b/drivers/reset/reset-rzg2l-usbphy-ctrl.c
+index 4d51213e59ba..6d8c48d247a0 100644
+--- a/drivers/reset/reset-rzg2l-usbphy-ctrl.c
++++ b/drivers/reset/reset-rzg2l-usbphy-ctrl.c
+@@ -158,8 +158,8 @@ static int rzg2l_usbphy_ctrl_pwrrdy_init(struct device *dev)
+ 	field.msb = __fls(args[1]);
+ 
+ 	pwrrdy = devm_regmap_field_alloc(dev, regmap, field);
+-	if (!pwrrdy)
+-		return -ENOMEM;
++	if (IS_ERR(pwrrdy))
++		return PTR_ERR(pwrrdy);
+ 
+ 	rzg2l_usbphy_ctrl_set_pwrrdy(pwrrdy, true);
+ 

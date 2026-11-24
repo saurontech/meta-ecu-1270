@@ -1,0 +1,40 @@
+From 42c4505f3dae9acb16c63e5bab09e6ad86e8f309 Mon Sep 17 00:00:00 2001
+From: Stanislav Jakubek <stano.jakubek@gmail.com>
+Date: Fri, 17 Jul 2026 15:14:53 +0200
+Subject: [PATCH 389/399] hwmon: (tmp108) Add basic regulator support
+
+commit bddbb9cff4ab97ad367692201a0abe680a59d44d upstream.
+
+TMP108/P3T1085 are powered by the V+/VCC regulator, add support for it.
+
+Signed-off-by: Stanislav Jakubek <stano.jakubek@gmail.com>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/tmp108.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/hwmon/tmp108.c b/drivers/hwmon/tmp108.c
+index fbe673009126..cd631e481d80 100644
+--- a/drivers/hwmon/tmp108.c
++++ b/drivers/hwmon/tmp108.c
+@@ -17,6 +17,7 @@
+ #include <linux/init.h>
+ #include <linux/jiffies.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/slab.h>
+ 
+ #define	DRIVER_NAME "tmp108"
+@@ -331,6 +332,10 @@ static int tmp108_common_probe(struct device *dev, struct regmap *regmap, char *
+ 	u32 config;
+ 	int err;
+ 
++	err = devm_regulator_get_enable(dev, "vcc");
++	if (err)
++		return dev_err_probe(dev, err, "Failed to enable regulator\n");
++
+ 	tmp108 = devm_kzalloc(dev, sizeof(*tmp108), GFP_KERNEL);
+ 	if (!tmp108)
+ 		return -ENOMEM;

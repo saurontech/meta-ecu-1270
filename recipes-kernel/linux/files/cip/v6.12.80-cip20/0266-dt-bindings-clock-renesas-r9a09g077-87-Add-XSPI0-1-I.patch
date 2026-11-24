@@ -1,0 +1,48 @@
+From f93ce740e307e9de8430618434533da44e0c90f9 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 7 Apr 2026 11:57:59 +0100
+Subject: [PATCH 266/283] dt-bindings: clock: renesas,r9a09g077/87: Add XSPI0/1
+ IDs
+
+commit 7c0b8360a4e2892bc1748aca77c0825af82f3dcd upstream.
+
+Add clock definitions for XSPI0/1 to both R9A09G077 and R9A09G087 SoCs.
+These definitions are required for describing XSPI devices in DT
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251028165127.991351-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h | 2 ++
+ include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+index 2a805e06487b..9eaedca6a616 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g077-cpg-mssr.h
+@@ -31,5 +31,7 @@
+ #define R9A09G077_ETCLKC		19
+ #define R9A09G077_ETCLKD		20
+ #define R9A09G077_ETCLKE		21
++#define R9A09G077_XSPI_CLK0		22
++#define R9A09G077_XSPI_CLK1		23
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G077_CPG_H__ */
+diff --git a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+index 09da0ad33be6..606468ac49a4 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
++++ b/include/dt-bindings/clock/renesas,r9a09g087-cpg-mssr.h
+@@ -31,5 +31,7 @@
+ #define R9A09G087_ETCLKC		19
+ #define R9A09G087_ETCLKD		20
+ #define R9A09G087_ETCLKE		21
++#define R9A09G087_XSPI_CLK0		22
++#define R9A09G087_XSPI_CLK1		23
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G087_CPG_H__ */

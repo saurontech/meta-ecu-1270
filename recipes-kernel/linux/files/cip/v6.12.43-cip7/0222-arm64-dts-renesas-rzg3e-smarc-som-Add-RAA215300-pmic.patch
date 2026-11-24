@@ -1,0 +1,80 @@
+From 3254f2a98cf79fabf7fd2eafb4759d713cb1bc0d Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Mon, 28 Jul 2025 15:48:44 +0200
+Subject: [PATCH 222/246] arm64: dts: renesas: rzg3e-smarc-som: Add RAA215300
+ pmic support
+
+commit 5ecd5a8261d00c1eb97bbe5392c9f2a7bc1fa2bd upstream.
+
+Enable RAA215300 PMIC and built-in RTC support on the RZ/G3E SoM module.
+Also add related clock and interrupt signals.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250329121258.172099-3-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[tommaso: Squashed the commits f62bb41740462("arm64: dts: renesas:
+            rzg3e-smarc-som: Reduce I2C2 clock frequency") and
+            5ecd5a8261d00 ("arm64: dts: renesas: rzg3e-smarc-som: Add
+            RAA215300 pmic support")]
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Message-ID: <20250728134844.1288347-3-tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ .../boot/dts/renesas/rzg3e-smarc-som.dtsi     | 27 ++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+index d93c846ad391..ecea29a76b14 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+@@ -64,6 +64,13 @@ reg_vdd0p8v_others: regulator-vdd0p8v-others {
+ 		regulator-boot-on;
+ 		regulator-always-on;
+ 	};
++
++	/* 32.768kHz crystal */
++	x3: x3-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <32768>;
++	};
+ };
+ 
+ &audio_extal_clk {
+@@ -78,8 +85,21 @@ &gpu {
+ &i2c2 {
+ 	pinctrl-0 = <&i2c2_pins>;
+ 	pinctrl-names = "default";
+-	clock-frequency = <1000000>;
++	clock-frequency = <400000>;
+ 	status = "okay";
++
++	raa215300: pmic@12 {
++		compatible = "renesas,raa215300";
++		reg = <0x12>, <0x6f>;
++		reg-names = "main", "rtc";
++		clocks = <&x3>;
++		clock-names = "xin";
++
++		pinctrl-0 = <&rtc_irq_pin>;
++		pinctrl-names = "default";
++
++		interrupts-extended = <&pinctrl RZG3E_GPIO(S, 1) IRQ_TYPE_EDGE_FALLING>;
++	};
+ };
+ 
+ &pinctrl {
+@@ -88,6 +108,11 @@ i2c2_pins: i2c {
+ 			 <RZG3E_PORT_PINMUX(3, 5, 1)>; /* SDA2 */
+ 	};
+ 
++	rtc_irq_pin: rtc-irq {
++		pins = "PS1";
++		bias-pull-up;
++	};
++
+ 	sdhi0_emmc_pins: sd0-emmc {
+ 		sd0-ctrl {
+ 			pins = "SD0CLK", "SD0CMD";

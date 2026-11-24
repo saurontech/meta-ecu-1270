@@ -1,0 +1,46 @@
+From 2deb70b3686ddcb7f87a1bb7be7a793e1282ed35 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Apr 2025 09:39:53 +0200
+Subject: [PATCH 056/246] dt-bindings: i2c: renesas,riic: Document the
+ R9A09G047 support
+
+commit 567ef9035f820ecd3e6fcc142003f396848b31f7 upstream.
+
+Document support for the I2C Bus Interface (RIIC) found in the Renesas
+RZ/G3E (R9A09G047) SoC. This IP is compatible with Renesas RZ/V2H
+(R9A09G057) RIIC IP.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20241216202436.185773-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Andi Shyti <andi.shyti@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ Documentation/devicetree/bindings/i2c/renesas,riic.yaml | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+index 505a8ec92266..1b7fed232642 100644
+--- a/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
++++ b/Documentation/devicetree/bindings/i2c/renesas,riic.yaml
+@@ -26,7 +26,9 @@ properties:
+           - const: renesas,riic-rz      # RZ/A or RZ/G2L
+ 
+       - items:
+-          - const: renesas,riic-r9a08g045   # RZ/G3S
++          - enum:
++              - renesas,riic-r9a08g045   # RZ/G3S
++              - renesas,riic-r9a09g047   # RZ/G3E
+           - const: renesas,riic-r9a09g057   # RZ/V2H(P)
+ 
+       - const: renesas,riic-r9a09g057   # RZ/V2H(P)
+@@ -89,6 +91,7 @@ if:
+           - renesas,riic-r9a07g043
+           - renesas,riic-r9a07g044
+           - renesas,riic-r9a07g054
++          - renesas,riic-r9a09g057
+ then:
+   required:
+     - resets

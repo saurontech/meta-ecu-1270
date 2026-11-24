@@ -1,0 +1,74 @@
+From 3ae63e7f03162d36305c70e8008dcb4cc5e95982 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:11 +0100
+Subject: [PATCH 194/246] clk: renesas: rzv2h: Add macro for defining static
+ dividers
+
+commit 6e1c795071359dc36e26ed96a271e06687d84f74 upstream.
+
+Unlike dynamic dividers, static dividers do not have a monitor bit.
+Introduce the `DEF_CSDIV()` macro for defining static dividers, ensuring
+consistency with existing dynamic divider macros.
+
+Additionally, introduce the `CSDIV_NO_MON` macro to indicate the absence
+of a monitor bit, allowing the monitoring step to be skipped when `mon`
+is set to `CSDIV_NO_MON`.
+
+Note, `rzv2h_cpg_ddiv_clk_register()` will be re-used instead of generic
+`clk_hw_register_divider_table()` for registering satic dividers as some
+of the static dividers require RMW operations.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407165202.197570-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c |  3 +++
+ drivers/clk/renesas/rzv2h-cpg.h | 10 ++++++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 7988f0db0f63..8e12ed49e9b3 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -298,6 +298,9 @@ static inline int rzv2h_cpg_wait_ddiv_clk_update_done(void __iomem *base, u8 mon
+ 	u32 bitmask = BIT(mon);
+ 	u32 val;
+ 
++	if (mon == CSDIV_NO_MON)
++		return 0;
++
+ 	return readl_poll_timeout_atomic(base + CPG_CLKSTATUS0, val, !(val & bitmask), 10, 200);
+ }
+ 
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index 03e602d70f69..00b52b459aad 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -45,6 +45,14 @@ struct ddiv {
+ 	unsigned int monbit:5;
+ };
+ 
++/*
++ * On RZ/V2H(P), the dynamic divider clock supports up to 19 monitor bits,
++ * while on RZ/G3E, it supports up to 16 monitor bits. Use the maximum value
++ * `0x1f` to indicate that monitor bits are not supported for static divider
++ * clocks.
++ */
++#define CSDIV_NO_MON	(0x1f)
++
+ #define DDIV_PACK(_offset, _shift, _width, _monbit) \
+ 	((struct ddiv){ \
+ 		.offset = _offset, \
+@@ -150,6 +158,8 @@ enum clk_types {
+ 		.parent = _parent, \
+ 		.dtable = _dtable, \
+ 		.flag = CLK_DIVIDER_HIWORD_MASK)
++#define DEF_CSDIV(_name, _id, _parent, _ddiv_packed, _dtable) \
++	DEF_DDIV(_name, _id, _parent, _ddiv_packed, _dtable)
+ #define DEF_SMUX(_name, _id, _smux_packed, _parent_names) \
+ 	DEF_TYPE(_name, _id, CLK_TYPE_SMUX, \
+ 		 .cfg.smux = _smux_packed, \

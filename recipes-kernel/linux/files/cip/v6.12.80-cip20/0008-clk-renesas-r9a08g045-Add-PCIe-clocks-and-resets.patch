@@ -1,0 +1,77 @@
+From ff97dd5b8314ba0c7f99516da5533adf0078fadd Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 11 Mar 2026 13:06:21 +0200
+Subject: [PATCH 008/283] clk: renesas: r9a08g045: Add PCIe clocks and resets
+
+commit 6b234eda88d781d244094836afc37c90b57832f3 upstream.
+
+Add clocks and resets for the PCIe IP available on the Renesas RZ/G3S
+SoC.  The clkl1pm clock is required for PCIe link power management (PM)
+control and should be enabled based on the state of the CLKREQ# pin.
+Therefore, mark it as a no_pm clock to allow the PCIe driver to manage
+it during link PM transitions.
+
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250704161410.3931884-3-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[claudiu.beznea: fixed conflict by dropping I3C clocks and resets as
+ these are not yet present in v6.12 CIP]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a08g045-cpg.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a08g045-cpg.c b/drivers/clk/renesas/r9a08g045-cpg.c
+index 9e6bda7f6c57..937a044cd5d3 100644
+--- a/drivers/clk/renesas/r9a08g045-cpg.c
++++ b/drivers/clk/renesas/r9a08g045-cpg.c
+@@ -291,6 +291,10 @@ static const struct rzg2l_mod_clk r9a08g045_mod_clks[] = {
+ 					MSTOP(BUS_MCPU2, BIT(14))),
+ 	DEF_MOD("tsu_pclk",		R9A08G045_TSU_PCLK, R9A08G045_CLK_TSU, 0x5ac, 0,
+ 					MSTOP(BUS_MCPU2, BIT(15))),
++	DEF_MOD("pci_aclk",		R9A08G045_PCI_ACLK, R9A08G045_CLK_M0, 0x608, 0,
++					MSTOP(BUS_PERI_COM, BIT(10))),
++	DEF_MOD("pci_clkl1pm",		R9A08G045_PCI_CLKL1PM, R9A08G045_CLK_ZT, 0x608, 1,
++					MSTOP(BUS_PERI_COM, BIT(10))),
+ 	DEF_MOD("vbat_bclk",		R9A08G045_VBAT_BCLK, R9A08G045_OSCCLK, 0x614, 0,
+ 					MSTOP(BUS_MCPU3, GENMASK(8, 7))),
+ };
+@@ -331,6 +335,13 @@ static const struct rzg2l_reset r9a08g045_resets[] = {
+ 	DEF_RST(R9A08G045_ADC_PRESETN, 0x8a8, 0),
+ 	DEF_RST(R9A08G045_ADC_ADRST_N, 0x8a8, 1),
+ 	DEF_RST(R9A08G045_TSU_PRESETN, 0x8ac, 0),
++	DEF_RST(R9A08G045_PCI_ARESETN, 0x908, 0),
++	DEF_RST(R9A08G045_PCI_RST_B, 0x908, 1),
++	DEF_RST(R9A08G045_PCI_RST_GP_B, 0x908, 2),
++	DEF_RST(R9A08G045_PCI_RST_PS_B, 0x908, 3),
++	DEF_RST(R9A08G045_PCI_RST_RSM_B, 0x908, 4),
++	DEF_RST(R9A08G045_PCI_RST_CFG_B, 0x908, 5),
++	DEF_RST(R9A08G045_PCI_RST_LOAD_B, 0x908, 6),
+ 	DEF_RST(R9A08G045_VBAT_BRESETN, 0x914, 0),
+ };
+ 
+@@ -342,6 +353,10 @@ static const unsigned int r9a08g045_crit_mod_clks[] __initconst = {
+ 	MOD_CLK_BASE + R9A08G045_VBAT_BCLK,
+ };
+ 
++static const unsigned int r9a08g045_no_pm_mod_clks[] = {
++	MOD_CLK_BASE + R9A08G045_PCI_CLKL1PM,
++};
++
+ const struct rzg2l_cpg_info r9a08g045_cpg_info = {
+ 	/* Core Clocks */
+ 	.core_clks = r9a08g045_core_clks,
+@@ -358,6 +373,10 @@ const struct rzg2l_cpg_info r9a08g045_cpg_info = {
+ 	.num_mod_clks = ARRAY_SIZE(r9a08g045_mod_clks),
+ 	.num_hw_mod_clks = R9A08G045_VBAT_BCLK + 1,
+ 
++	/* No PM modules Clocks */
++	.no_pm_mod_clks = r9a08g045_no_pm_mod_clks,
++	.num_no_pm_mod_clks = ARRAY_SIZE(r9a08g045_no_pm_mod_clks),
++
+ 	/* Resets */
+ 	.resets = r9a08g045_resets,
+ 	.num_resets = R9A08G045_VBAT_BRESETN + 1, /* Last reset ID + 1 */

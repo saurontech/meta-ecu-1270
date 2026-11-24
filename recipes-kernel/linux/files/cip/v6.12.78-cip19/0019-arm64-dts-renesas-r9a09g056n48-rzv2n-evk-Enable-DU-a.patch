@@ -1,0 +1,120 @@
+From d4c3a255819b463e80ca56a73ee63bd5ab18f653 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 5 Mar 2026 15:37:25 +0000
+Subject: [PATCH 019/851] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable
+ DU and DSI
+
+commit 9a5a73dca92aa120ec1ab8b510eb4dbbd653d4e2 upstream.
+
+Enable DU, DSI and adv7535 HDMI encoder on RZ/V2N Evaluation Kit.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251103200349.62087-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g056n48-rzv2n-evk.dts    | 69 +++++++++++++++++++
+ 1 file changed, 69 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index a636ca77bdfc..2846a1b23cd7 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -33,6 +33,17 @@ chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "d";
++
++		port {
++			hdmi_con_out: endpoint {
++				remote-endpoint = <&adv7535_out>;
++			};
++		};
++	};
++
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+@@ -75,12 +86,36 @@ vqmmc_sdhi1: regulator-vqmmc-sdhi1 {
+ 		gpios-states = <0>;
+ 		states = <3300000 0>, <1800000 1>;
+ 	};
++
++	/* 12MHz oscillator for ADV7535 */
++	y1: y1-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <12000000>;
++	};
+ };
+ 
+ &audio_extal_clk {
+ 	clock-frequency = <22579200>;
+ };
+ 
++&dsi {
++	status = "okay";
++
++	ports {
++		port@1 {
++			dsi_out: endpoint {
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&adv7535_in>;
++			};
++		};
++	};
++};
++
++&du {
++	status = "okay";
++};
++
+ &ehci0 {
+ 	dr_mode = "otg";
+ 	status = "okay";
+@@ -138,6 +173,40 @@ &i2c3 {
+ 	pinctrl-names = "default";
+ 	clock-frequency = <400000>;
+ 	status = "okay";
++
++	adv7535: hdmi@3d {
++		compatible = "adi,adv7535";
++		reg = <0x3d>, <0x3f>, <0x3c>, <0x38>;
++		reg-names = "main", "edid", "cec", "packet";
++		clocks = <&y1>;
++		clock-names = "cec";
++		avdd-supply = <&reg_1p8v>;
++		dvdd-supply = <&reg_1p8v>;
++		pvdd-supply = <&reg_1p8v>;
++		a2vdd-supply = <&reg_1p8v>;
++		v3p3-supply = <&reg_3p3v>;
++		v1p2-supply = <&reg_1p8v>;
++		adi,dsi-lanes = <4>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7535_in: endpoint {
++					remote-endpoint = <&dsi_out>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7535_out: endpoint {
++					remote-endpoint = <&hdmi_con_out>;
++				};
++			};
++		};
++	};
+ };
+ 
+ &i2c6 {

@@ -1,0 +1,54 @@
+From 85a7daf390849cfe0f5c9a0e12a43a546cae64d9 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:31 +0000
+Subject: [PATCH 320/851] serial: rsci: Drop rsci_clear_SCxSR()
+
+[ Upstream commit 450bd399c8797d2783c73aa6c83f382ac8d5f630 ]
+
+Drop rsci_clear_SCxSR by reusing rsci_clear_CFC() as the contents of
+both functions are the same.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/rsci.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/tty/serial/rsci.c b/drivers/tty/serial/rsci.c
+index 63b37c7e461c..ca593665b551 100644
+--- a/drivers/tty/serial/rsci.c
++++ b/drivers/tty/serial/rsci.c
+@@ -137,10 +137,6 @@ static void rsci_clear_DRxC(struct uart_port *port)
+ 	rsci_serial_out(port, FFCLR, FFCLR_DRC);
+ }
+ 
+-static void rsci_clear_SCxSR(struct uart_port *port, unsigned int mask)
+-{
+-	rsci_serial_out(port, CFCLR, mask);
+-}
+ 
+ static void rsci_start_rx(struct uart_port *port)
+ {
+@@ -390,7 +386,7 @@ static void rsci_poll_put_char(struct uart_port *port, unsigned char c)
+ 	}
+ 	rsci_serial_out(port, TDR, c);
+ done:
+-	rsci_clear_SCxSR(port, CFCLR_TDREC);
++	rsci_clear_CFC(port, CFCLR_TDREC);
+ }
+ 
+ static void rsci_prepare_console_write(struct uart_port *port, u32 ctrl)
+@@ -463,7 +459,7 @@ static const struct uart_ops rsci_uart_ops = {
+ static const struct sci_port_ops rsci_port_ops = {
+ 	.read_reg		= rsci_serial_in,
+ 	.write_reg		= rsci_serial_out,
+-	.clear_SCxSR		= rsci_clear_SCxSR,
++	.clear_SCxSR		= rsci_clear_CFC,
+ 	.transmit_chars		= rsci_transmit_chars,
+ 	.receive_chars		= rsci_receive_chars,
+ 	.poll_put_char		= rsci_poll_put_char,

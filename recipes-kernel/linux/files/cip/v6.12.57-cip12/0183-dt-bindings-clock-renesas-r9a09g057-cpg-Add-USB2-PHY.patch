@@ -1,0 +1,37 @@
+From ac83e362361fb024447b6fb6e07cd2cf2db11662 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 6 Nov 2025 10:40:16 +0000
+Subject: [PATCH 183/192] dt-bindings: clock: renesas,r9a09g057-cpg: Add USB2
+ PHY and GBETH PTP core clocks
+
+commit ad227dab306543208a0658357a82712e678a06f4 upstream.
+
+Add definitions for USB2 PHY core clocks and Gigabit Ethernet PTP
+reference core clocks in the R9A09G057 CPG DT bindings header file.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407165202.197570-8-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ include/dt-bindings/clock/renesas,r9a09g057-cpg.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/dt-bindings/clock/renesas,r9a09g057-cpg.h b/include/dt-bindings/clock/renesas,r9a09g057-cpg.h
+index 541e6d719bd6..884dbeb1e139 100644
+--- a/include/dt-bindings/clock/renesas,r9a09g057-cpg.h
++++ b/include/dt-bindings/clock/renesas,r9a09g057-cpg.h
+@@ -17,5 +17,9 @@
+ #define R9A09G057_CM33_CLK0			6
+ #define R9A09G057_CST_0_SWCLKTCK		7
+ #define R9A09G057_IOTOP_0_SHCLK			8
++#define R9A09G057_USB2_0_CLK_CORE0		9
++#define R9A09G057_USB2_0_CLK_CORE1		10
++#define R9A09G057_GBETH_0_CLK_PTP_REF_I		11
++#define R9A09G057_GBETH_1_CLK_PTP_REF_I		12
+ 
+ #endif /* __DT_BINDINGS_CLOCK_RENESAS_R9A09G057_CPG_H__ */

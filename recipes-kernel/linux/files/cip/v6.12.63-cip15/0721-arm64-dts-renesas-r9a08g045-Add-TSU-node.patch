@@ -1,0 +1,114 @@
+From a8dd84a2b422895020b40d824fda6832da3fa567 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 17 Dec 2025 12:32:21 +0200
+Subject: [PATCH 721/724] arm64: dts: renesas: r9a08g045: Add TSU node
+
+commit ee9bfab464247edd9a3f0f65e7ed96053e4b1095 upstream.
+
+Add TSU node along with thermal zones and keep it enabled in the SoC DTSI.
+The temperature reported by the TSU can only be read through channel 8 of
+the ADC. Therefore, enable the ADC by default.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20250810122125.792966-4-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[claudiu.beznea: fixed conflict around the i3c node as this is not yet in
+ v6.12 CIP]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi    | 49 ++++++++++++++++++-
+ .../boot/dts/renesas/rzg3s-smarc-som.dtsi     |  4 --
+ 2 files changed, 48 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+index 0364f89776e6..3f56fff7d9b0 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a08g045.dtsi
+@@ -233,7 +233,6 @@ adc: adc@10058000 {
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			#io-channel-cells = <1>;
+-			status = "disabled";
+ 
+ 			channel@0 {
+ 				reg = <0>;
+@@ -272,6 +271,17 @@ channel@8 {
+ 			};
+ 		};
+ 
++		tsu: thermal@10059000 {
++			compatible = "renesas,r9a08g045-tsu";
++			reg = <0 0x10059000 0 0x1000>;
++			clocks = <&cpg CPG_MOD R9A08G045_TSU_PCLK>;
++			resets = <&cpg R9A08G045_TSU_PRESETN>;
++			power-domains = <&cpg>;
++			#thermal-sensor-cells = <0>;
++			io-channels = <&adc 8>;
++			io-channel-names = "tsu";
++		};
++
+ 		vbattb: clock-controller@1005c000 {
+ 			compatible = "renesas,r9a08g045-vbattb";
+ 			reg = <0 0x1005c000 0 0x1000>;
+@@ -717,6 +727,43 @@ timer {
+ 				  "hyp-virt";
+ 	};
+ 
++	thermal-zones {
++		cpu_thermal: cpu-thermal {
++			polling-delay-passive = <250>;
++			polling-delay = <1000>;
++			thermal-sensors = <&tsu>;
++			sustainable-power = <423>;
++
++			cooling-maps {
++				map0 {
++					trip = <&cpu_alert0>;
++					cooling-device = <&cpu0 0 2>;
++					contribution = <1024>;
++				};
++			};
++
++			trips {
++				cpu_crit: cpu-critical {
++					temperature = <110000>;
++					hysteresis = <1000>;
++					type = "critical";
++				};
++
++				cpu_alert1: trip-point1 {
++					temperature = <90000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++
++				cpu_alert0: trip-point0 {
++					temperature = <85000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++	};
++
+ 	vbattb_xtal: vbattb-xtal {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index 39845faec894..6f25ab617982 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -84,10 +84,6 @@ x3_clk: x3-clock {
+ 	};
+ };
+ 
+-&adc {
+-	status = "okay";
+-};
+-
+ #if SW_CONFIG3 == SW_ON
+ &eth0 {
+ 	pinctrl-0 = <&eth0_pins>;

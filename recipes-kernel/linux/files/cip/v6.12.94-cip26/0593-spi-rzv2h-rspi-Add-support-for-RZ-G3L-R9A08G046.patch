@@ -1,0 +1,46 @@
+From fd55ddf8bd3770164ce4debb9967752cc0725395 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 17 Jun 2026 10:34:56 +0200
+Subject: [PATCH 593/600] spi: rzv2h-rspi: Add support for RZ/G3L (R9A08G046)
+
+commit 9be1143516473694ffd731304198a8b02e832d1d upstream.
+
+Add support for RZ/G3L RSPI. The RZ/G3L variant requires only
+2 clocks (pclk + tclk), unlike the RZ/V2H which needs 3.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20260408085418.18770-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index aae916882915..5589e361fd10 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -813,6 +813,13 @@ static const struct rzv2h_rspi_info rzv2h_info = {
+ 	.num_clks = 3,
+ };
+ 
++static const struct rzv2h_rspi_info rzg3l_info = {
++	.find_tclk_rate = rzv2h_rspi_find_rate_fixed,
++	.tclk_name = "tclk",
++	.fifo_size = 16,
++	.num_clks = 2,
++};
++
+ static const struct rzv2h_rspi_info rzt2h_info = {
+ 	.find_tclk_rate = rzv2h_rspi_find_rate_variable,
+ 	.find_pclk_rate = rzv2h_rspi_find_rate_fixed,
+@@ -822,6 +829,7 @@ static const struct rzv2h_rspi_info rzt2h_info = {
+ };
+ 
+ static const struct of_device_id rzv2h_rspi_match[] = {
++	{ .compatible = "renesas,r9a08g046-rspi", &rzg3l_info },
+ 	{ .compatible = "renesas,r9a09g057-rspi", &rzv2h_info },
+ 	{ .compatible = "renesas,r9a09g077-rspi", &rzt2h_info },
+ 	{ /* sentinel */ }

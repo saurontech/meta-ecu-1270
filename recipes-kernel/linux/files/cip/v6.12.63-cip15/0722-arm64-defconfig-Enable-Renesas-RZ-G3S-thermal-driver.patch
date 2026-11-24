@@ -1,0 +1,33 @@
+From 8e40cb4fe24b76d9b1b907c9cc1a78277b2d5b5f Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Wed, 17 Dec 2025 12:32:22 +0200
+Subject: [PATCH 722/724] arm64: defconfig: Enable Renesas RZ/G3S thermal
+ driver
+
+commit 823062d153851a944e61768014d7458d609fa4ca upstream.
+
+Enable the CONFIG_RZG3S_THERMAL flag for the RZ/G3S SoC.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20250810122125.792966-5-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index affd0e1f107a..789830ba9870 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -703,6 +703,7 @@ CONFIG_ROCKCHIP_THERMAL=m
+ CONFIG_RCAR_THERMAL=y
+ CONFIG_RCAR_GEN3_THERMAL=y
+ CONFIG_RZG2L_THERMAL=y
++CONFIG_RZG3S_THERMAL=m
+ CONFIG_ARMADA_THERMAL=y
+ CONFIG_MTK_THERMAL=m
+ CONFIG_MTK_LVTS_THERMAL=m

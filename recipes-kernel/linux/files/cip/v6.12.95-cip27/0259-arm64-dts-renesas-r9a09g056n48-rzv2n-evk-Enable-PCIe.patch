@@ -1,0 +1,73 @@
+From 2d83a74b5d7557cf2d721c3ba5f7161d3eb61e33 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 3 Jul 2026 16:28:03 +0100
+Subject: [PATCH 259/286] arm64: dts: renesas: r9a09g056n48-rzv2n-evk: Enable
+ PCIe
+
+commit 62169c13d85c143174b61876ff60328b838e02b9 upstream.
+
+Enable the PCIE1 slot available on the RZ/V2N EVK.
+
+Note, the PCIE_REFCLK comes from 5L35023B versa clock generator, once the
+support for this clock generator is added, the fixed clock node can be
+removed and can be replaced with a reference to the clock generator.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260501105116.33452-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../dts/renesas/r9a09g056n48-rzv2n-evk.dts    | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+index 6ed74e091d4b..38c9a0489f85 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g056n48-rzv2n-evk.dts
+@@ -63,6 +63,12 @@ memory@48000000 {
+ 		reg = <0x0 0x48000000 0x1 0xf8000000>;
+ 	};
+ 
++	pcie_refclk: clock-pcie-ref {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <100000000>;
++	};
++
+ 	reg_0p8v: regulator-0p8v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "fixed-0.8V";
+@@ -318,6 +324,17 @@ &ostm7 {
+ 	status = "okay";
+ };
+ 
++&pcie {
++	pinctrl-0 = <&pcie_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pcie_port0 {
++	clocks = <&pcie_refclk>;
++	clock-names = "ref";
++};
++
+ &pinctrl {
+ 	eth0_pins: eth0 {
+ 		pins = "ET0_TXC_TXCLK";
+@@ -368,6 +385,12 @@ i2c8_pins: i2c8 {
+ 			 <RZV2N_PORT_PINMUX(0, 7, 1)>; /* I2C8_SCL */
+ 	};
+ 
++	pcie_pins: pcie {
++		pins = "PCIE0_RSTOUTB";
++		slew-rate = <0>;
++		renesas,output-impedance = <2>;
++	};
++
+ 	scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";
+ 		renesas,output-impedance = <1>;

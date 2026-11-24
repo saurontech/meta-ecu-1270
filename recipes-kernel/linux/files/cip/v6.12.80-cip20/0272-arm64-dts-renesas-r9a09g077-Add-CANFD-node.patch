@@ -1,0 +1,62 @@
+From fc4969e7c3da3b140192f253a8b56973c36560da Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 7 Apr 2026 11:58:05 +0100
+Subject: [PATCH 272/283] arm64: dts: renesas: r9a09g077: Add CANFD node
+
+commit ff108a26c91631bef465702d04bcd8d910af7f0e upstream.
+
+Add support for the CANFD controller on the Renesas RZ/T2H Soc.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251224175204.3400062-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g077.dtsi | 31 ++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+index 48b2d0eaa826..cb85b745b2cf 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g077.dtsi
+@@ -232,6 +232,37 @@ rspi3: spi@81007000 {
+ 			status = "disabled";
+ 		};
+ 
++		canfd: can@80040000 {
++			compatible = "renesas,r9a09g077-canfd";
++			reg = <0 0x80040000 0 0x20000>;
++			interrupts = <GIC_SPI 633 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 632 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 627 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 628 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 626 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 630 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 631 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 629 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "g_err", "g_recc",
++					  "ch0_err", "ch0_rec", "ch0_trx",
++					  "ch1_err", "ch1_rec", "ch1_trx";
++			clocks = <&cpg CPG_MOD 310>,
++				 <&cpg CPG_CORE R9A09G077_CLK_PCLKH>,
++				 <&cpg CPG_CORE R9A09G077_PCLKCAN>;
++			clock-names = "fck", "ram_clk", "can_clk";
++			assigned-clocks = <&cpg CPG_CORE R9A09G077_PCLKCAN>;
++			assigned-clock-rates = <80000000>;
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			channel0 {
++				status = "disabled";
++			};
++			channel1 {
++				status = "disabled";
++			};
++		};
++
+ 		wdt0: watchdog@80082000 {
+ 			compatible = "renesas,r9a09g077-wdt";
+ 			reg = <0 0x80082000 0 0x400>,

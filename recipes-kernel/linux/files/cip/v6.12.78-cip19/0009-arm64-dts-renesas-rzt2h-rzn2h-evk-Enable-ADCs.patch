@@ -1,0 +1,219 @@
+From 54b4f4e978975c2aac935ac382d6cb1197f0506c Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Tue, 3 Mar 2026 18:53:49 +0200
+Subject: [PATCH 009/851] arm64: dts: renesas: rzt2h/rzn2h-evk: Enable ADCs
+
+commit 62fb11fba0cc12ecb808fc57b16027b94bd1ba1a upstream.
+
+The ADCs on RZ/T2H and RZ/N2H are exposed on the evaluation kit boards.
+
+Enable them.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251005111323.804638-6-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../dts/renesas/r9a09g077m44-rzt2h-evk.dts    | 28 +++++++
+ .../dts/renesas/r9a09g087m44-rzn2h-evk.dts    | 64 +++++++++++++++
+ .../dts/renesas/rzt2h-n2h-evk-common.dtsi     | 79 +++++++++++++++++++
+ 3 files changed, 171 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+index 7da3d23d2c0b..95348fee1a03 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g077m44-rzt2h-evk.dts
+@@ -148,3 +148,31 @@ i2c1_pins: i2c1-pins {
+ 			 <RZT2H_PORT_PINMUX(4, 7, 0x17)>; /* SCL */
+ 	};
+ };
++
++&adc2 {
++	status = "okay";
++
++	channel@0 {
++		reg = <0x0>;
++	};
++
++	channel@1 {
++		reg = <0x1>;
++	};
++
++	channel@2 {
++		reg = <0x2>;
++	};
++
++	channel@3 {
++		reg = <0x3>;
++	};
++
++	channel@4 {
++		reg = <0x4>;
++	};
++
++	channel@5 {
++		reg = <0x5>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
+index 80f358fb2d74..079fda5f8ced 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
+@@ -186,3 +186,67 @@ i2c1_pins: i2c1-pins {
+ 			 <RZT2H_PORT_PINMUX(3, 4, 0x17)>;
+ 	};
+ };
++
++&adc2 {
++	status = "okay";
++
++	channel@0 {
++		reg = <0x0>;
++	};
++
++	channel@1 {
++		reg = <0x1>;
++	};
++
++	channel@2 {
++		reg = <0x2>;
++	};
++
++	channel@3 {
++		reg = <0x3>;
++	};
++
++	channel@4 {
++		reg = <0x4>;
++	};
++
++	channel@5 {
++		reg = <0x5>;
++	};
++
++	channel@6 {
++		reg = <0x6>;
++	};
++
++	channel@7 {
++		reg = <0x7>;
++	};
++
++	channel@8 {
++		reg = <0x8>;
++	};
++
++	channel@9 {
++		reg = <0x9>;
++	};
++
++	channel@a {
++		reg = <0xa>;
++	};
++
++	channel@b {
++		reg = <0xb>;
++	};
++
++	channel@c {
++		reg = <0xc>;
++	};
++
++	channel@d {
++		reg = <0xd>;
++	};
++
++	channel@e {
++		reg = <0xe>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+index 91068042bec0..e11293db0f0b 100644
+--- a/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzt2h-n2h-evk-common.dtsi
+@@ -222,3 +222,82 @@ &wdt2 {
+ 	status = "okay";
+ 	timeout-sec = <60>;
+ };
++
++/*
++ * ADC0 AN000 can be connected to a potentiometer on the board or
++ * exposed on ADC header.
++ *
++ * T2H:
++ * SW17[1] = ON, SW17[2] = OFF - Potentiometer
++ * SW17[1] = OFF, SW17[2] = ON  - CN41 header
++ * N2H:
++ * DSW6[1] = OFF, DSW6[2] = ON - Potentiometer
++ * DSW6[1] = ON, DSW6[2] = OFF - CN3 header
++ */
++&adc0 {
++	status = "okay";
++
++	channel@0 {
++		reg = <0x0>;
++	};
++
++	channel@1 {
++		reg = <0x1>;
++	};
++
++	channel@2 {
++		reg = <0x2>;
++	};
++
++	channel@3 {
++		reg = <0x3>;
++	};
++};
++
++/*
++ * ADC1 AN100 can be exposed on ADC header or on mikroBUS connector.
++ *
++ * T2H:
++ * SW18[1] = ON, SW18[2] = OFF - CN42 header
++ * SW18[1] = OFF, SW18[2] = ON - mikroBUS
++ * N2H:
++ * DSW6[3] = ON, DSW6[4] = OFF - CN4 header
++ * DSW6[3] = OFF, DSW6[4] = ON - mikroBUS
++ *
++ * ADC1 AN101 can be exposed on ADC header or on Grove2 connector.
++ *
++ * T2H:
++ * SW18[3] = ON, SW18[4] = OFF - CN42 header
++ * SW18[3] = OFF, SW18[4] = ON - Grove2
++ * N2H:
++ * DSW6[5] = ON, DSW6[6] = OFF - CN4 header
++ * DSW6[5] = OFF, DSW6[6] = ON - Grove2
++ *
++ * ADC1 AN102 can be exposed on ADC header or on Grove2 connector.
++ *
++ * T2H:
++ * SW18[5] = ON, SW18[6] = OFF - CN42 header
++ * SW18[5] = OFF, SW18[6] = ON - Grove2
++ * N2H:
++ * DSW6[7] = ON, DSW6[8] = OFF - CN4 header
++ * DSW6[7] = OFF, DSW6[8] = ON - Grove2
++ */
++&adc1 {
++	status = "okay";
++
++	channel@0 {
++		reg = <0x0>;
++	};
++
++	channel@1 {
++		reg = <0x1>;
++	};
++
++	channel@2 {
++		reg = <0x2>;
++	};
++
++	channel@3 {
++		reg = <0x3>;
++	};
++};

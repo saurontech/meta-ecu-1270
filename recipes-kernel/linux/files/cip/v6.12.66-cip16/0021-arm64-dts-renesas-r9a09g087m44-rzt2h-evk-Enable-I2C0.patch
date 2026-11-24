@@ -1,0 +1,113 @@
+From 4d4e441b5ab64ead8711c12caf196af9b12f6828 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 29 Dec 2025 22:39:10 +0000
+Subject: [PATCH 021/838] arm64: dts: renesas: r9a09g087m44-rzt2h-evk: Enable
+ I2C0 and I2C1 support
+
+commit fc14be9667ee06301c3fff578357c8d78749bb13 upstream.
+
+Enable I2C0 and I2C1 on the RZ/N2H evaluation board.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250820200659.2048755-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../dts/renesas/r9a09g087m44-rzn2h-evk.dts    | 56 +++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
+index fb2651c4c338..a068661fc442 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g087m44-rzn2h-evk.dts
+@@ -10,6 +10,14 @@
+ #include "r9a09g087m44.dtsi"
+ #include "rzt2h-n2h-evk-common.dtsi"
+ 
++/*
++ * I2C0 and LED8/9 share the same pins use the below
++ * macro to choose (and set approopriate DIP switches).
++ */
++#define I2C0	1
++#define LED8	(!I2C0)
++#define LED9	(!I2C0)
++
+ / {
+ 	model = "Renesas RZ/N2H EVK Board based on r9a09g087m44";
+ 	compatible = "renesas,rzn2h-evk", "renesas,r9a09g087m44", "renesas,r9a09g087";
+@@ -60,6 +68,7 @@ led-7 {
+ 			function-enumerator = <8>;
+ 		};
+ 
++#if LED8
+ 		led-8 {
+ 			/*
+ 			 * USER_LED0
+@@ -70,7 +79,9 @@ led-8 {
+ 			function = LED_FUNCTION_DEBUG;
+ 			function-enumerator = <0>;
+ 		};
++#endif
+ 
++#if LED9
+ 		led-9 {
+ 			/*
+ 			 * USER_LED1
+@@ -81,6 +92,7 @@ led-9 {
+ 			function = LED_FUNCTION_DEBUG;
+ 			function-enumerator = <1>;
+ 		};
++#endif
+ 
+ 		led-10 {
+ 			/*
+@@ -105,3 +117,47 @@ led-11 {
+ 		};
+ 	};
+ };
++
++#if I2C0
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <400000>;
++	status = "okay";
++};
++#endif
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <400000>;
++	status = "okay";
++};
++
++&pinctrl {
++	/*
++	 * I2C0 Pin Configuration:
++	 * ------------------------
++	 * Signal | Pin     | DSW15
++	 * -------|---------|--------------
++	 * SCL    | P14_6   | 8: OFF, 9: ON, 10: OFF
++	 * SDA    | P14_7   | 5: ON, 6: OFF
++	 */
++	i2c0_pins: i2c0-pins {
++		pinmux = <RZT2H_PORT_PINMUX(14, 6, 0x17)>,
++			 <RZT2H_PORT_PINMUX(14, 7, 0x17)>;
++	};
++
++	/*
++	 * I2C1 Pin Configuration:
++	 * ------------------------
++	 * Signal | Pin     | DSW7
++	 * -------|---------|--------------
++	 * SCL    | P03_3   | 1: ON, 2: OFF
++	 * SDA    | P03_4   | 3: ON, 4: OFF
++	 */
++	i2c1_pins: i2c1-pins {
++		pinmux = <RZT2H_PORT_PINMUX(3, 3, 0x17)>,
++			 <RZT2H_PORT_PINMUX(3, 4, 0x17)>;
++	};
++};

@@ -1,0 +1,18 @@
+From fdb821a4c1ec0b772fcb433fb653749292ad424e Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Fri, 15 May 2026 19:42:48 +0900
+Subject: [PATCH 432/432] CIP: Bump version suffix to -cip23 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index 4b19f164aedf..1fef53f319cc 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip22
++-cip23

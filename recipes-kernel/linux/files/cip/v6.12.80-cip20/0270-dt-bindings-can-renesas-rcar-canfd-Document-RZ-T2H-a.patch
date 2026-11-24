@@ -1,0 +1,134 @@
+From 99524bdb6d295455b702a1dc8b49c4224dc39bdd Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 7 Apr 2026 11:58:03 +0100
+Subject: [PATCH 270/283] dt-bindings: can: renesas,rcar-canfd: Document RZ/T2H
+ and RZ/N2H SoCs
+
+commit 1e3710b1fe915e24ff78f6b7a838eb9557c5baca upstream.
+
+Document the CAN-FD controller used on the RZ/T2H and RZ/N2H SoCs. The
+CAN-FD IP is largely compatible with the R-Car Gen4 block, but differs
+in that AFLPN and CFTML are different, there is no reset line for the IP,
+and it only supports two channels.
+
+Sync the resets and reset-names schema handling with other CAN-FD SoCs so
+DT validation stays consistent and maintainable.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260114154525.3169992-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/net/can/renesas,rcar-canfd.yaml  | 48 +++++++++++++++++--
+ 1 file changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+index fb709cfd26d7..b9d9dd7a7967 100644
+--- a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
++++ b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+@@ -12,6 +12,10 @@ maintainers:
+ properties:
+   compatible:
+     oneOf:
++      - enum:
++          - renesas,r9a09g047-canfd        # RZ/G3E
++          - renesas,r9a09g077-canfd        # RZ/T2H
++
+       - items:
+           - enum:
+               - renesas,r8a774a1-canfd     # RZ/G2M
+@@ -42,14 +46,16 @@ properties:
+               - renesas,r9a07g054-canfd    # RZ/V2L
+           - const: renesas,rzg2l-canfd     # RZ/G2L family
+ 
+-      - const: renesas,r9a09g047-canfd     # RZ/G3E
+-
+       - items:
+           - enum:
+               - renesas,r9a09g056-canfd     # RZ/V2N
+               - renesas,r9a09g057-canfd     # RZ/V2H(P)
+           - const: renesas,r9a09g047-canfd
+ 
++      - items:
++          - const: renesas,r9a09g087-canfd  # RZ/N2H
++          - const: renesas,r9a09g077-canfd
++
+   reg:
+     maxItems: 1
+ 
+@@ -179,7 +185,6 @@ required:
+   - clocks
+   - clock-names
+   - power-domains
+-  - resets
+   - assigned-clocks
+   - assigned-clock-rates
+   - channel0
+@@ -243,11 +248,25 @@ allOf:
+           minItems: 2
+           maxItems: 2
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g077-canfd
++    then:
++      properties:
++        interrupts:
++          maxItems: 8
++
++        interrupt-names:
++          maxItems: 8
++
+   - if:
+       properties:
+         compatible:
+           contains:
+             enum:
++              - renesas,r9a09g077-canfd
+               - renesas,rcar-gen3-canfd
+               - renesas,rzg2l-canfd
+     then:
+@@ -296,6 +315,16 @@ allOf:
+       properties:
+         renesas,no-can-fd: false
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g077-canfd
++    then:
++      properties:
++        resets: false
++        reset-names: false
++
+   - if:
+       properties:
+         compatible:
+@@ -305,8 +334,19 @@ allOf:
+               - renesas,rzg2l-canfd
+     then:
+       required:
++        - resets
+         - reset-names
+-    else:
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,rcar-gen3-canfd
++              - renesas,rcar-gen4-canfd
++    then:
++      required:
++        - resets
+       properties:
+         reset-names: false
+ 

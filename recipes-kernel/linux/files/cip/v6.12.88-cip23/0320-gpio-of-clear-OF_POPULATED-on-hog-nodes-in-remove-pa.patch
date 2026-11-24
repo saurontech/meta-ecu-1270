@@ -1,0 +1,40 @@
+From 2a9090b83dcdb2e7ff892cc47397627d22ec28b3 Mon Sep 17 00:00:00 2001
+From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Date: Mon, 9 Mar 2026 13:42:37 +0100
+Subject: [PATCH 320/432] gpio: of: clear OF_POPULATED on hog nodes in remove
+ path
+
+commit bbee90e750262bfb406d66dc65c46d616d2b6673 upstream.
+
+The previously set OF_POPULATED flag should be cleared on the hog nodes
+when removing the chip.
+
+Cc: stable@vger.kernel.org
+Fixes: 63636d956c455 ("gpio: of: Add DT overlay support for GPIO hogs")
+Acked-by: Linus Walleij <linusw@kernel.org>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Link: https://patch.msgid.link/20260309-gpio-hog-fwnode-v2-1-4e61f3dbf06a@oss.qualcomm.com
+Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/gpio/gpiolib-of.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
+index 36f8c7bb79d8..d074ec4d8add 100644
+--- a/drivers/gpio/gpiolib-of.c
++++ b/drivers/gpio/gpiolib-of.c
+@@ -1196,5 +1196,12 @@ int of_gpiochip_add(struct gpio_chip *chip)
+ 
+ void of_gpiochip_remove(struct gpio_chip *chip)
+ {
+-	of_node_put(dev_of_node(&chip->gpiodev->dev));
++	struct device_node *np = dev_of_node(&chip->gpiodev->dev);
++
++	for_each_child_of_node_scoped(np, child) {
++		if (of_property_present(child, "gpio-hog"))
++			of_node_clear_flag(child, OF_POPULATED);
++	}
++
++	of_node_put(np);
+ }

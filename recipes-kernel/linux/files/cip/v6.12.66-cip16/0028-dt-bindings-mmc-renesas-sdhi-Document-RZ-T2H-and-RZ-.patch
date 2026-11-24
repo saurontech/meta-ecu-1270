@@ -1,0 +1,152 @@
+From 77404aa74f5122d564702c6cac0f0e83c0d4b1ae Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 31 Dec 2025 17:00:15 +0000
+Subject: [PATCH 028/838] dt-bindings: mmc: renesas,sdhi: Document RZ/T2H and
+ RZ/N2H support
+
+commit b93d8b1cab299bc76f574f9e3cb8aafcfafc0037 upstream.
+
+Add SDHI bindings for the Renesas RZ/T2H (a.k.a R9A09G077) and RZ/N2H
+(a.k.a R9A09G087) SoCs. Use `renesas,sdhi-r9a09g057` as a fallback since
+the SD/MMC block on these SoCs is identical to the one on RZ/V2H(P),
+allowing reuse of the existing driver without modifications.
+
+Update the binding schema to reflect differences: unlike RZ/V2H(P),
+RZ/T2H and RZ/N2H do not require the `resets` property and use only a
+two clocks instead of four.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250617164914.158091-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../devicetree/bindings/mmc/renesas,sdhi.yaml | 85 ++++++++++++-------
+ 1 file changed, 53 insertions(+), 32 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml b/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
+index 7563623876fc..ba15ccbda61a 100644
+--- a/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
++++ b/Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml
+@@ -72,6 +72,8 @@ properties:
+           - enum:
+               - renesas,sdhi-r9a09g047 # RZ/G3E
+               - renesas,sdhi-r9a09g056 # RZ/V2N
++              - renesas,sdhi-r9a09g077 # RZ/T2H
++              - renesas,sdhi-r9a09g087 # RZ/N2H
+           - const: renesas,sdhi-r9a09g057 # RZ/V2H(P)
+ 
+   reg:
+@@ -129,59 +131,78 @@ allOf:
+         compatible:
+           contains:
+             enum:
+-              - renesas,sdhi-r9a09g057
+-              - renesas,rzg2l-sdhi
++              - renesas,sdhi-r9a09g077
++              - renesas,sdhi-r9a09g087
+     then:
+       properties:
++        resets: false
+         clocks:
+           items:
+-            - description: IMCLK, SDHI channel main clock1.
+-            - description: CLK_HS, SDHI channel High speed clock which operates
+-                           4 times that of SDHI channel main clock1.
+-            - description: IMCLK2, SDHI channel main clock2. When this clock is
+-                           turned off, external SD card detection cannot be
+-                           detected.
+-            - description: ACLK, SDHI channel bus clock.
++            - description: ACLK, IMCLK, SDHI channel bus and main clocks.
++            - description: CLK_HS, SDHI channel High speed clock.
+         clock-names:
+           items:
+-            - const: core
+-            - const: clkh
+-            - const: cd
+             - const: aclk
+-      required:
+-        - clock-names
+-        - resets
++            - const: clkh
+     else:
+       if:
+         properties:
+           compatible:
+             contains:
+               enum:
+-                - renesas,rcar-gen2-sdhi
+-                - renesas,rcar-gen3-sdhi
+-                - renesas,rcar-gen4-sdhi
++                - renesas,sdhi-r9a09g057
++                - renesas,rzg2l-sdhi
+       then:
+         properties:
+           clocks:
+-            minItems: 1
+-            maxItems: 3
+-          clock-names:
+-            minItems: 1
+-            uniqueItems: true
+             items:
+-              - const: core
+-              - enum: [ clkh, cd ]
+-              - const: cd
+-      else:
+-        properties:
+-          clocks:
+-            minItems: 1
+-            maxItems: 2
++              - description: IMCLK, SDHI channel main clock1.
++              - description: CLK_HS, SDHI channel High speed clock which operates
++                             4 times that of SDHI channel main clock1.
++              - description: IMCLK2, SDHI channel main clock2. When this clock is
++                             turned off, external SD card detection cannot be
++                             detected.
++              - description: ACLK, SDHI channel bus clock.
+           clock-names:
+-            minItems: 1
+             items:
+               - const: core
++              - const: clkh
+               - const: cd
++              - const: aclk
++        required:
++          - clock-names
++          - resets
++      else:
++        if:
++          properties:
++            compatible:
++              contains:
++                enum:
++                  - renesas,rcar-gen2-sdhi
++                  - renesas,rcar-gen3-sdhi
++                  - renesas,rcar-gen4-sdhi
++        then:
++          properties:
++            clocks:
++              minItems: 1
++              maxItems: 3
++            clock-names:
++              minItems: 1
++              uniqueItems: true
++              items:
++                - const: core
++                - enum: [ clkh, cd ]
++                - const: cd
++        else:
++          properties:
++            clocks:
++              minItems: 1
++              maxItems: 2
++            clock-names:
++              minItems: 1
++              items:
++                - const: core
++                - const: cd
+ 
+   - if:
+       properties:

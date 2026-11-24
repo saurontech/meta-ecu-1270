@@ -1,0 +1,36 @@
+From 0e85c5254cb015a544c3cd8e6d8f8afd0aa086d2 Mon Sep 17 00:00:00 2001
+From: "suricata.lu" <suricata.lu@gmail.com>
+Date: Fri, 13 Nov 2026 11:21:55 +0800
+Subject: [PATCH] net: ethernet: ti: cpsw-proxy-client: drop skip_fdq from
+ k3_udma_glue_reset_rx_chn()
+
+CIP patch 0574 (upstream 0da30874729b "dmaengine: ti: k3-udma-glue:
+Drop skip_fdq argument from k3_udma_glue_reset_rx_chn") removed the
+skip_fdq argument and converted the upstream callers. TI's CPSW Proxy
+Client is not upstream, so it still passed the old fifth argument and
+no longer builds.
+
+It resets flow 0 with skip_fdq = false. The function now skips the
+free descriptor queue only when the channel uses a single FDQ and
+flow_num is not 0, so dropping the argument keeps the behaviour.
+ti-linux-6.18.y makes the same call with four arguments.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ drivers/net/ethernet/ti/cpsw-proxy-client.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/ti/cpsw-proxy-client.c b/drivers/net/ethernet/ti/cpsw-proxy-client.c
+index 83218e3a7faa9..11be005e8de28 100644
+--- a/drivers/net/ethernet/ti/cpsw-proxy-client.c
++++ b/drivers/net/ethernet/ti/cpsw-proxy-client.c
+@@ -1710,8 +1710,7 @@ static void vport_stop(struct virtual_port *vport)
+ 		k3_udma_glue_rx_flow_disable(rx_chn->rx_chan, 0);
+ 		/* Need some delay to process RX ring before reset */
+ 		msleep(100);
+-		k3_udma_glue_reset_rx_chn(rx_chn->rx_chan, 0, rx_chn, vport_rx_cleanup,
+-					  false);
++		k3_udma_glue_reset_rx_chn(rx_chn->rx_chan, 0, rx_chn, vport_rx_cleanup);
+ 		napi_disable(&rx_chn->napi_rx);
+ 		hrtimer_cancel(&rx_chn->rx_hrtimer);
+ 	}

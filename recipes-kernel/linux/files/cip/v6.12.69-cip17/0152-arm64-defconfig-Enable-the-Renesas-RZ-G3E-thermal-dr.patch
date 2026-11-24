@@ -1,0 +1,34 @@
+From 59cd130a62ed9a5a99a73a5d64c4d1c062742451 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Wed, 28 Jan 2026 13:26:46 +0000
+Subject: [PATCH 152/420] arm64: defconfig: Enable the Renesas RZ/G3E thermal
+ driver
+
+commit caf433bb59db842b41f57e4d0088ce0f76bb302a upstream.
+
+Enable the Renesas RZ/G3E thermal driver, as used on the Renesas
+RZ/G3E SMARC EVK board.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20250917170202.197929-5-john.madieu.xa@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 789830ba9870..1503ada53d78 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -703,6 +703,7 @@ CONFIG_ROCKCHIP_THERMAL=m
+ CONFIG_RCAR_THERMAL=y
+ CONFIG_RCAR_GEN3_THERMAL=y
+ CONFIG_RZG2L_THERMAL=y
++CONFIG_RZG3E_THERMAL=y
+ CONFIG_RZG3S_THERMAL=m
+ CONFIG_ARMADA_THERMAL=y
+ CONFIG_MTK_THERMAL=m

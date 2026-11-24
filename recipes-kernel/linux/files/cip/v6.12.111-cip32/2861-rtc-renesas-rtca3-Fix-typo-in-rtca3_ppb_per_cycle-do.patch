@@ -1,0 +1,36 @@
+From 901e11297d04856cedaf329d23a10d9b31bb605d Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 17 Sep 2026 10:16:15 +0100
+Subject: [PATCH 2861/2868] rtc: renesas-rtca3: Fix typo in rtca3_ppb_per_cycle
+ documentation
+
+commit 9fb12656a7a5473b1ce46e27f78e92e5e8df7c58 upstream.
+
+Correct a typo in the kernel-doc comment for struct
+rtca3_ppb_per_cycle by fixing "adjutment" to "adjustment".
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com> # on RZ/G3S
+Link: https://patch.msgid.link/20260602192559.1791344-5-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/rtc/rtc-renesas-rtca3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/rtc/rtc-renesas-rtca3.c b/drivers/rtc/rtc-renesas-rtca3.c
+index 67ef34456288..ea349dc1084b 100644
+--- a/drivers/rtc/rtc-renesas-rtca3.c
++++ b/drivers/rtc/rtc-renesas-rtca3.c
+@@ -103,7 +103,7 @@ enum rtca3_alrm_set_step {
+ 
+ /**
+  * struct rtca3_ppb_per_cycle - PPB per cycle
+- * @ten_sec: PPB per cycle in 10 seconds adjutment mode
++ * @ten_sec: PPB per cycle in 10 seconds adjustment mode
+  * @sixty_sec: PPB per cycle in 60 seconds adjustment mode
+  */
+ struct rtca3_ppb_per_cycle {

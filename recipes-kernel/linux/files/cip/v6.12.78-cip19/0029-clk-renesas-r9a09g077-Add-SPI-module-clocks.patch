@@ -1,0 +1,89 @@
+From 33cfb1d640e2ba55a42a1314a36b819d207a8d71 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Mon, 9 Mar 2026 17:06:06 +0200
+Subject: [PATCH 029/851] clk: renesas: r9a09g077: Add SPI module clocks
+
+commit 5fb2f67341bd4b7c482f2bbda6b78244a51c3923 upstream.
+
+The Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs have four SPI
+peripherals, each with their own clock divider, which divides PLL4 by
+either 24, 25, 30 or 32, similar to the SCI peripheral.
+
+The dividers feed into the usual module clocks.
+
+Add them all.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251105104151.1489281-2-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[cosmin.tanislav: resolve merge conflict]
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a09g077-cpg.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/r9a09g077-cpg.c b/drivers/clk/renesas/r9a09g077-cpg.c
+index af49565a544e..a1d420254ca6 100644
+--- a/drivers/clk/renesas/r9a09g077-cpg.c
++++ b/drivers/clk/renesas/r9a09g077-cpg.c
+@@ -46,12 +46,15 @@
+ #define DIVCA55C2	CONF_PACK(SCKCR2, 10, 1)
+ #define DIVCA55C3	CONF_PACK(SCKCR2, 11, 1)
+ #define DIVCA55S	CONF_PACK(SCKCR2, 12, 1)
++#define DIVSPI3ASYNC	CONF_PACK(SCKCR2, 16, 2)
+ 
++#define DIVSPI0ASYNC	CONF_PACK(SCKCR3, 0, 2)
++#define DIVSPI1ASYNC	CONF_PACK(SCKCR3, 2, 2)
++#define DIVSPI2ASYNC	CONF_PACK(SCKCR3, 4, 2)
+ #define DIVSCI0ASYNC	CONF_PACK(SCKCR3, 6, 2)
+ 
+ #define SEL_PLL		CONF_PACK(SCKCR, 22, 1)
+ 
+-
+ enum rzt2h_clk_types {
+ 	CLK_TYPE_RZT2H_DIV = CLK_TYPE_CUSTOM,	/* Clock with divider */
+ 	CLK_TYPE_RZT2H_MUX,			/* Clock with clock source selector */
+@@ -84,6 +87,10 @@ enum clk_ids {
+ 	CLK_SEL_CLK_PLL4,
+ 	CLK_PLL4D1,
+ 	CLK_SCI0ASYNC,
++	CLK_SPI0ASYNC,
++	CLK_SPI1ASYNC,
++	CLK_SPI2ASYNC,
++	CLK_SPI3ASYNC,
+ 
+ 	/* Module Clocks */
+ 	MOD_CLK_BASE,
+@@ -134,6 +141,15 @@ static const struct cpg_core_clk r9a09g077_core_clks[] __initconst = {
+ 	DEF_DIV(".sci0async", CLK_SCI0ASYNC, CLK_PLL4D1, DIVSCI0ASYNC,
+ 		dtable_24_25_30_32),
+ 
++	DEF_DIV(".spi0async", CLK_SPI0ASYNC, CLK_PLL4D1, DIVSPI0ASYNC,
++		dtable_24_25_30_32),
++	DEF_DIV(".spi1async", CLK_SPI1ASYNC, CLK_PLL4D1, DIVSPI1ASYNC,
++		dtable_24_25_30_32),
++	DEF_DIV(".spi2async", CLK_SPI2ASYNC, CLK_PLL4D1, DIVSPI2ASYNC,
++		dtable_24_25_30_32),
++	DEF_DIV(".spi3async", CLK_SPI3ASYNC, CLK_PLL4D1, DIVSPI3ASYNC,
++		dtable_24_25_30_32),
++
+ 	/* Core output clk */
+ 	DEF_DIV("CA55C0", R9A09G077_CLK_CA55C0, CLK_SEL_CLK_PLL0, DIVCA55C0,
+ 		dtable_1_2),
+@@ -156,10 +172,14 @@ static const struct mssr_mod_clk r9a09g077_mod_clks[] __initconst = {
+ 	DEF_MOD("sci0fck", 8, CLK_SCI0ASYNC),
+ 	DEF_MOD("iic0", 100, R9A09G077_CLK_PCLKL),
+ 	DEF_MOD("iic1", 101, R9A09G077_CLK_PCLKL),
++	DEF_MOD("spi0", 104, CLK_SPI0ASYNC),
++	DEF_MOD("spi1", 105, CLK_SPI1ASYNC),
++	DEF_MOD("spi2", 106, CLK_SPI2ASYNC),
+ 	DEF_MOD("adc0", 206, R9A09G077_CLK_PCLKH),
+ 	DEF_MOD("adc1", 207, R9A09G077_CLK_PCLKH),
+ 	DEF_MOD("adc2", 225, R9A09G077_CLK_PCLKM),
+ 	DEF_MOD("iic2", 601, R9A09G077_CLK_PCLKL),
++	DEF_MOD("spi3", 602, CLK_SPI3ASYNC),
+ 	DEF_MOD("sdhi0", 1212, R9A09G077_CLK_PCLKAM),
+ 	DEF_MOD("sdhi1", 1213, R9A09G077_CLK_PCLKAM),
+ };

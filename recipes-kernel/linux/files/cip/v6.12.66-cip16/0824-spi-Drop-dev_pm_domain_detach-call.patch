@@ -1,0 +1,62 @@
+From 221334f5f1be9b1c938bb06102de98dfae1ac31c Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Thu, 15 Jan 2026 10:35:50 +0200
+Subject: [PATCH 824/838] spi: Drop dev_pm_domain_detach() call
+
+commit c42e36a488c7e01f833fc9f4814f735b66b2d494 upstream.
+
+Starting with commit f99508074e78 ("PM: domains: Detach on
+device_unbind_cleanup()"), there is no longer a need to call
+dev_pm_domain_detach() in the bus remove function. The
+device_unbind_cleanup() function now handles this to avoid
+invoking devres cleanup handlers while the PM domain is
+powered off, which could otherwise lead to failures as
+described in the above-mentioned commit.
+
+Drop the explicit dev_pm_domain_detach() call and rely instead
+on the flags passed to dev_pm_domain_attach() to power off the
+domain.
+
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Message-ID: <20250827101612.928008-1-claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+[claudiu.beznea: drop dev_pm_domain_detach() conditionally]
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Ulrich Hecht <uli@fpond.eu>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+index e5f3372d86be..2e931ccc4c97 100644
+--- a/drivers/spi/spi.c
++++ b/drivers/spi/spi.c
+@@ -434,13 +434,14 @@ static int spi_probe(struct device *dev)
+ 			spi->irq = 0;
+ 	}
+ 
+-	ret = dev_pm_domain_attach(dev, PD_FLAG_ATTACH_POWER_ON);
++	ret = dev_pm_domain_attach(dev, PD_FLAG_ATTACH_POWER_ON |
++					PD_FLAG_DETACH_POWER_OFF);
+ 	if (ret)
+ 		return ret;
+ 
+ 	if (sdrv->probe) {
+ 		ret = sdrv->probe(spi);
+-		if (ret)
++		if (ret && !dev_pm_domain_allow_detach_on_unbind_cleanup())
+ 			dev_pm_domain_detach(dev, true);
+ 	}
+ 
+@@ -454,7 +455,8 @@ static void spi_remove(struct device *dev)
+ 	if (sdrv->remove)
+ 		sdrv->remove(to_spi_device(dev));
+ 
+-	dev_pm_domain_detach(dev, true);
++	if (!dev_pm_domain_allow_detach_on_unbind_cleanup())
++		dev_pm_domain_detach(dev, true);
+ }
+ 
+ static void spi_shutdown(struct device *dev)

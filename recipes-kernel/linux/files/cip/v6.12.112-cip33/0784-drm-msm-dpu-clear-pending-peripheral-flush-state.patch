@@ -1,0 +1,43 @@
+From a69f2e99e6bf9bac1332ef802a8c23dfc3968626 Mon Sep 17 00:00:00 2001
+From: Saim Shujah <saimzst@gmail.com>
+Date: Tue, 22 Sep 2026 14:58:34 -0400
+Subject: [PATCH 784/854] drm/msm/dpu: clear pending peripheral flush state
+
+[ Upstream commit a5b5cc909931572aec446e129c035b76b3f0c1fa ]
+
+dpu_hw_ctl_clear_pending_flush() resets the cached per-block state after a
+flush transaction, but misses pending_periph_flush_mask.
+
+The peripheral flush updater accumulates interface bits in this mask. A
+later transaction which sets the top-level peripheral flush bit can write
+stale interface bits to CTL_PERIPH_FLUSH together with the current state.
+
+Peripheral flush support was added after the helper started clearing every
+individual pending flush mask. Clear the peripheral mask together with the
+other cached child masks.
+
+Fixes: 64f7b81f0358 ("drm/msm/dpu: add support of new peripheral flush mechanism")
+Cc: stable@vger.kernel.org
+Signed-off-by: Saim Shujah <saimzst@gmail.com>
+Patchwork: https://patchwork.freedesktop.org/patch/748968/
+Link: https://lore.kernel.org/r/20260828065440.140410-1-saimzst@gmail.com
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+[ Adjusted context due to the missing pending_cwb_flush_mask field in Linux 6.12. ]
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c b/drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c
+index 2e50049f2f850..b07d09171262d 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c
+@@ -110,6 +110,7 @@ static inline void dpu_hw_ctl_clear_pending_flush(struct dpu_hw_ctl *ctx)
+ 	ctx->pending_flush_mask = 0x0;
+ 	ctx->pending_intf_flush_mask = 0;
+ 	ctx->pending_wb_flush_mask = 0;
++	ctx->pending_periph_flush_mask = 0;
+ 	ctx->pending_merge_3d_flush_mask = 0;
+ 	ctx->pending_dsc_flush_mask = 0;
+ 	ctx->pending_cdm_flush_mask = 0;

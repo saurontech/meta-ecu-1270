@@ -1,0 +1,45 @@
+From 5bc4c4223f62da0ce28ab393595e9a4621dd0ab8 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 3 Nov 2025 12:37:46 +0100
+Subject: [PATCH 162/192] dt-bindings: pinctrl: renesas: Document RZ/V2N SoC
+
+[ Upstream commit 626acded47269bd0aae73e80a0448256924e3bf8 ]
+
+Add documentation for the pin controller found on the Renesas RZ/V2N
+(R9A09G056) SoC. The RZ/V2N PFC differs slightly from the RZ/G2L family
+and is almost identical to the RZ/V2H(P) SoC, except that the RZ/V2H(P) SoC
+has an additional dedicated pin.
+
+To account for this, a SoC-specific compatible string,
+'renesas,r9a09g056-pinctrl', is introduced for the RZ/V2N SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250407191628.323613-10-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml      | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
+index 11e22610125d..0cd00eb436dc 100644
+--- a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.yaml
+@@ -27,6 +27,7 @@ properties:
+               - renesas,r9a07g044-pinctrl # RZ/G2{L,LC}
+               - renesas,r9a08g045-pinctrl # RZ/G3S
+               - renesas,r9a09g047-pinctrl # RZ/G3E
++              - renesas,r9a09g056-pinctrl # RZ/V2N
+               - renesas,r9a09g057-pinctrl # RZ/V2H(P)
+ 
+       - items:
+@@ -159,6 +160,7 @@ allOf:
+           contains:
+             enum:
+               - renesas,r9a09g047-pinctrl
++              - renesas,r9a09g056-pinctrl
+               - renesas,r9a09g057-pinctrl
+     then:
+       properties:

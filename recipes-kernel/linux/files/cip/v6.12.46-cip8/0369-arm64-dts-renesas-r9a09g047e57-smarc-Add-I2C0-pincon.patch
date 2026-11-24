@@ -1,0 +1,48 @@
+From 8bc6d64fb9c4a8097676435797b55efccab86f62 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:47 +0200
+Subject: [PATCH 369/643] arm64: dts: renesas: r9a09g047e57-smarc: Add I2C0
+ pincontrol
+
+commit bf3409a6612cb94b03c708350d56a4755e65970d upstream.
+
+Add device node for I2C0 pincontrol.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250514162422.910114-3-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 1f5e61a73c35..2454a9743df2 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -74,6 +74,11 @@ &can_transceiver1 {
+ };
+ #endif
+ 
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++};
++
+ &pinctrl {
+ 	canfd_pins: canfd {
+ 		can1_pins: can1 {
+@@ -87,6 +92,11 @@ can4_pins: can4 {
+ 		};
+ 	};
+ 
++	i2c0_pins: i2c0 {
++		pinmux = <RZG3E_PORT_PINMUX(D, 4, 4)>, /* SCL0 */
++			 <RZG3E_PORT_PINMUX(D, 5, 4)>; /* SDA0 */
++	};
++
+ 	scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";
+ 		renesas,output-impedance = <1>;

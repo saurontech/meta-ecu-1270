@@ -1,0 +1,43 @@
+From 1963ef43fc5198f64b81c120528de81479cb5e07 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 4 May 2026 06:49:37 +0000
+Subject: [PATCH 003/432] dt-bindings: phy: renesas,rzg3e-usb3-phy: Add
+ RZ/V2H(P) and RZ/V2N support
+
+commit 8a203b0571d0a28e227dff7ab81e64cd7aa18e17 upstream.
+
+Add compatibles for the USB3.0 PHY used in the RZ/V2H(P) and RZ/V2N SoCs.
+These SoCs integrate the same USB3 PHY IP block as the RZ/G3E, so the
+RZ/G3E compatible is used as a fallback for both.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+Link: https://patch.msgid.link/20251222161846.152952-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/phy/renesas,rzg3e-usb3-phy.yaml  | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/phy/renesas,rzg3e-usb3-phy.yaml b/Documentation/devicetree/bindings/phy/renesas,rzg3e-usb3-phy.yaml
+index b86dc7a291a4..6d97e038a927 100644
+--- a/Documentation/devicetree/bindings/phy/renesas,rzg3e-usb3-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/renesas,rzg3e-usb3-phy.yaml
+@@ -11,7 +11,14 @@ maintainers:
+ 
+ properties:
+   compatible:
+-    const: renesas,r9a09g047-usb3-phy
++    oneOf:
++      - const: renesas,r9a09g047-usb3-phy # RZ/G3E
++
++      - items:
++          - enum:
++              - renesas,r9a09g056-usb3-phy # RZ/V2N
++              - renesas,r9a09g057-usb3-phy # RZ/V2H(P)
++          - const: renesas,r9a09g047-usb3-phy
+ 
+   reg:
+     maxItems: 1

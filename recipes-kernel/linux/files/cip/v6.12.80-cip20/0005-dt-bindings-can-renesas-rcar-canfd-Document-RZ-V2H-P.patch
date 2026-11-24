@@ -1,0 +1,41 @@
+From 1c9d5b4070c43327b099184df34c0ee37477159c Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 27 Mar 2026 09:42:29 +0000
+Subject: [PATCH 005/283] dt-bindings: can: renesas,rcar-canfd: Document
+ RZ/V2H(P) and RZ/V2N SoCs
+
+commit c74ab6275c34315b3987750760c900136b1009fe upstream.
+
+Document CANFD IP found on the Renesas RZ/V2H(P) (R9A09G057) and RZ/V2N
+(R9A09G056) SoCs. The CANFD IP on these SoCs are identical to that found
+on the RZ/G3E (R9A09G047) SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260114154525.3169992-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/net/can/renesas,rcar-canfd.yaml     | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+index 9bfd4f44e4d4..fb709cfd26d7 100644
+--- a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
++++ b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+@@ -44,6 +44,12 @@ properties:
+ 
+       - const: renesas,r9a09g047-canfd     # RZ/G3E
+ 
++      - items:
++          - enum:
++              - renesas,r9a09g056-canfd     # RZ/V2N
++              - renesas,r9a09g057-canfd     # RZ/V2H(P)
++          - const: renesas,r9a09g047-canfd
++
+   reg:
+     maxItems: 1
+ 

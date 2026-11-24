@@ -1,0 +1,51 @@
+From 6f7aed789ba273ababe2b2f4d4c39ac41381b2f7 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:26 +0100
+Subject: [PATCH 007/286] dt-bindings: soc: renesas: Document RZ/G3L SoC
+ variants, SMARC SoM and Carrier-II EVK
+
+[ Upstream commit 56c828dff9ff5e787e74d901e8b530a36b8941da ]
+
+Document Renesas RZ/G3L (R9A08G046) SoC variants and the Renesas RZ/G3L
+SMARC Carrier-II EVK board which is based on the Renesas RZ/G3L SMARC SoM.
+The RZ/G3L SMARC Carrier-II EVK consists of an RZ/G3L SoM module and a
+SMARC Carrier-II carrier board.  The SoM module sits on top of the carrier
+board.
+
+Reviewed-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260203103031.247435-3-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../devicetree/bindings/soc/renesas/renesas.yaml    | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+index 2006c6975b30..b0ac451abf6c 100644
+--- a/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas.yaml
+@@ -519,6 +519,19 @@ properties:
+           - const: renesas,r9a08g045s33 # PCIe support
+           - const: renesas,r9a08g045
+ 
++      - description: RZ/G3L (R9A08G046)
++        items:
++          - enum:
++              - renesas,smarc2-evk # RZ SMARC Carrier-II EVK
++          - enum:
++              - renesas,rzg3l-smarcm # RZ/G3L SMARC Module (SoM)
++          - enum:
++              - renesas,r9a08g046l26 # Dual Cortex-A55 + Cortex-M33 + GE3D/VCP (14mm LFBGA)
++              - renesas,r9a08g046l28 # Dual Cortex-A55 + Cortex-M33 + GE3D/VCP (17mm LFBGA)
++              - renesas,r9a08g046l46 # Quad Cortex-A55 + Cortex-M33 + GE3D/VCP (14mm LFBGA)
++              - renesas,r9a08g046l48 # Quad Cortex-A55 + Cortex-M33 + GE3D/VCP (17mm LFBGA)
++          - const: renesas,r9a08g046
++
+       - description: RZ/V2M (R9A09G011)
+         items:
+           - enum:

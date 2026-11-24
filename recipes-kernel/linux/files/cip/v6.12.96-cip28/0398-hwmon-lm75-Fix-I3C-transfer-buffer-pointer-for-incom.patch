@@ -1,0 +1,35 @@
+From abc1ff7e78a43a6523e775c5cd45ddb094e5dd40 Mon Sep 17 00:00:00 2001
+From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Date: Fri, 17 Jul 2026 15:15:02 +0200
+Subject: [PATCH 398/399] hwmon: (lm75) Fix I3C transfer buffer pointer for
+ incoming data
+
+commit 0ddce5549012a3f3b9ddcf59822aa0d1be61e8e8 upstream.
+
+Use the I3C private transfer input buffer pointer for incoming data
+instead of output buffer. For now this is harmless since both of those
+pointers are union members but may confuse when reading the code.
+
+Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Link: https://lore.kernel.org/r/20250513111739.508886-1-jarkko.nikula@linux.intel.com
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/hwmon/lm75.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/hwmon/lm75.c b/drivers/hwmon/lm75.c
+index d95a3c6c245c..9b4875e2fd8d 100644
+--- a/drivers/hwmon/lm75.c
++++ b/drivers/hwmon/lm75.c
+@@ -622,7 +622,7 @@ static int lm75_i3c_reg_read(void *context, unsigned int reg, unsigned int *val)
+ 		{
+ 			.rnw = true,
+ 			.len = 2,
+-			.data.out = data->val_buf,
++			.data.in = data->val_buf,
+ 		},
+ 	};
+ 	int ret;

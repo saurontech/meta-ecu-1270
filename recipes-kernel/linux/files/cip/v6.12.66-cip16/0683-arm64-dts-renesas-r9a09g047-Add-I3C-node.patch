@@ -1,0 +1,67 @@
+From a2da5595b46fed1e66db46d92b2ac3adf920d3f7 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Thu, 8 Jan 2026 10:30:17 +0100
+Subject: [PATCH 683/838] arm64: dts: renesas: r9a09g047: Add I3C node
+
+commit 6fb1e70e7a918969573bc5258975456bb7165cc0 upstream.
+
+Add the I3C node to RZ/G3E SoC DTSI.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250807151434.5241-8-wsa+renesas@sang-engineering.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 35 ++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+index b55b113d1f11..42bf6a57df97 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
+@@ -322,6 +322,41 @@ scif0: serial@11c01400 {
+ 			status = "disabled";
+ 		};
+ 
++		i3c: i3c@12400000 {
++			compatible = "renesas,r9a09g047-i3c";
++			reg = <0 0x12400000 0 0x10000>;
++			clocks = <&cpg CPG_MOD 0x91>,
++				 <&cpg CPG_MOD 0x92>,
++				 <&cpg CPG_MOD 0x90>;
++			clock-names = "pclk", "tclk", "pclkrw";
++			interrupts = <GIC_SPI 674 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 675 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 676 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 677 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 678 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 679 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 680 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 681 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 682 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 689 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 690 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 692 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 693 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 694 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 695 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 696 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "ierr", "terr", "abort", "resp",
++					  "cmd", "ibi", "rx", "tx", "rcv",
++					  "st", "sp", "tend", "nack", "al",
++					  "tmo", "wu";
++			resets = <&cpg 0x96>, <&cpg 0x97>;
++			reset-names = "presetn", "tresetn";
++			power-domains = <&cpg>;
++			#address-cells = <3>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		canfd: can@12440000 {
+ 			compatible = "renesas,r9a09g047-canfd";
+ 			reg = <0 0x12440000 0 0x40000>;

@@ -1,0 +1,57 @@
+From 88b34145c816a526443c638ec9b60f6def0e37fa Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 2 Jul 2026 11:23:46 +0100
+Subject: [PATCH 252/286] dt-bindings: pinctrl: renesas,r9a09g077: Document pin
+ configuration properties
+
+commit 9efe63b74e9c30777db9815dc5d38d667576ac6f upstream.
+
+Document the pin configuration properties supported by the RZ/T2H
+pinctrl driver.
+
+The RZ/T2H SoC allows configuring several electrical characteristics
+through the DRCTLm (I/O Buffer Function Switching) registers. These
+registers control drive strength, bias configuration, Schmitt trigger
+input, and output slew rate.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Linus Walleij <linusw@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260319141515.2053556-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../pinctrl/renesas,r9a09g077-pinctrl.yaml      | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml
+index 36d665971484..d622cd94340a 100644
+--- a/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/renesas,r9a09g077-pinctrl.yaml
+@@ -72,6 +72,23 @@ definitions:
+       input: true
+       input-enable: true
+       output-enable: true
++      bias-disable: true
++      bias-pull-down: true
++      bias-pull-up: true
++      input-schmitt-enable: true
++      input-schmitt-disable: true
++      slew-rate:
++        description: 0 is slow slew rate, 1 is fast slew rate
++        enum: [0, 1]
++      drive-strength-microamp:
++        description: |
++          Four discrete levels are supported (via registers DRCTLm), corresponding
++          to the following nominal values:
++          - 2500  (Low strength)
++          - 5000  (Middle strength)
++          - 9000  (High strength)
++          - 11800 (Ultra High strength)
++        enum: [2500, 5000, 9000, 11800]
+     oneOf:
+       - required: [pinmux]
+       - required: [pins]

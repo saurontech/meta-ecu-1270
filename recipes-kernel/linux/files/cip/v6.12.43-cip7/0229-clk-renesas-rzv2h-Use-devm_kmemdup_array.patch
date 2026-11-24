@@ -1,0 +1,35 @@
+From 8813548d30eeb1a8f98167bd06b732e49332737f Mon Sep 17 00:00:00 2001
+From: Raag Jadav <raag.jadav@intel.com>
+Date: Wed, 20 Aug 2025 09:45:53 +0100
+Subject: [PATCH 229/246] clk: renesas: rzv2h: Use devm_kmemdup_array()
+
+commit 338b505d564c1ea04d5ad0495dd25098a475f168 upstream.
+
+Convert to use devm_kmemdup_array() which is more robust.
+
+Signed-off-by: Raag Jadav <raag.jadav@intel.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250610072809.1808464-1-raag.jadav@intel.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/clk/renesas/rzv2h-cpg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index d60907e20977..47b1f1e0cae8 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -1031,8 +1031,8 @@ static int __init rzv2h_cpg_probe(struct platform_device *pdev)
+ 	/* Adjust for CPG_BUS_m_MSTOP starting from m = 1 */
+ 	priv->mstop_count -= 16;
+ 
+-	priv->resets = devm_kmemdup(dev, info->resets, sizeof(*info->resets) *
+-				    info->num_resets, GFP_KERNEL);
++	priv->resets = devm_kmemdup_array(dev, info->resets, info->num_resets,
++					  sizeof(*info->resets), GFP_KERNEL);
+ 	if (!priv->resets)
+ 		return -ENOMEM;
+ 

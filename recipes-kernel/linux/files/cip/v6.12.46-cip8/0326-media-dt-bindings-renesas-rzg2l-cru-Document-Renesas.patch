@@ -1,0 +1,133 @@
+From f3c350ced2613e7ff98d2be56a0aca02642c3d88 Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 20 Aug 2025 18:07:04 +0200
+Subject: [PATCH 326/643] media: dt-bindings: renesas,rzg2l-cru: Document
+ Renesas RZ/G3E SoC
+
+commit d71be5add2f3fd4e11c11a21855df17c48088fc2 upstream.
+
+The CRU block found on the Renesas RZ/G3E ("R9A09G047") SoC has five
+interrupts:
+
+ - image_conv:    image_conv irq
+ - axi_mst_err:   AXI master error level irq
+ - vd_addr_wend:  Video data AXI master addr 0 write end irq
+ - sd_addr_wend:  Statistics data AXI master addr 0 write end irq
+ - vsd_addr_wend: Video statistics data AXI master addr 0 write end irq
+
+This IP has only one input port 'port@1' similar to the RZ/G2UL CRU.
+
+Document the CRU block found on the Renesas RZ/G3E ("R9A09G047") SoC.
+
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250411170624.472257-4-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../bindings/media/renesas,rzg2l-cru.yaml     | 65 +++++++++++++++----
+ 1 file changed, 54 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/media/renesas,rzg2l-cru.yaml b/Documentation/devicetree/bindings/media/renesas,rzg2l-cru.yaml
+index bc1245127025..47e18690fa57 100644
+--- a/Documentation/devicetree/bindings/media/renesas,rzg2l-cru.yaml
++++ b/Documentation/devicetree/bindings/media/renesas,rzg2l-cru.yaml
+@@ -17,24 +17,43 @@ description:
+ 
+ properties:
+   compatible:
+-    items:
+-      - enum:
+-          - renesas,r9a07g043-cru       # RZ/G2UL
+-          - renesas,r9a07g044-cru       # RZ/G2{L,LC}
+-          - renesas,r9a07g054-cru       # RZ/V2L
+-      - const: renesas,rzg2l-cru
++    oneOf:
++      - items:
++          - enum:
++              - renesas,r9a07g043-cru       # RZ/G2UL
++              - renesas,r9a07g044-cru       # RZ/G2{L,LC}
++              - renesas,r9a07g054-cru       # RZ/V2L
++          - const: renesas,rzg2l-cru
++      - const: renesas,r9a09g047-cru        # RZ/G3E
+ 
+   reg:
+     maxItems: 1
+ 
+   interrupts:
+-    maxItems: 3
++    oneOf:
++      - items:
++          - description: CRU Interrupt for image_conv
++          - description: CRU Interrupt for image_conv_err
++          - description: CRU AXI master error interrupt
++      - items:
++          - description: CRU Interrupt for image_conv
++          - description: CRU AXI master error interrupt
++          - description: CRU Video Data AXI Master Address 0 Write End interrupt
++          - description: CRU Statistics data AXI master addr 0 write end interrupt
++          - description: CRU Video statistics data AXI master addr 0 write end interrupt
+ 
+   interrupt-names:
+-    items:
+-      - const: image_conv
+-      - const: image_conv_err
+-      - const: axi_mst_err
++    oneOf:
++      - items:
++          - const: image_conv
++          - const: image_conv_err
++          - const: axi_mst_err
++      - items:
++          - const: image_conv
++          - const: axi_mst_err
++          - const: vd_addr_wend
++          - const: sd_addr_wend
++          - const: vsd_addr_wend
+ 
+   clocks:
+     items:
+@@ -109,6 +128,10 @@ allOf:
+               - renesas,r9a07g054-cru
+     then:
+       properties:
++        interrupts:
++          maxItems: 3
++        interrupt-names:
++          maxItems: 3
+         ports:
+           required:
+             - port@0
+@@ -122,10 +145,30 @@ allOf:
+               - renesas,r9a07g043-cru
+     then:
+       properties:
++        interrupts:
++          maxItems: 3
++        interrupt-names:
++          maxItems: 3
+         ports:
+           properties:
+             port@0: false
++          required:
++            - port@1
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: renesas,r9a09g047-cru
++    then:
++      properties:
++        interrupts:
++          minItems: 5
++        interrupt-names:
++          minItems: 5
++        ports:
++          properties:
++            port@0: false
+           required:
+             - port@1
+ 

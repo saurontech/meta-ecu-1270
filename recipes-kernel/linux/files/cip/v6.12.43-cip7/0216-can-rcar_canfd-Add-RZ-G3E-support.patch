@@ -1,0 +1,78 @@
+From c8c819a09951ac3c4ccd129a263c40d6e43f8ef4 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 14 Jul 2025 11:16:33 +0100
+Subject: [PATCH 216/246] can: rcar_canfd: Add RZ/G3E support
+
+commit be53aa052008538d67d9ad23f6f8160df390e1d6 upstream.
+
+The CAN-FD IP found on the RZ/G3E SoC is similar to R-Car Gen4, but
+it has no external clock instead it has clk_ram, it has 6 channels
+and supports 20 interrupts. Add support for RZ/G3E CAN-FD driver.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20250417054320.14100-20-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 6a9c970364cb..27d503ac87dc 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -726,6 +726,22 @@ static const struct rcar_canfd_hw_info rzg2l_hw_info = {
+ 	.external_clk = 1,
+ };
+ 
++static const struct rcar_canfd_hw_info r9a09g047_hw_info = {
++	.nom_bittiming = &rcar_canfd_gen4_nom_bittiming_const,
++	.data_bittiming = &rcar_canfd_gen4_data_bittiming_const,
++	.regs = &rcar_gen4_regs,
++	.sh = &rcar_gen4_shift_data,
++	.rnc_field_width = 16,
++	.max_aflpn = 63,
++	.max_cftml = 31,
++	.max_channels = 6,
++	.postdiv = 1,
++	.multi_channel_irqs = 1,
++	.ch_interface_mode = 1,
++	.shared_can_regs = 1,
++	.external_clk = 0,
++};
++
+ /* Helper functions */
+ static inline void rcar_canfd_update(u32 mask, u32 val, u32 __iomem *reg)
+ {
+@@ -1969,6 +1985,7 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+ 	u32 rule_entry = 0;
+ 	bool fdmode = true;			/* CAN FD only mode - default */
+ 	char name[9] = "channelX";
++	struct clk *clk_ram;
+ 	int i;
+ 
+ 	info = of_device_get_match_data(dev);
+@@ -2058,6 +2075,11 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+ 		gpriv->extclk = gpriv->info->external_clk;
+ 	}
+ 
++	clk_ram = devm_clk_get_optional_enabled(dev, "ram_clk");
++	if (IS_ERR(clk_ram))
++		return dev_err_probe(dev, PTR_ERR(clk_ram),
++				     "cannot get enabled ram clock\n");
++
+ 	addr = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(addr)) {
+ 		err = PTR_ERR(addr);
+@@ -2220,6 +2242,7 @@ static SIMPLE_DEV_PM_OPS(rcar_canfd_pm_ops, rcar_canfd_suspend,
+ 
+ static const __maybe_unused struct of_device_id rcar_canfd_of_table[] = {
+ 	{ .compatible = "renesas,r8a779a0-canfd", .data = &rcar_gen4_hw_info },
++	{ .compatible = "renesas,r9a09g047-canfd", .data = &r9a09g047_hw_info },
+ 	{ .compatible = "renesas,rcar-gen3-canfd", .data = &rcar_gen3_hw_info },
+ 	{ .compatible = "renesas,rcar-gen4-canfd", .data = &rcar_gen4_hw_info },
+ 	{ .compatible = "renesas,rzg2l-canfd", .data = &rzg2l_hw_info },

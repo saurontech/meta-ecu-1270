@@ -1,0 +1,36 @@
+From 7b122aed0f6b9528a1696529cd95e1396a710c89 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 5 Dec 2025 14:32:23 +0000
+Subject: [PATCH 319/724] dt-bindings: serial: rsci: Update maintainer entry
+
+commit 64a2e41b8ef7771554374a0ac8386648fc6db2ba upstream.
+
+Add myself as the maintainer for the Renesas RSCI device tree binding,
+as Thierry Bultel no longer works for Renesas.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: "Rob Herring (Arm)" <robh@kernel.org>
+Link: https://lore.kernel.org/r/20250630202323.279809-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Message-ID: <20251205143258.13748-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@denx.de>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ Documentation/devicetree/bindings/serial/renesas,rsci.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/serial/renesas,rsci.yaml b/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
+index 1bf255407df0..548225e509e5 100644
+--- a/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
++++ b/Documentation/devicetree/bindings/serial/renesas,rsci.yaml
+@@ -8,7 +8,7 @@ title: Renesas RSCI Serial Communication Interface
+ 
+ maintainers:
+   - Geert Uytterhoeven <geert+renesas@glider.be>
+-  - Thierry Bultel <thierry.bultel.yh@bp.renesas.com>
++  - Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+ 
+ allOf:
+   - $ref: serial.yaml#

@@ -1,0 +1,45 @@
+From 1f7bdfbe791aacad77db87f044e78ef60a93ae0d Mon Sep 17 00:00:00 2001
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Date: Fri, 22 May 2026 10:25:31 -0700
+Subject: [PATCH 0964/1853] Input: ims-pcu - fix firmware leak in async update
+
+commit d48795b5cd6828d36b707e8d62fc9e5c90e004ab upstream.
+
+The firmware object was not being released if validation failed.
+Use __free(firmware) to ensure the firmware is always released.
+
+Fixes: 628329d52474 ("Input: add IMS Passenger Control Unit driver")
+Cc: stable@vger.kernel.org
+Reported-by: Sashiko bot <sashiko-bot@kernel.org>
+Assisted-by: Gemini:gemini-3.1-pro
+Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/input/misc/ims-pcu.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/input/misc/ims-pcu.c b/drivers/input/misc/ims-pcu.c
+index 2a8761ce8e68..9c1351fc5ee6 100644
+--- a/drivers/input/misc/ims-pcu.c
++++ b/drivers/input/misc/ims-pcu.c
+@@ -944,9 +944,10 @@ static int ims_pcu_handle_firmware_update(struct ims_pcu *pcu,
+ 	return retval;
+ }
+ 
+-static void ims_pcu_process_async_firmware(const struct firmware *fw,
++static void ims_pcu_process_async_firmware(const struct firmware *_fw,
+ 					   void *context)
+ {
++	const struct firmware *fw __free(firmware) = _fw;
+ 	struct ims_pcu *pcu = context;
+ 	int error;
+ 
+@@ -966,8 +967,6 @@ static void ims_pcu_process_async_firmware(const struct firmware *fw,
+ 	scoped_guard(mutex, &pcu->cmd_mutex)
+ 		ims_pcu_handle_firmware_update(pcu, fw);
+ 
+-	release_firmware(fw);
+-
+ out:
+ 	complete(&pcu->async_firmware_done);
+ }

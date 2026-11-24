@@ -1,0 +1,97 @@
+From 63b01b83edc3580eb92dc4b32542855425dfc62f Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 9 Mar 2026 07:51:07 +0000
+Subject: [PATCH 024/851] dt-bindings: can: renesas,rcar-canfd: Specify
+ reset-names
+
+[ Upstream commit af6b427c7ad096724da7399b180dc3bb9f033322 ]
+
+Specify the expected reset-names for the Renesas CAN-FD controller on
+RZ/G2L and RZ/G3E SoCs.
+
+The reset names rstp_n and rstc_n are defined in the SoC hardware manual
+and are already used by the driver since commit 76e9353a80e9 ("can:
+rcar_canfd: Add support for RZ/G2L family"). The reset-names property
+existed previously but was dropped by commit 466c8ef7b66b ("dt-bindings:
+can: renesas,rcar-canfd: Simplify the conditional schema").
+
+Restore and constrain reset-names in the binding so DT schema checks
+match the actual hardware requirements and driver expectations.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260114154525.3169992-2-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../bindings/net/can/renesas,rcar-canfd.yaml  | 33 +++++++++++--------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+index e129bdceef84..9bfd4f44e4d4 100644
+--- a/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
++++ b/Documentation/devicetree/bindings/net/can/renesas,rcar-canfd.yaml
+@@ -122,6 +122,11 @@ properties:
+ 
+   resets: true
+ 
++  reset-names:
++    items:
++      - const: rstp_n
++      - const: rstc_n
++
+   renesas,no-can-fd:
+     $ref: /schemas/types.yaml#/definitions/flag
+     description:
+@@ -195,13 +200,6 @@ allOf:
+           minItems: 2
+           maxItems: 2
+ 
+-        reset-names:
+-          minItems: 2
+-          maxItems: 2
+-
+-      required:
+-        - reset-names
+-
+   - if:
+       properties:
+         compatible:
+@@ -239,13 +237,6 @@ allOf:
+           minItems: 2
+           maxItems: 2
+ 
+-        reset-names:
+-          minItems: 2
+-          maxItems: 2
+-
+-      required:
+-        - reset-names
+-
+   - if:
+       properties:
+         compatible:
+@@ -299,6 +290,20 @@ allOf:
+       properties:
+         renesas,no-can-fd: false
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - renesas,r9a09g047-canfd
++              - renesas,rzg2l-canfd
++    then:
++      required:
++        - reset-names
++    else:
++      properties:
++        reset-names: false
++
+ unevaluatedProperties: false
+ 
+ examples:

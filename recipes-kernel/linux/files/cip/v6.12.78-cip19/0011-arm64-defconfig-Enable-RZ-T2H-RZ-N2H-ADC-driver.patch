@@ -1,0 +1,38 @@
+From 3f185e069d5c532c8e42023a1dc0c8e42da6ec95 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Tue, 3 Mar 2026 18:53:51 +0200
+Subject: [PATCH 011/851] arm64: defconfig: Enable RZ/T2H / RZ/N2H ADC driver
+
+commit e7d34657744a3e48e7ff3f61342eccd9852445bc upstream.
+
+Renesas RZ/T2H (R9A09G077) and RZ/N2H (R9A09G087) SoCs include three
+12-Bit successive approximation A/D converters.
+
+RZ/T2H has two ADCs with 4 channels and one with 6.
+RZ/N2H has two ADCs with 4 channels and one with 15.
+
+Enable the driver for them, as used on the RZ/T2H and RZ/N2H EVKs.
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251005111323.804638-7-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 7cc3f46ece81..efa6efe31a9b 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1488,6 +1488,7 @@ CONFIG_QCOM_SPMI_VADC=m
+ CONFIG_QCOM_SPMI_ADC5=m
+ CONFIG_ROCKCHIP_SARADC=m
+ CONFIG_RZG2L_ADC=m
++CONFIG_RZT2H_ADC=m
+ CONFIG_TI_ADS1015=m
+ CONFIG_TI_AM335X_ADC=m
+ CONFIG_IIO_CROS_EC_SENSORS_CORE=m

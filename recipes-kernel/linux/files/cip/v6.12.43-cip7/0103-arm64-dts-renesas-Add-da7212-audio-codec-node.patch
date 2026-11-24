@@ -1,0 +1,96 @@
+From 9efa92f55bf7d0588f71bbccd8b105ed12216d53 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 9 May 2025 12:32:01 +0300
+Subject: [PATCH 103/246] arm64: dts: renesas: Add da7212 audio codec node
+
+commit c3de00ac31f76b8e3af9f7a85c2da29c1b72babf upstream.
+
+Add the da7212 audio codec node. Along with it regulators nodes were
+reworked to be able to re-use them on da7212.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20241210170953.2936724-23-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ .../boot/dts/renesas/rzg3s-smarc-som.dtsi     | 17 ++++++++++-----
+ arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi  | 21 +++++++++++++++++++
+ 2 files changed, 33 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index 3399d20b93fc..041d256d7b79 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -58,7 +58,6 @@ vcc_sdhi0: regulator0 {
+ 		enable-active-high;
+ 	};
+ 
+-#if SW_CONFIG2 == SW_ON
+ 	vccq_sdhi0: regulator1 {
+ 		compatible = "regulator-gpio";
+ 		regulator-name = "SDHI0 VccQ";
+@@ -68,8 +67,8 @@ vccq_sdhi0: regulator1 {
+ 		gpios-states = <1>;
+ 		states = <3300000 1>, <1800000 0>;
+ 	};
+-#else
+-	reg_1p8v: regulator1 {
++
++	reg_1p8v: regulator2 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "fixed-1.8V";
+ 		regulator-min-microvolt = <1800000>;
+@@ -77,9 +76,17 @@ reg_1p8v: regulator1 {
+ 		regulator-boot-on;
+ 		regulator-always-on;
+ 	};
+-#endif
+ 
+-	vcc_sdhi2: regulator2 {
++	reg_3p3v: regulator3 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vcc_sdhi2: regulator4 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "SDHI2 Vcc";
+ 		regulator-min-microvolt = <3300000>;
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi
+index af2ab1629104..154a360c4527 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi
+@@ -76,6 +76,27 @@ &i2c0 {
+ 	status = "okay";
+ 
+ 	clock-frequency = <1000000>;
++
++	da7212: codec@1a {
++		compatible = "dlg,da7212";
++		reg = <0x1a>;
++
++		clocks = <&versa3 1>;
++		clock-names = "mclk";
++
++		#sound-dai-cells = <0>;
++
++		dlg,micbias1-lvl = <2500>;
++		dlg,micbias2-lvl = <2500>;
++		dlg,dmic-data-sel = "lrise_rfall";
++		dlg,dmic-samplephase = "between_clkedge";
++		dlg,dmic-clkrate = <3000000>;
++
++		VDDA-supply = <&reg_1p8v>;
++		VDDSP-supply = <&reg_3p3v>;
++		VDDMIC-supply = <&reg_3p3v>;
++		VDDIO-supply = <&reg_1p8v>;
++	};
+ };
+ 
+ &pinctrl {

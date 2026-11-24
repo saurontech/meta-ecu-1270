@@ -1,0 +1,33 @@
+From 5584ec8c7b9aad0af13c146445f23f7ae57a3884 Mon Sep 17 00:00:00 2001
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Date: Fri, 1 Nov 2024 11:57:19 +0200
+Subject: [PATCH 011/246] arm64: dts: renesas: rzg3s-smarc-som: Enable RTC
+
+Commit 0cd647cd53db0315361e41056e10739a5ee1e668 upstream.
+
+Enable RTC.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://lore.kernel.org/20241101095720.2247815-9-claudiu.beznea.uj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+index 3d25f3c4ab6c..55c72c8a0735 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3s-smarc-som.dtsi
+@@ -340,6 +340,10 @@ mux {
+ 	};
+ };
+ 
++&rtc {
++	status = "okay";
++};
++
+ &vbattb {
+ 	assigned-clocks = <&vbattb VBATTB_MUX>;
+ 	assigned-clock-parents = <&vbattb VBATTB_XC>;

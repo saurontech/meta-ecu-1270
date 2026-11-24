@@ -1,0 +1,72 @@
+From 872c093deef08a104a76b99189bacb9772e2f40c Mon Sep 17 00:00:00 2001
+From: Eric Dumazet <edumazet@google.com>
+Date: Fri, 21 Aug 2026 10:49:23 -0400
+Subject: [PATCH 253/435] ipv4: frags: remove ipq_put()
+
+[ Upstream commit a2fb987c0ecf0498cc17056339cb11d128c46ab7 ]
+
+Replace ipq_put() with inet_frag_putn()
+
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+Link: https://patch.msgid.link/20250312082250.1803501-3-edumazet@google.com
+Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+Stable-dep-of: 653d7ddf6cba ("inet: frags: publish queues before arming timer")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ net/ipv4/ip_fragment.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
+
+diff --git a/net/ipv4/ip_fragment.c b/net/ipv4/ip_fragment.c
+index b3c5ca0ad156..460e140f9648 100644
+--- a/net/ipv4/ip_fragment.c
++++ b/net/ipv4/ip_fragment.c
+@@ -107,14 +107,6 @@ static void ip4_frag_free(struct inet_frag_queue *q)
+ 		inet_putpeer(qp->peer);
+ }
+ 
+-
+-/* Destruction primitives. */
+-
+-static void ipq_put(struct ipq *ipq)
+-{
+-	inet_frag_putn(&ipq->q, 1);
+-}
+-
+ /* Kill ipq entry. It is not destroyed immediately,
+  * because caller (and someone more) holds reference count.
+  */
+@@ -142,6 +134,7 @@ static void ip_expire(struct timer_list *t)
+ 	struct sk_buff *head = NULL;
+ 	struct net *net;
+ 	struct ipq *qp;
++	int refs = 1;
+ 	int err;
+ 
+ 	qp = container_of(frag, struct ipq, q);
+@@ -203,7 +196,7 @@ static void ip_expire(struct timer_list *t)
+ out_rcu_unlock:
+ 	rcu_read_unlock();
+ 	kfree_skb_reason(head, SKB_DROP_REASON_FRAG_REASM_TIMEOUT);
+-	ipq_put(qp);
++	inet_frag_putn(&qp->q, refs);
+ }
+ 
+ /* Find the correct entry in the "incomplete datagrams" queue for
+@@ -492,14 +485,14 @@ int ip_defrag(struct net *net, struct sk_buff *skb, u32 user)
+ 	/* Lookup (or create) queue header */
+ 	qp = ip_find(net, ip_hdr(skb), user, vif);
+ 	if (qp) {
+-		int ret;
++		int ret, refs = 1;
+ 
+ 		spin_lock(&qp->q.lock);
+ 
+ 		ret = ip_frag_queue(qp, skb);
+ 
+ 		spin_unlock(&qp->q.lock);
+-		ipq_put(qp);
++		inet_frag_putn(&qp->q, refs);
+ 		return ret;
+ 	}
+ 

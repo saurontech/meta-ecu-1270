@@ -1,0 +1,42 @@
+From 81e25323eb2f6f336e5db6b73158f821aa74ec81 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 10 Mar 2026 16:00:48 +0000
+Subject: [PATCH 045/851] irqchip/renesas-rzv2h: Add support for RZ/V2N SoC
+
+commit 8d4c354bef3cc438db93f362e4657b317db03392 upstream.
+
+Add support for the RZ/V2N Interrupt Control Unit (ICU) by introducing a
+dedicated compatible string in the irqchip driver. While the RZ/V2N ICU
+differs from the RZ/V2H(P) version in its register layout primarily due
+to a reduced set of ECCRAM related registers the irqchip driver does not
+currently access these registers.
+
+As a result, the RZ/V2N ICU can be safely handled by rzv2h_icu_probe for
+now, but it still requires a distinct compatible so that future changes
+can differentiate the SoCs when needed.
+
+[ tglx: Fixed up the made up subject prefix ]
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://patch.msgid.link/20251127162447.320971-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+[OP: used rzv2h_icu_init instead of rzv2h_icu_probe in IRQCHIP_MATCH()]
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index ff3f84cfa8a1..41ee73c3dde6 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -688,6 +688,7 @@ static int rzv2h_icu_init(struct device_node *node, struct device_node *parent)
+ 
+ IRQCHIP_PLATFORM_DRIVER_BEGIN(rzv2h_icu)
+ IRQCHIP_MATCH("renesas,r9a09g047-icu", rzg3e_icu_init)
++IRQCHIP_MATCH("renesas,r9a09g056-icu", rzv2h_icu_init)
+ IRQCHIP_MATCH("renesas,r9a09g057-icu", rzv2h_icu_init)
+ IRQCHIP_PLATFORM_DRIVER_END(rzv2h_icu)
+ MODULE_AUTHOR("Fabrizio Castro <fabrizio.castro.jz@renesas.com>");

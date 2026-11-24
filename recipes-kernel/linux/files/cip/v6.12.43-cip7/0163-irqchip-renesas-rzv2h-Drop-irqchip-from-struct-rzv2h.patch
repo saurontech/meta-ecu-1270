@@ -1,0 +1,60 @@
+From 025ae67f463f2a1f84625f172ae7fde2cf0eac27 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Jul 2025 11:07:13 +0200
+Subject: [PATCH 163/246] irqchip/renesas-rzv2h: Drop irqchip from struct
+ rzv2h_icu_priv
+
+commit c56cab0c3ee063f30d1e53cca7614574e3c2cbd5 upstream.
+
+Use rzv2h_icu_chip directly on irq_domain_set_hwirq_and_chip() and drop
+the global variable irqchip from struct rzv2h_icu_priv.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Reviewed-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/all/20250224131253.134199-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index f6363246a71a..0573062c89c4 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -83,13 +83,11 @@
+ /**
+  * struct rzv2h_icu_priv - Interrupt Control Unit controller private data structure.
+  * @base:	Controller's base address
+- * @irqchip:	Pointer to struct irq_chip
+  * @fwspec:	IRQ firmware specific data
+  * @lock:	Lock to serialize access to hardware registers
+  */
+ struct rzv2h_icu_priv {
+ 	void __iomem			*base;
+-	const struct irq_chip		*irqchip;
+ 	struct irq_fwspec		fwspec[ICU_NUM_IRQ];
+ 	raw_spinlock_t			lock;
+ };
+@@ -390,7 +388,7 @@ static int rzv2h_icu_alloc(struct irq_domain *domain, unsigned int virq, unsigne
+ 	if (hwirq > (ICU_NUM_IRQ - 1))
+ 		return -EINVAL;
+ 
+-	ret = irq_domain_set_hwirq_and_chip(domain, virq, hwirq, priv->irqchip,
++	ret = irq_domain_set_hwirq_and_chip(domain, virq, hwirq, &rzv2h_icu_chip,
+ 					    (void *)(uintptr_t)tint);
+ 	if (ret)
+ 		return ret;
+@@ -446,8 +444,6 @@ static int rzv2h_icu_init(struct device_node *node, struct device_node *parent)
+ 		goto put_dev;
+ 	}
+ 
+-	rzv2h_icu_data->irqchip = &rzv2h_icu_chip;
+-
+ 	rzv2h_icu_data->base = devm_of_iomap(&pdev->dev, pdev->dev.of_node, 0, NULL);
+ 	if (IS_ERR(rzv2h_icu_data->base)) {
+ 		ret = PTR_ERR(rzv2h_icu_data->base);

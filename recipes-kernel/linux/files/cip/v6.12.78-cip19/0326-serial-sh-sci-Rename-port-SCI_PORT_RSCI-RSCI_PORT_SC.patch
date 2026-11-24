@@ -1,0 +1,89 @@
+From 8f0a2d959fb0bd652330a4223342fb6c187721de Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Wed, 11 Mar 2026 10:04:37 +0000
+Subject: [PATCH 326/851] serial: sh-sci: Rename port
+ SCI_PORT_RSCI->RSCI_PORT_SCIF16
+
+[ Upstream commit d53f4aa9edaafda28e426d8e5eda7dc50f7ca94e ]
+
+Rename port SCI_PORT_RSCI->RSCI_PORT_SCIF16 to differentiate it from
+RZ/G3E port that has 32-stage FIFO.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20251129164325.209213-12-biju.das.jz@bp.renesas.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/tty/serial/rsci.c          | 2 +-
+ drivers/tty/serial/sh-sci-common.h | 2 +-
+ drivers/tty/serial/sh-sci.c        | 8 ++++----
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/tty/serial/rsci.c b/drivers/tty/serial/rsci.c
+index fb419f34f35d..8a4f2618e53c 100644
+--- a/drivers/tty/serial/rsci.c
++++ b/drivers/tty/serial/rsci.c
+@@ -461,7 +461,7 @@ static const struct sci_port_ops rsci_port_ops = {
+ };
+ 
+ struct sci_of_data of_sci_rsci_data = {
+-	.type = SCI_PORT_RSCI,
++	.type = RSCI_PORT_SCIF16,
+ 	.ops = &rsci_port_ops,
+ 	.uart_ops = &rsci_uart_ops,
+ 	.params = &rsci_port_params,
+diff --git a/drivers/tty/serial/sh-sci-common.h b/drivers/tty/serial/sh-sci-common.h
+index e3c028df14f1..1b9480c7f4cb 100644
+--- a/drivers/tty/serial/sh-sci-common.h
++++ b/drivers/tty/serial/sh-sci-common.h
+@@ -7,7 +7,7 @@
+ 
+ /* Private port IDs */
+ enum SCI_PORT_TYPE {
+-	SCI_PORT_RSCI = BIT(7) | 0,
++	RSCI_PORT_SCIF16 = BIT(7) | 0,
+ };
+ 
+ enum SCI_CLKS {
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 0be3d5c45388..69cd9aa60922 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -1184,7 +1184,7 @@ static int sci_handle_errors(struct uart_port *port)
+ 
+ static bool sci_is_rsci_type(u8 type)
+ {
+-	return (type == SCI_PORT_RSCI);
++	return (type == RSCI_PORT_SCIF16);
+ }
+ 
+ static int sci_handle_fifo_overrun(struct uart_port *port)
+@@ -3179,7 +3179,7 @@ static int sci_init_clocks(struct sci_port *sci_port, struct device *dev)
+ 
+ 	if (sci_port->type == PORT_HSCIF) {
+ 		clk_names[SCI_SCK] = "hsck";
+-	} else if (sci_port->type == SCI_PORT_RSCI) {
++	} else if (sci_port->type == RSCI_PORT_SCIF16) {
+ 		clk_names[SCI_FCK] = "operation";
+ 		clk_names[SCI_BRG_INT] = "bus";
+ 	}
+@@ -3191,7 +3191,7 @@ static int sci_init_clocks(struct sci_port *sci_port, struct device *dev)
+ 		if (IS_ERR(clk))
+ 			return PTR_ERR(clk);
+ 
+-		if (!clk && sci_port->type == SCI_PORT_RSCI &&
++		if (!clk && sci_port->type == RSCI_PORT_SCIF16 &&
+ 		    (i == SCI_FCK || i == SCI_BRG_INT))
+ 			return dev_err_probe(dev, -ENODEV, "failed to get %s\n", name);
+ 
+@@ -3329,7 +3329,7 @@ static int sci_init_single(struct platform_device *dev,
+ 		else
+ 			sci_port->rx_trigger = 8;
+ 		break;
+-	case SCI_PORT_RSCI:
++	case RSCI_PORT_SCIF16:
+ 		sci_port->rx_trigger = 16;
+ 		break;
+ 	default:

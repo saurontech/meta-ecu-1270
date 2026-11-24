@@ -1,0 +1,188 @@
+From 15a976caa6e8c79631445a1204903ec85d8d9860 Mon Sep 17 00:00:00 2001
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+Date: Thu, 14 May 2026 09:39:29 +0000
+Subject: [PATCH 156/163] PCI: rzg3s-host: Add SoC-specific configuration and
+ initialization callbacks
+
+[ Upstream commit 5f2c4de717786150f8d6cdbdbffb986cd3c59edb ]
+
+Add optional cfg_pre_init, cfg_post_init, and cfg_deinit callbacks
+to handle SoC-specific configuration methods. While RZ/G3S uses the Linux
+reset framework with dedicated reset lines, other SoC variants like RZ/G3E
+control configuration resets through PCIe AXI registers.
+
+As Linux reset bulk API gracefully handles optional NULL reset lines
+(num_cfg_resets = 0 for RZ/G3E), the driver continues to use the standard
+reset framework when reset lines are available, while custom callbacks
+are only invoked when provided.
+
+This provides a balanced pattern where:
+- RZ/G3S: Uses callbacks that fall back to the reset framework
+- RZ/G3E: Sets num_cfg_resets=0, provides
+  cfg_pre_init/cfg_post_init/cfg_deinit
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N EVK
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Link: https://patch.msgid.link/20260306143423.19562-10-john.madieu.xa@bp.renesas.com
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 61 +++++++++++++++++-------
+ 1 file changed, 44 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 8620d8d31137..1de91ac54069 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -232,6 +232,9 @@ struct rzg3s_pcie_host;
+ /**
+  * struct rzg3s_pcie_soc_data - SoC specific data
+  * @init_phy: PHY initialization function
++ * @config_pre_init: Optional callback for SoC-specific pre-configuration
++ * @config_post_init: Callback for SoC-specific post-configuration
++ * @config_deinit: Callback for SoC-specific de-initialization
+  * @power_resets: array with the resets that need to be de-asserted after
+  *                power-on
+  * @cfg_resets: array with the resets that need to be de-asserted after
+@@ -242,6 +245,9 @@ struct rzg3s_pcie_host;
+  */
+ struct rzg3s_pcie_soc_data {
+ 	int (*init_phy)(struct rzg3s_pcie_host *host);
++	void (*config_pre_init)(struct rzg3s_pcie_host *host);
++	int (*config_post_init)(struct rzg3s_pcie_host *host);
++	int (*config_deinit)(struct rzg3s_pcie_host *host);
+ 	const char * const *power_resets;
+ 	const char * const *cfg_resets;
+ 	struct rzg3s_sysc_info sysc_info;
+@@ -1131,6 +1137,18 @@ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
+ 	return 0;
+ }
+ 
++static int rzg3s_pcie_config_post_init(struct rzg3s_pcie_host *host)
++{
++	return reset_control_bulk_deassert(host->data->num_cfg_resets,
++					   host->cfg_resets);
++}
++
++static int rzg3s_pcie_config_deinit(struct rzg3s_pcie_host *host)
++{
++	return reset_control_bulk_assert(host->data->num_cfg_resets,
++					 host->cfg_resets);
++}
++
+ static void rzg3s_pcie_irq_init(struct rzg3s_pcie_host *host)
+ {
+ 	/*
+@@ -1279,22 +1297,26 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+ 	u32 val;
+ 	int ret;
+ 
++	/* SoC-specific pre-configuration */
++	if (host->data->config_pre_init)
++		host->data->config_pre_init(host);
++
+ 	/* Initialize the PCIe related registers */
+ 	ret = rzg3s_pcie_config_init(host);
+ 	if (ret)
+-		return ret;
++		goto config_deinit;
+ 
+ 	ret = rzg3s_pcie_host_init_port(host);
+ 	if (ret)
+-		return ret;
++		goto config_deinit;
+ 
+ 	/* Initialize the interrupts */
+ 	rzg3s_pcie_irq_init(host);
+ 
+-	ret = reset_control_bulk_deassert(host->data->num_cfg_resets,
+-					  host->cfg_resets);
++	/* SoC-specific post-configuration */
++	ret = host->data->config_post_init(host);
+ 	if (ret)
+-		goto disable_port_refclk;
++		goto config_deinit_and_refclk;
+ 
+ 	/* Wait for link up */
+ 	ret = readl_poll_timeout(host->axi + RZG3S_PCI_PCSTAT1, val,
+@@ -1303,18 +1325,20 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+ 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
+ 				 PCIE_LINK_WAIT_MAX_RETRIES);
+ 	if (ret)
+-		goto cfg_resets_deassert;
++		goto config_deinit_post;
+ 
+ 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
+ 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
+ 
+ 	return 0;
+ 
+-cfg_resets_deassert:
+-	reset_control_bulk_assert(host->data->num_cfg_resets,
+-				  host->cfg_resets);
+-disable_port_refclk:
++config_deinit_post:
++	host->data->config_deinit(host);
++config_deinit_and_refclk:
+ 	clk_disable_unprepare(host->port.refclk);
++config_deinit:
++	if (host->data->config_pre_init)
++		host->data->config_deinit(host);
+ 	return ret;
+ }
+ 
+@@ -1675,7 +1699,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 
+ host_probe_teardown:
+ 	rzg3s_pcie_teardown_irqdomain(host);
+-	reset_control_bulk_assert(host->data->num_cfg_resets, host->cfg_resets);
++	host->data->config_deinit(host);
+ rpm_put:
+ 	pm_runtime_put_sync(dev);
+ rpm_disable:
+@@ -1708,15 +1732,15 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 
+ 	clk_disable_unprepare(port->refclk);
+ 
+-	ret = reset_control_bulk_assert(data->num_cfg_resets,
+-					host->cfg_resets);
++	/* SoC-specific de-initialization */
++	ret = data->config_deinit(host);
+ 	if (ret)
+ 		goto refclk_restore;
+ 
+ 	ret = reset_control_bulk_assert(data->num_power_resets,
+ 					host->power_resets);
+ 	if (ret)
+-		goto cfg_resets_restore;
++		goto config_reinit;
+ 
+ 	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ 	if (ret)
+@@ -1728,9 +1752,10 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ power_resets_restore:
+ 	reset_control_bulk_deassert(data->num_power_resets,
+ 				    host->power_resets);
+-cfg_resets_restore:
+-	reset_control_bulk_deassert(data->num_cfg_resets,
+-				    host->cfg_resets);
++config_reinit:
++	if (data->config_pre_init)
++		data->config_pre_init(host);
++	data->config_post_init(host);
+ refclk_restore:
+ 	clk_prepare_enable(port->refclk);
+ 	pm_runtime_resume_and_get(dev);
+@@ -1795,6 +1820,8 @@ static const struct rzg3s_pcie_soc_data rzg3s_soc_data = {
+ 	.num_power_resets = ARRAY_SIZE(rzg3s_soc_power_resets),
+ 	.cfg_resets = rzg3s_soc_cfg_resets,
+ 	.num_cfg_resets = ARRAY_SIZE(rzg3s_soc_cfg_resets),
++	.config_post_init = rzg3s_pcie_config_post_init,
++	.config_deinit = rzg3s_pcie_config_deinit,
+ 	.init_phy = rzg3s_soc_pcie_init_phy,
+ 	.sysc_info = {
+ 		.functions = {

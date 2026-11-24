@@ -1,0 +1,31 @@
+From 5a208071ddbbadbbdeb3d282b7fc5a37f09cabda Mon Sep 17 00:00:00 2001
+From: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Date: Thu, 8 Jan 2026 10:30:09 +0100
+Subject: [PATCH 675/838] i3c: Document I3C_ADDR_SLOT_EXT_STATUS_MASK
+
+commit f6ca73063754950bf3fbad753e3a9557e3aa85e3 upstream.
+
+As the mask is part of the enum, document it.
+
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Link: https://lore.kernel.org/r/20241102132841.2446176-1-alexandre.belloni@bootlin.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ include/linux/i3c/master.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index 6e5328c6c6af..12d532b012c5 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -298,6 +298,7 @@ enum i3c_open_drain_speed {
+  * @I3C_ADDR_SLOT_I2C_DEV: address is assigned to an I2C device
+  * @I3C_ADDR_SLOT_I3C_DEV: address is assigned to an I3C device
+  * @I3C_ADDR_SLOT_STATUS_MASK: address slot mask
++ * @I3C_ADDR_SLOT_EXT_STATUS_MASK: address slot mask with extended information
+  * @I3C_ADDR_SLOT_EXT_DESIRED: the bitmask represents addresses that are preferred by some devices,
+  *			       such as the "assigned-address" property in a device tree source.
+  * On an I3C bus, addresses are assigned dynamically, and we need to know which

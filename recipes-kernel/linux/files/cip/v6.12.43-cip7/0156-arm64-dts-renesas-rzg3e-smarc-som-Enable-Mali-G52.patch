@@ -1,0 +1,52 @@
+From f6295d2d7dc3f157694e201e5720331943d7ca0e Mon Sep 17 00:00:00 2001
+From: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Date: Wed, 2 Jul 2025 12:37:10 +0200
+Subject: [PATCH 156/246] arm64: dts: renesas: rzg3e-smarc-som: Enable Mali-G52
+
+commit 4c5e0f0c89f0c54610ab6de29b0649f799a66542 upstream.
+
+Enable the Mali-G52 (GPU) node on the RZ/G3E SMARC SoM board.
+
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250402131142.1270701-5-tommaso.merciai.xr@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+index 72b42a81bcf3..051a43a7e2f0 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+@@ -45,12 +45,27 @@ reg_3p3v: regulator-3p3v {
+ 		regulator-boot-on;
+ 		regulator-always-on;
+ 	};
++
++	reg_vdd0p8v_others: regulator-vdd0p8v-others {
++		compatible = "regulator-fixed";
++
++		regulator-name = "fixed-0.8V";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
+ };
+ 
+ &audio_extal_clk {
+ 	clock-frequency = <48000000>;
+ };
+ 
++&gpu {
++	status = "okay";
++	mali-supply = <&reg_vdd0p8v_others>;
++};
++
+ &pinctrl {
+ 	sdhi0_emmc_pins: sd0-emmc {
+ 		sd0-ctrl {

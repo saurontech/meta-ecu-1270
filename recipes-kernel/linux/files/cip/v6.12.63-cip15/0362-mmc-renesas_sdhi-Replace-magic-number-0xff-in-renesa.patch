@@ -1,0 +1,34 @@
+From 204087e9ed3a3aada175fc26ef37c96445fbfbb3 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sun, 14 Dec 2025 12:16:19 +0000
+Subject: [PATCH 362/724] mmc: renesas_sdhi: Replace magic number '0xff' in
+ renesas_sdhi_set_clock()
+
+[ Upstream commit 5d0702dc9c2f6700140b7366dd9ec6c78cde3aa1 ]
+
+Replace the magic number '0xff' with CLK_CTL_DIV_MASK macro for finding
+actual clock in renesas_sdhi_set_clock().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20250820104808.94562-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/mmc/host/renesas_sdhi_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index f123fcb8e01e..8b898d0229c8 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -223,7 +223,7 @@ static void renesas_sdhi_set_clock(struct tmio_mmc_host *host,
+ 	}
+ 
+ 	clock = clk & CLK_CTL_DIV_MASK;
+-	if (clock != 0xff)
++	if (clock != CLK_CTL_DIV_MASK)
+ 		host->mmc->actual_clock /= (1 << (ffs(clock) + 1));
+ 
+ 	sd_ctrl_write16(host, CTL_SD_CARD_CLK_CTL, clock);

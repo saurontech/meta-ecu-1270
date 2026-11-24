@@ -1,0 +1,18 @@
+From 9948023c5f0ce7c3d0d18b0d3af918bc37d783f8 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Date: Mon, 27 Apr 2026 06:34:43 +0900
+Subject: [PATCH 497/497] CIP: Bump version suffix to -cip21 after merge from
+ stable
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ localversion-cip | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/localversion-cip b/localversion-cip
+index fdbd1ce014a8..b7919e72719f 100644
+--- a/localversion-cip
++++ b/localversion-cip
+@@ -1 +1 @@
+--cip20
++-cip21

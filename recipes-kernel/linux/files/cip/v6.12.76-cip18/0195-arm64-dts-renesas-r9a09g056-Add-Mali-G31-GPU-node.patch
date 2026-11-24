@@ -1,0 +1,91 @@
+From 8d25f13648784bcb8def7221bc856a020d2d41ad Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 23 Feb 2026 10:27:56 +0000
+Subject: [PATCH 0195/1190] arm64: dts: renesas: r9a09g056: Add Mali-G31 GPU
+ node
+
+commit 3407963b237da9532d17c421c972ad5f5ec2a536 upstream.
+
+Add the device tree node for the ARM Mali-G31 GPU found on selected
+variants of the Renesas RZ/V2N (R9A09G056) SoC.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/20250514101528.41663-10-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ arch/arm64/boot/dts/renesas/r9a09g056.dtsi | 51 ++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+index d5f198760390..10d3b9727ea5 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g056.dtsi
+@@ -123,6 +123,35 @@ L3_CA55: cache-controller-0 {
+ 		};
+ 	};
+ 
++	gpu_opp_table: opp-table-1 {
++		compatible = "operating-points-v2";
++
++		opp-630000000 {
++			opp-hz = /bits/ 64 <630000000>;
++			opp-microvolt = <800000>;
++		};
++
++		opp-315000000 {
++			opp-hz = /bits/ 64 <315000000>;
++			opp-microvolt = <800000>;
++		};
++
++		opp-157500000 {
++			opp-hz = /bits/ 64 <157500000>;
++			opp-microvolt = <800000>;
++		};
++
++		opp-78750000 {
++			opp-hz = /bits/ 64 <78750000>;
++			opp-microvolt = <800000>;
++		};
++
++		opp-19687500 {
++			opp-hz = /bits/ 64 <19687500>;
++			opp-microvolt = <800000>;
++		};
++	};
++
+ 	psci {
+ 		compatible = "arm,psci-1.0", "arm,psci-0.2";
+ 		method = "smc";
+@@ -529,6 +558,28 @@ i2c8: i2c@11c01000 {
+ 			status = "disabled";
+ 		};
+ 
++		gpu: gpu@14850000 {
++			compatible = "renesas,r9a09g056-mali",
++				     "arm,mali-bifrost";
++			reg = <0x0 0x14850000 0x0 0x10000>;
++			interrupts = <GIC_SPI 884 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 885 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 883 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 886 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "job", "mmu", "gpu", "event";
++			clocks = <&cpg CPG_MOD 0xf0>,
++				 <&cpg CPG_MOD 0xf1>,
++				 <&cpg CPG_MOD 0xf2>;
++			clock-names = "gpu", "bus", "bus_ace";
++			resets = <&cpg 0xdd>,
++				 <&cpg 0xde>,
++				 <&cpg 0xdf>;
++			reset-names = "rst", "axi_rst", "ace_rst";
++			power-domains = <&cpg>;
++			operating-points-v2 = <&gpu_opp_table>;
++			status = "disabled";
++		};
++
+ 		gic: interrupt-controller@14900000 {
+ 			compatible = "arm,gic-v3";
+ 			reg = <0x0 0x14900000 0 0x20000>,

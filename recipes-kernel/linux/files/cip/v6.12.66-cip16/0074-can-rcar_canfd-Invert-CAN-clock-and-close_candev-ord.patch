@@ -1,0 +1,38 @@
+From b242e2b5f0bfe2123532a1317433de1b401a0e7e Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:44 +0000
+Subject: [PATCH 074/838] can: rcar_canfd: Invert CAN clock and close_candev()
+ order
+
+[ Upstream commit ddf9bbf22b70d6b1a10e7d45de8ec3b94de7c54c ]
+
+The CAN clock is enabled before calling open_candev(), and disabled
+before calling close_candev().  Invert the order of the latter, to
+restore symmetry.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patch.msgid.link/20251124102837.106973-6-biju.das.jz@bp.renesas.com
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 2b6321578e52..233ec0e4af78 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1578,8 +1578,8 @@ static int rcar_canfd_close(struct net_device *ndev)
+ 	netif_stop_queue(ndev);
+ 	rcar_canfd_stop(ndev);
+ 	napi_disable(&priv->napi);
+-	clk_disable_unprepare(gpriv->can_clk);
+ 	close_candev(ndev);
++	clk_disable_unprepare(gpriv->can_clk);
+ 	phy_power_off(priv->transceiver);
+ 	return 0;
+ }

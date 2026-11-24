@@ -1,0 +1,58 @@
+From 6ba9c13c5361c71359c02a81854a65ffe23d349e Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 4 Jul 2025 11:07:21 +0200
+Subject: [PATCH 171/246] irqchip/renesas-rzv2h: Update macros
+ ICU_TSSR_TSSEL_{MASK,PREP}
+
+commit e3a16c33db69ffd1369ebfdf93f93a93a785896a upstream.
+
+On RZ/G3E, TSSEL register field is 8 bits wide compared to 7 on RZ/V2H.
+Also bits 8..14 is reserved on RZ/G3E and any writes on these reserved
+bits is ignored.
+
+Use bitmask GENMASK(field_width - 2, 0) on both SoCs for extracting TSSEL
+and then update the macros ICU_TSSR_TSSEL_PREP and ICU_TSSR_TSSEL_MASK for
+supporting both SoCs.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/all/20250224131253.134199-12-biju.das.jz@bp.renesas.com
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/irqchip/irq-renesas-rzv2h.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzv2h.c b/drivers/irqchip/irq-renesas-rzv2h.c
+index 8d0bd4d69de2..7bc4397ec149 100644
+--- a/drivers/irqchip/irq-renesas-rzv2h.c
++++ b/drivers/irqchip/irq-renesas-rzv2h.c
+@@ -64,8 +64,13 @@
+ #define ICU_TINT_LEVEL_HIGH			2
+ #define ICU_TINT_LEVEL_LOW			3
+ 
+-#define ICU_TSSR_TSSEL_PREP(tssel, n)		((tssel) << ((n) * 8))
+-#define ICU_TSSR_TSSEL_MASK(n)			ICU_TSSR_TSSEL_PREP(0x7F, n)
++#define ICU_TSSR_TSSEL_PREP(tssel, n, field_width)	((tssel) << ((n) * (field_width)))
++#define ICU_TSSR_TSSEL_MASK(n, field_width)	\
++({\
++		typeof(field_width) (_field_width) = (field_width); \
++		ICU_TSSR_TSSEL_PREP((GENMASK(((_field_width) - 2), 0)), (n), _field_width); \
++})
++
+ #define ICU_TSSR_TIEN(n, field_width)	\
+ ({\
+ 		typeof(field_width) (_field_width) = (field_width); \
+@@ -326,8 +331,8 @@ static int rzv2h_tint_set_type(struct irq_data *d, unsigned int type)
+ 	guard(raw_spinlock)(&priv->lock);
+ 
+ 	tssr = readl_relaxed(priv->base + priv->info->t_offs + ICU_TSSR(tssr_k));
+-	tssr &= ~(ICU_TSSR_TSSEL_MASK(tssel_n) | tien);
+-	tssr |= ICU_TSSR_TSSEL_PREP(tint, tssel_n);
++	tssr &= ~(ICU_TSSR_TSSEL_MASK(tssel_n, priv->info->field_width) | tien);
++	tssr |= ICU_TSSR_TSSEL_PREP(tint, tssel_n, priv->info->field_width);
+ 
+ 	writel_relaxed(tssr, priv->base + priv->info->t_offs + ICU_TSSR(tssr_k));
+ 

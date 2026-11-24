@@ -1,0 +1,40 @@
+From 4cd11b121ecb32e9375b2895073fe721c0424c38 Mon Sep 17 00:00:00 2001
+From: "suricata.lu" <suricata.lu@gmail.com>
+Date: Wed, 11 Nov 2026 23:39:03 +0800
+Subject: [PATCH] PCI: j721e: pass PD_FLAG_* to dev_pm_domain_attach()
+
+CIP patch 0819 (upstream d42c7c6fd66a "PM: domains: Add flags to specify
+power on attach/detach") changed the second argument of
+dev_pm_domain_attach() from "bool power_on" to a u32 flag mask and
+converted all upstream callers. TI's 7669c931b19e ("FROMLIST: PCI: j721e:
+Fix programming sequence of "strap" settings") adds a caller that is not
+upstream, so it still passes "true", which now means PD_FLAG_NO_DEV_LINK.
+
+Pass PD_FLAG_ATTACH_POWER_ON as 0819 does for the other callers, and
+PD_FLAG_DETACH_POWER_OFF so that the re-attach uses the same flags as
+platform_probe(), which attached the domain that j721e_pcie_probe()
+detaches before programming the strap settings.
+
+On a DT system genpd_dev_pm_attach() always powers on the domain and
+PD_FLAG_NO_DEV_LINK is not used by dev_pm_domain_attach(), and
+detach_power_off is only used on the Renesas RZ machines listed in
+dev_pm_domain_allow_detach_on_unbind_cleanup(), so there is no change in
+behaviour on TI K3; this keeps the meaning of the call correct.
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 7a70c085eb83..92a58d0565dd 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -495,7 +495,8 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = dev_pm_domain_attach(dev, true);
++	ret = dev_pm_domain_attach(dev, PD_FLAG_ATTACH_POWER_ON |
++					 PD_FLAG_DETACH_POWER_OFF);
+ 	if (ret < 0) {
+ 		dev_err(dev, "failed to power on PCIe Controller\n");
+ 		return ret;

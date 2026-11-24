@@ -1,0 +1,112 @@
+From 4bf1c78238692b02e512006f223196b5c16ff3f7 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 22 Oct 2026 14:40:13 +0100
+Subject: [PATCH 1362/1368] arm64: dts: renesas: r9a08g046l48-smarc: Enable
+ rsci{1,2,3} nodes
+
+[ Upstream commit 4fb32d9e4836c33ea9861f7c3e57beab6f546eb1 ]
+
+Enable rsci{1,2,3} device nodes for the RZ/G3L SMARC EVK.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260529125442.327290-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ .../boot/dts/renesas/r9a08g046l48-smarc.dts   | 59 +++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+index c1c36f7529597..5289efd1a430a 100644
+--- a/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a08g046l48-smarc.dts
+@@ -13,6 +13,7 @@
+ #define SW_DPI_EN		0
+ #define SW_GPIO4		1
+ #define SW_I3C_EN		0
++#define SW_SER0_PMOD		1
+ 
+ #define PMOD_GPIO4		0
+ #define PMOD_GPIO6		0
+@@ -37,6 +38,9 @@ / {
+ 	aliases {
+ 		i2c2 = &i2c2;
+ 		i2c3 = &i2c3;
++		serial0 = &rsci2;
++		serial1 = &rsci3;
++		serial2 = &rsci1;
+ 		serial3 = &scif0;
+ 	};
+ 
+@@ -134,6 +138,30 @@ i2c3_pins: i2c3 {
+ 			 <RZG3L_PORT_PINMUX(2, 1, 4)>; /* RIIC3_SDA */
+ 	};
+ 
++	rsci1_pins: rsci1 {
++		pinmux = <RZG3L_PORT_PINMUX(D, 4, 5)>, /* RSCI1_RXD_MISO_SCL */
++			 <RZG3L_PORT_PINMUX(D, 5, 5)>, /* RSCI1_TXD_MOSI_SDA */
++			 <RZG3L_PORT_PINMUX(D, 6, 6)>, /* RSCI1_CTS */
++			 <RZG3L_PORT_PINMUX(D, 7, 5)>; /* RSCI1_SS_CTS#_RTS# */
++		bias-pull-up;
++	};
++
++	rsci2_pins: rsci2 {
++		pinmux = <RZG3L_PORT_PINMUX(7, 6, 5)>, /* RSCI2_RXD_MISO_SCL */
++			 <RZG3L_PORT_PINMUX(7, 7, 5)>, /* RSCI2_TXD_MOSI_SDA */
++			 <RZG3L_PORT_PINMUX(8, 0, 6)>, /* RSCI2_CTS */
++			 <RZG3L_PORT_PINMUX(8, 1, 5)>; /* RSCI2_SS_CTS#_RTS# */
++		bias-pull-up;
++		power-source = <1800>;
++	};
++
++	rsci3_pins: rsci3 {
++		pinmux = <RZG3L_PORT_PINMUX(8, 2, 5)>, /* RSCI3_RXD_MISO_SCL */
++			 <RZG3L_PORT_PINMUX(8, 3, 5)>; /* RSCI3_TXD_MOSI_SDA */
++		bias-pull-up;
++		power-source = <1800>;
++	};
++
+ 	rspi2_pins: rspi2 {
+ 		pinmux = <RZG3L_PORT_PINMUX(6, 0, 2)>, /* RSPI2_MISO */
+ 			 <RZG3L_PORT_PINMUX(6, 1, 2)>, /* RSPI2_MOSI */
+@@ -155,6 +183,37 @@ ssi0_pins: ssi0 {
+ 	};
+ };
+ 
++#if SW_SER0_PMOD
++&rsci1 {
++	pinctrl-0 = <&rsci1_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++
++	status = "okay";
++};
++#endif
++
++#if !SW_DPI_EN
++&rsci2 {
++	pinctrl-0 = <&rsci2_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++
++	status = "okay";
++};
++#endif
++
++#if (!SW_DPI_EN)
++&rsci3 {
++	pinctrl-0 = <&rsci3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++#endif
++
+ #if !SW_DPI_EN
+ &rspi2 {
+ 	pinctrl-0 = <&rspi2_pins>;

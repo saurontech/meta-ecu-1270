@@ -1,0 +1,54 @@
+From a755e5bf47c530e9a73f8b528d6c2d2f53c5da28 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:47 +0100
+Subject: [PATCH 028/286] clk: renesas: r9a08g046: Add SCIF{1..5} clocks and
+ resets
+
+[ Upstream commit 6b99bb5e6ebec07815c0ad742862bafa386797ff ]
+
+Add SCIF{1..5} clock and reset entries.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260330132349.149391-5-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a08g046-cpg.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a08g046-cpg.c b/drivers/clk/renesas/r9a08g046-cpg.c
+index a311e17958d1..962094157cab 100644
+--- a/drivers/clk/renesas/r9a08g046-cpg.c
++++ b/drivers/clk/renesas/r9a08g046-cpg.c
+@@ -264,6 +264,16 @@ static const struct rzg2l_mod_clk r9a08g046_mod_clks[] = {
+ 					MSTOP(BUS_PERI_COM, BIT(3))),
+ 	DEF_MOD("scif0_clk_pck",	R9A08G046_SCIF0_CLK_PCK, R9A08G046_CLK_P0, 0x584, 0,
+ 					MSTOP(BUS_MCPU2, BIT(1))),
++	DEF_MOD("scif1_clk_pck",	R9A08G046_SCIF1_CLK_PCK, R9A08G046_CLK_P0, 0x584, 1,
++					MSTOP(BUS_MCPU2, BIT(2))),
++	DEF_MOD("scif2_clk_pck",	R9A08G046_SCIF2_CLK_PCK, R9A08G046_CLK_P0, 0x584, 2,
++					MSTOP(BUS_MCPU2, BIT(3))),
++	DEF_MOD("scif3_clk_pck",	R9A08G046_SCIF3_CLK_PCK, R9A08G046_CLK_P0, 0x584, 3,
++					MSTOP(BUS_MCPU2, BIT(4))),
++	DEF_MOD("scif4_clk_pck",	R9A08G046_SCIF4_CLK_PCK, R9A08G046_CLK_P0, 0x584, 4,
++					MSTOP(BUS_MCPU2, BIT(5))),
++	DEF_MOD("scif5_clk_pck",	R9A08G046_SCIF5_CLK_PCK, R9A08G046_CLK_P0, 0x584, 5,
++					MSTOP(BUS_MCPU3, BIT(4))),
+ 	DEF_MOD("gpio_hclk",		R9A08G046_GPIO_HCLK, R9A08G046_OSCCLK, 0x598, 0,
+ 					MSTOP(BUS_PERI_CPU, BIT(6))),
+ };
+@@ -278,6 +288,11 @@ static const struct rzg2l_reset r9a08g046_resets[] = {
+ 	DEF_RST(R9A08G046_ETH0_ARESET_N, 0x87c, 0),
+ 	DEF_RST(R9A08G046_ETH1_ARESET_N, 0x87c, 1),
+ 	DEF_RST(R9A08G046_SCIF0_RST_SYSTEM_N, 0x884, 0),
++	DEF_RST(R9A08G046_SCIF1_RST_SYSTEM_N, 0x884, 1),
++	DEF_RST(R9A08G046_SCIF2_RST_SYSTEM_N, 0x884, 2),
++	DEF_RST(R9A08G046_SCIF3_RST_SYSTEM_N, 0x884, 3),
++	DEF_RST(R9A08G046_SCIF4_RST_SYSTEM_N, 0x884, 4),
++	DEF_RST(R9A08G046_SCIF5_RST_SYSTEM_N, 0x884, 5),
+ 	DEF_RST(R9A08G046_GPIO_RSTN, 0x898, 0),
+ 	DEF_RST(R9A08G046_GPIO_PORT_RESETN, 0x898, 1),
+ 	DEF_RST(R9A08G046_GPIO_SPARE_RESETN, 0x898, 2),

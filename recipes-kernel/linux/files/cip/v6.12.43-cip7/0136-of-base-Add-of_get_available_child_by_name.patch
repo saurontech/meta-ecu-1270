@@ -1,0 +1,89 @@
+From 48aaeea744b59ea89d1bda8734235d88729cddae Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Mon, 23 Jun 2025 16:48:10 +0200
+Subject: [PATCH 136/246] of: base: Add of_get_available_child_by_name()
+
+commit 8d3bbe4355aded32961b9009b31de6d41b7352e9 upstream.
+
+There are lot of drivers using of_get_child_by_name() followed by
+of_device_is_available() to find the available child node by name for a
+given parent. Provide a helper for these users to simplify the code.
+
+Suggested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Reviewed-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Signed-off-by: Pavel Machek <pavel@denx.de>
+---
+ drivers/of/base.c  | 27 +++++++++++++++++++++++++++
+ include/linux/of.h |  9 +++++++++
+ 2 files changed, 36 insertions(+)
+
+diff --git a/drivers/of/base.c b/drivers/of/base.c
+index 4bb87e0cbaf1..c2ecd77325a3 100644
+--- a/drivers/of/base.c
++++ b/drivers/of/base.c
+@@ -771,6 +771,33 @@ struct device_node *of_get_child_by_name(const struct device_node *node,
+ }
+ EXPORT_SYMBOL(of_get_child_by_name);
+ 
++/**
++ * of_get_available_child_by_name - Find the available child node by name for a given parent
++ * @node:	parent node
++ * @name:	child name to look for.
++ *
++ * This function looks for child node for given matching name and checks the
++ * device's availability for use.
++ *
++ * Return: A node pointer if found, with refcount incremented, use
++ * of_node_put() on it when done.
++ * Returns NULL if node is not found.
++ */
++struct device_node *of_get_available_child_by_name(const struct device_node *node,
++						   const char *name)
++{
++	struct device_node *child;
++
++	child = of_get_child_by_name(node, name);
++	if (child && !of_device_is_available(child)) {
++		of_node_put(child);
++		return NULL;
++	}
++
++	return child;
++}
++EXPORT_SYMBOL(of_get_available_child_by_name);
++
+ struct device_node *__of_find_node_by_path(struct device_node *parent,
+ 						const char *path)
+ {
+diff --git a/include/linux/of.h b/include/linux/of.h
+index 85b60ac9eec5..4232d1c43929 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -298,6 +298,8 @@ extern struct device_node *of_get_compatible_child(const struct device_node *par
+ 					const char *compatible);
+ extern struct device_node *of_get_child_by_name(const struct device_node *node,
+ 					const char *name);
++extern struct device_node *of_get_available_child_by_name(const struct device_node *node,
++							  const char *name);
+ 
+ /* cache lookup */
+ extern struct device_node *of_find_next_cache_node(const struct device_node *);
+@@ -575,6 +577,13 @@ static inline struct device_node *of_get_child_by_name(
+ 	return NULL;
+ }
+ 
++static inline struct device_node *of_get_available_child_by_name(
++					const struct device_node *node,
++					const char *name)
++{
++	return NULL;
++}
++
+ static inline int of_device_is_compatible(const struct device_node *device,
+ 					  const char *name)
+ {

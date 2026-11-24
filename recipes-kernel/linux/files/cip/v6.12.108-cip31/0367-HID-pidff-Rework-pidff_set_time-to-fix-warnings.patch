@@ -1,0 +1,36 @@
+From f49fbb6c1353c9a99c74cabef72047f17d49e4da Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tomasz=20Paku=C5=82a?= <tomasz.pakula.oficjalny@gmail.com>
+Date: Wed, 26 Aug 2026 09:47:12 -0400
+Subject: [PATCH 367/435] HID: pidff: Rework pidff_set_time() to fix warnings
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[ Upstream commit bed72bd240ce77623845853397b89a08f6dc5770 ]
+
+Fixes blank line warning from checkpatch.pl script
+
+Signed-off-by: Tomasz Pakuła <tomasz.pakula.oficjalny@gmail.com>
+Signed-off-by: Jiri Kosina <jkosina@suse.com>
+Stable-dep-of: 67bb1074e3d2 ("HID: pidff: fix OOB write when hid->inputs is empty")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/hid/usbhid/hid-pidff.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/hid/usbhid/hid-pidff.c b/drivers/hid/usbhid/hid-pidff.c
+index 0e653b104b52..471dbc8fabc9 100644
+--- a/drivers/hid/usbhid/hid-pidff.c
++++ b/drivers/hid/usbhid/hid-pidff.c
+@@ -339,8 +339,8 @@ static void pidff_set_signed(struct pidff_usage *usage, s16 value)
+ 
+ static void pidff_set_time(struct pidff_usage *usage, u16 time)
+ {
+-	u32 modified_time = pidff_rescale_time(time, usage->field);
+-	usage->value[0] = pidff_clamp(modified_time, usage->field);
++	usage->value[0] = pidff_clamp(
++		pidff_rescale_time(time, usage->field), usage->field);
+ }
+ 
+ static void pidff_set_duration(struct pidff_usage *usage, u16 duration)

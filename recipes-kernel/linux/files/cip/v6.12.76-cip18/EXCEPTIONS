@@ -1,0 +1,4 @@
+# action commit patch reason
+refresh 52defdd4034d 0347-media-chips-media-wave5-Fix-memory-leak-on-codec_inf.patch Context changed by TI; merged by git 3-way
+refresh 156020e889ed 0986-media-chips-media-wave5-Fix-kthread-worker-destructi.patch Context changed by TI; merged by git 3-way
+adapt 86ad5c4ac790 1121-net-ti-icssg-prueth-Add-optional-dependency-on-HSR.patch Conflict only because TI's base added 'depends on NET_SCH_TAPRIO || NET_SCH_TAPRIO=n' to TI_ICSSG_PRUETH at the same place. Keep both lines, TAPRIO first, in the same order as ti-linux-6.18.y (whose entry differs only by not selecting PAGE_POOL). ECU-1270 has TI_ICSSG_PRUETH=m and HSR=m, which the new dependency allows.

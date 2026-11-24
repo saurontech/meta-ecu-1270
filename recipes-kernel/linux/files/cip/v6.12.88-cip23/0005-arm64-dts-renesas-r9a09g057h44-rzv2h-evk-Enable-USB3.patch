@@ -1,0 +1,75 @@
+From 075d9014f09107c2771cd46ec1cafb60c54e980b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Mon, 4 May 2026 06:49:39 +0000
+Subject: [PATCH 005/432] arm64: dts: renesas: r9a09g057h44-rzv2h-evk: Enable
+ USB3.0 PHYs and xHCI controllers
+
+commit 7ef7ba62ec5cd1d32fd282669d0ff947df255408 upstream.
+
+Enable the USB3.0 (CH0) and USB3.1 (CH1) host controllers on the RZ/V2H
+Evaluation Kit. The CN4 stacked connector on the EVK provides access to
+both channels, with CH0 corresponding to USB3.0 and CH1 to USB3.1.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20251119110505.100253-3-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ .../dts/renesas/r9a09g057h44-rzv2h-evk.dts    | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+index a2c8509648b6..5540b97a4a9e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g057h44-rzv2h-evk.dts
+@@ -440,6 +440,16 @@ vbus {
+ 		};
+ 	};
+ 
++	usb30_pins: usb30 {
++		pinmux = <RZV2H_PORT_PINMUX(B, 0, 14)>, /* USB30_VBUSEN */
++			 <RZV2H_PORT_PINMUX(B, 1, 14)>; /* USB30_OVRCURN */
++	};
++
++	usb31_pins: usb31 {
++		pinmux = <RZV2H_PORT_PINMUX(6, 2, 14)>, /* USB31_VBUSEN */
++			 <RZV2H_PORT_PINMUX(6, 3, 14)>; /* USB31_OVRCURN */
++	};
++
+ 	xspi_pins: xspi0 {
+ 		ctrl {
+ 			pins = "XSPI0_RESET0N", "XSPI0_CS0N", "XSPI0_CKP";
+@@ -506,10 +516,30 @@ &usb2_phy1 {
+ 	status = "okay";
+ };
+ 
++&usb3_phy0 {
++	status = "okay";
++};
++
++&usb3_phy1 {
++	status = "okay";
++};
++
+ &wdt1 {
+ 	status = "okay";
+ };
+ 
++&xhci0 {
++	pinctrl-0 = <&usb30_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&xhci1 {
++	pinctrl-0 = <&usb31_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &xspi {
+ 	pinctrl-0 = <&xspi_pins>;
+ 	pinctrl-names = "default";

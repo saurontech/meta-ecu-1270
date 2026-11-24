@@ -1,0 +1,176 @@
+From 7472aee39db467b590ecb78b60240611fabb0f2c Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:59:01 +0100
+Subject: [PATCH 013/399] pinctrl: renesas: rzg2l: Add support for selecting
+ power source for {WDT,AWO,ISO}
+
+[ Upstream commit bbe2277dedbeb54bb251ae3e0599007253739aad ]
+
+The RZ/G3L SoC has support for setting power source that are not
+controlled by the following voltage control registers:
+  - SD_CH{0,1,2}_POC, XSPI_POC, ETH{0,1}_POC, I3C_SET.POC
+
+Add support for selecting voltages using OTHER_POC register for
+setting I/O domain voltage for WDT, ISO and AWO by extending
+rzg2l_caps_to_pwr_reg() with a mask output parameter so that callers
+callers can identify which bit(s) within OTHER_POC correspond to the
+requested domain. Update rzg2l_get_power_source() to extract the
+relevant bit field via field_get() when reading OTHER_POC, and update
+rzg2l_set_power_source() to perform a read-modify-write under the
+spinlock when writing to OTHER_POC, since multiple domains share the
+same register.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260430093422.74812-4-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[Biju: Added local field_get macro ]
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 55 +++++++++++++++++++++----
+ 1 file changed, 46 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index 1525dedca76e..9136cc352b9c 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -63,10 +63,18 @@
+ #define PIN_CFG_SMT			BIT(16)	/* Schmitt-trigger input control */
+ #define PIN_CFG_ELC			BIT(17)
+ #define PIN_CFG_IOLH_RZV2H		BIT(18)
++#define PIN_CFG_PVDD1833_OTH_AWO_POC	BIT(19) /* known on RZ/G3L only */
++#define PIN_CFG_PVDD1833_OTH_ISO_POC	BIT(20) /* known on RZ/G3L only */
++#define PIN_CFG_WDTOVF_N_POC		BIT(21) /* known on RZ/G3L only */
+ 
+ #define RZG2L_SINGLE_PIN		BIT_ULL(63)	/* Dedicated pin */
+ #define RZG2L_VARIABLE_CFG		BIT_ULL(62)	/* Variable cfg for port pins */
+ 
++#define PIN_CFG_OTHER_POC_MASK	\
++					(PIN_CFG_PVDD1833_OTH_AWO_POC | \
++					 PIN_CFG_PVDD1833_OTH_ISO_POC | \
++					 PIN_CFG_WDTOVF_N_POC)
++
+ #define RZG2L_MPXED_COMMON_PIN_FUNCS(group) \
+ 					(PIN_CFG_IOLH_##group | \
+ 					 PIN_CFG_PUPD | \
+@@ -146,6 +154,7 @@
+ #define SD_CH(off, ch)		((off) + (ch) * 4)
+ #define ETH_POC(off, ch)	((off) + (ch) * 4)
+ #define QSPI			(0x3008) /* known on RZ/{G2L,G2LC,G2UL,Five} only */
++#define OTHER_POC		(0x3028) /* known on RZ/G3L only */
+ 
+ #define PVDD_2500		2	/* I/O domain voltage 2.5V */
+ #define PVDD_1800		1	/* I/O domain voltage <= 1.8V */
+@@ -177,6 +186,8 @@
+ /* Custom pinconf parameters */
+ #define RENESAS_RZV2H_PIN_CONFIG_OUTPUT_IMPEDANCE	(PIN_CONFIG_END + 1)
+ 
++#define field_get(_mask, _reg) (((_reg) & (_mask)) >> (ffs(_mask) - 1))
++
+ static const struct pinconf_generic_params renesas_rzv2h_custom_bindings[] = {
+ 	{ "renesas,output-impedance", RENESAS_RZV2H_PIN_CONFIG_OUTPUT_IMPEDANCE, 1 },
+ };
+@@ -900,7 +911,8 @@ static void rzg2l_rmw_pin_config(struct rzg2l_pinctrl *pctrl, u32 offset,
+ 	raw_spin_unlock_irqrestore(&pctrl->lock, flags);
+ }
+ 
+-static int rzg2l_caps_to_pwr_reg(const struct rzg2l_register_offsets *regs, u32 caps)
++static int rzg2l_caps_to_pwr_reg(const struct rzg2l_register_offsets *regs,
++				 u32 caps, u8 *mask)
+ {
+ 	if (caps & PIN_CFG_IO_VMC_SD0)
+ 		return SD_CH(regs->sd_ch, 0);
+@@ -912,6 +924,16 @@ static int rzg2l_caps_to_pwr_reg(const struct rzg2l_register_offsets *regs, u32
+ 		return ETH_POC(regs->eth_poc, 1);
+ 	if (caps & PIN_CFG_IO_VMC_QSPI)
+ 		return QSPI;
++	if (caps & PIN_CFG_OTHER_POC_MASK) {
++		if (caps & PIN_CFG_PVDD1833_OTH_AWO_POC)
++			*mask = BIT(0);
++		else if (caps & PIN_CFG_PVDD1833_OTH_ISO_POC)
++			*mask = BIT(1);
++		else
++			*mask = BIT(2);
++
++		return OTHER_POC;
++	}
+ 
+ 	return -EINVAL;
+ }
+@@ -920,17 +942,20 @@ static int rzg2l_get_power_source(struct rzg2l_pinctrl *pctrl, u32 pin, u32 caps
+ {
+ 	const struct rzg2l_hwcfg *hwcfg = pctrl->data->hwcfg;
+ 	const struct rzg2l_register_offsets *regs = &hwcfg->regs;
++	u8 val, mask;
+ 	int pwr_reg;
+-	u8 val;
+ 
+ 	if (caps & PIN_CFG_SOFT_PS)
+ 		return pctrl->settings[pin].power_source;
+ 
+-	pwr_reg = rzg2l_caps_to_pwr_reg(regs, caps);
++	pwr_reg = rzg2l_caps_to_pwr_reg(regs, caps, &mask);
+ 	if (pwr_reg < 0)
+ 		return pwr_reg;
+ 
+ 	val = readb(pctrl->base + pwr_reg);
++	if (pwr_reg == OTHER_POC)
++		val = field_get(mask, val);
++
+ 	switch (val) {
+ 	case PVDD_1800:
+ 		return 1800;
+@@ -948,8 +973,8 @@ static int rzg2l_set_power_source(struct rzg2l_pinctrl *pctrl, u32 pin, u32 caps
+ {
+ 	const struct rzg2l_hwcfg *hwcfg = pctrl->data->hwcfg;
+ 	const struct rzg2l_register_offsets *regs = &hwcfg->regs;
++	u8 poc_val, val, mask;
+ 	int pwr_reg;
+-	u8 val;
+ 
+ 	if (caps & PIN_CFG_SOFT_PS) {
+ 		pctrl->settings[pin].power_source = ps;
+@@ -958,25 +983,37 @@ static int rzg2l_set_power_source(struct rzg2l_pinctrl *pctrl, u32 pin, u32 caps
+ 
+ 	switch (ps) {
+ 	case 1800:
+-		val = PVDD_1800;
++		poc_val = PVDD_1800;
+ 		break;
+ 	case 2500:
+ 		if (!(caps & (PIN_CFG_IO_VMC_ETH0 | PIN_CFG_IO_VMC_ETH1)))
+ 			return -EINVAL;
+-		val = PVDD_2500;
++		poc_val = PVDD_2500;
+ 		break;
+ 	case 3300:
+-		val = PVDD_3300;
++		poc_val = PVDD_3300;
+ 		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+ 
+-	pwr_reg = rzg2l_caps_to_pwr_reg(regs, caps);
++	pwr_reg = rzg2l_caps_to_pwr_reg(regs, caps, &mask);
+ 	if (pwr_reg < 0)
+ 		return pwr_reg;
+ 
+-	writeb(val, pctrl->base + pwr_reg);
++	if (pwr_reg == OTHER_POC) {
++		scoped_guard(raw_spinlock, &pctrl->lock) {
++			val = readb(pctrl->base + pwr_reg);
++			if (poc_val)
++				val |= mask;
++			else
++				val &= ~mask;
++			writeb(val, pctrl->base + pwr_reg);
++		}
++	} else {
++		writeb(poc_val, pctrl->base + pwr_reg);
++	}
++
+ 	pctrl->settings[pin].power_source = ps;
+ 
+ 	return 0;

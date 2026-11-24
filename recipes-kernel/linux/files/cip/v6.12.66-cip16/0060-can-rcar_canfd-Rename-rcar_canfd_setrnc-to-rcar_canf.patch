@@ -1,0 +1,46 @@
+From 939d4d269d6bd8942eaec343d480173142c71117 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 6 Jan 2026 11:44:30 +0000
+Subject: [PATCH 060/838] can: rcar_canfd: Rename rcar_canfd_setrnc() to
+ rcar_canfd_set_rnc()
+
+[ Upstream commit 1b76dca8fd892a8ced41d980e123b4701ad3cf10 ]
+
+Insert an underscore in the function's name, for consistency with other
+getter and setter helper functions.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
+Link: https://patch.msgid.link/9fdc2584ce27b2784ecea76390d2a81eab289d0d.1749655315.git.geert+renesas@glider.be
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/net/can/rcar/rcar_canfd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index 3133ef64f537..2f84393d95c1 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -830,8 +830,8 @@ static void rcar_canfd_tx_failure_cleanup(struct net_device *ndev)
+ 		can_free_echo_skb(ndev, i, NULL);
+ }
+ 
+-static void rcar_canfd_setrnc(struct rcar_canfd_global *gpriv, unsigned int ch,
+-			      unsigned int num_rules)
++static void rcar_canfd_set_rnc(struct rcar_canfd_global *gpriv, unsigned int ch,
++			       unsigned int num_rules)
+ {
+ 	unsigned int rnc_stride = 32 / gpriv->info->rnc_field_width;
+ 	unsigned int shift = 32 - (ch % rnc_stride + 1) * gpriv->info->rnc_field_width;
+@@ -968,7 +968,7 @@ static void rcar_canfd_configure_afl_rules(struct rcar_canfd_global *gpriv,
+ 			    RCANFD_GAFLECTR_AFLDAE));
+ 
+ 	/* Write number of rules for channel */
+-	rcar_canfd_setrnc(gpriv, ch, num_rules);
++	rcar_canfd_set_rnc(gpriv, ch, num_rules);
+ 	if (gpriv->info->shared_can_regs)
+ 		offset = RCANFD_GEN4_GAFL_OFFSET;
+ 	else if (gpriv->fdmode)

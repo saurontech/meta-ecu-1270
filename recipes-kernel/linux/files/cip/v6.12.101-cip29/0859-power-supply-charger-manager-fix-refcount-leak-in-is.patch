@@ -1,0 +1,44 @@
+From 3999f47e4bbf864e3c7fbfd813fb2f651e6b5714 Mon Sep 17 00:00:00 2001
+From: WenTao Liang <vulab@iscas.ac.cn>
+Date: Thu, 11 Jun 2026 08:53:21 +0800
+Subject: [PATCH 0859/1853] power: supply: charger-manager: fix refcount leak
+ in is_full_charged()
+
+commit 4373cfa38ead58f980362c841b0d0bdf8c4d956c upstream.
+
+In is_full_charged(), power_supply_get_by_name() is called to
+obtain a reference to the fuel_gauge power supply. If the
+voltage check (uV >= desc->fullbatt_uV) succeeds, the function
+returns true directly without releasing the reference, leaking
+the refcount.
+
+Fix this by setting a flag and jumping to the out label where
+power_supply_put() properly drops the reference.
+
+Cc: stable@vger.kernel.org
+Fixes: e132fc6bb89b ("power: supply: charger-manager: Make decisions focussed on battery status")
+Signed-off-by: WenTao Liang <vulab@iscas.ac.cn>
+Link: https://patch.msgid.link/20260611005322.53096-1-vulab@iscas.ac.cn
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/power/supply/charger-manager.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/power/supply/charger-manager.c b/drivers/power/supply/charger-manager.c
+index 96f0a7fbf105..8074c828080a 100644
+--- a/drivers/power/supply/charger-manager.c
++++ b/drivers/power/supply/charger-manager.c
+@@ -302,8 +302,10 @@ static bool is_full_charged(struct charger_manager *cm)
+ 			if (cm->battery_status == POWER_SUPPLY_STATUS_FULL
+ 					&& desc->fullbatt_vchkdrop_uV)
+ 				uV += desc->fullbatt_vchkdrop_uV;
+-			if (uV >= desc->fullbatt_uV)
+-				return true;
++			if (uV >= desc->fullbatt_uV) {
++				is_full = true;
++				goto out;
++			}
+ 		}
+ 	}
+ 

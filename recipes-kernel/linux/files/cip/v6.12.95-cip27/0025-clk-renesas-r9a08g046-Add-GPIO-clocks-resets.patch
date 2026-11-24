@@ -1,0 +1,51 @@
+From eb2fb510b6b23b0990bb5986e48a34cf8deee577 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 30 Jun 2026 12:47:44 +0100
+Subject: [PATCH 025/286] clk: renesas: r9a08g046: Add GPIO clocks/resets
+
+[ Upstream commit da000c4d5f1de7e83778cc0fb3974d2a9af2933c ]
+
+Add GPIO clock and reset entries.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260330132349.149391-2-biju.das.jz@bp.renesas.com
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/clk/renesas/r9a08g046-cpg.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/clk/renesas/r9a08g046-cpg.c b/drivers/clk/renesas/r9a08g046-cpg.c
+index 578a8004feeb..dc4108325d9d 100644
+--- a/drivers/clk/renesas/r9a08g046-cpg.c
++++ b/drivers/clk/renesas/r9a08g046-cpg.c
+@@ -174,6 +174,7 @@ static const struct cpg_core_clk r9a08g046_core_clks[] __initconst = {
+ 	DEF_FIXED("ETHRM1", R9A08G046_CLK_ETHRM1, CLK_SEL_ETH1_RM, 1, 1),
+ 	DEF_FIXED("ETHTX12", R9A08G046_CLK_ETHTX12, CLK_SEL_ETH1_TX, 1, 1),
+ 	DEF_FIXED("ETHRX12", R9A08G046_CLK_ETHRX12, CLK_SEL_ETH1_RX, 1, 1),
++	DEF_FIXED("OSCCLK", R9A08G046_OSCCLK, CLK_EXTAL, 1, 1),
+ };
+ 
+ static const struct rzg2l_mod_clk r9a08g046_mod_clks[] = {
+@@ -229,6 +230,8 @@ static const struct rzg2l_mod_clk r9a08g046_mod_clks[] = {
+ 					MSTOP(BUS_PERI_COM, BIT(3))),
+ 	DEF_MOD("scif0_clk_pck",	R9A08G046_SCIF0_CLK_PCK, R9A08G046_CLK_P0, 0x584, 0,
+ 					MSTOP(BUS_MCPU2, BIT(1))),
++	DEF_MOD("gpio_hclk",		R9A08G046_GPIO_HCLK, R9A08G046_OSCCLK, 0x598, 0,
++					MSTOP(BUS_PERI_CPU, BIT(6))),
+ };
+ 
+ static const struct rzg2l_reset r9a08g046_resets[] = {
+@@ -240,6 +243,9 @@ static const struct rzg2l_reset r9a08g046_resets[] = {
+ 	DEF_RST(R9A08G046_ETH0_ARESET_N, 0x87c, 0),
+ 	DEF_RST(R9A08G046_ETH1_ARESET_N, 0x87c, 1),
+ 	DEF_RST(R9A08G046_SCIF0_RST_SYSTEM_N, 0x884, 0),
++	DEF_RST(R9A08G046_GPIO_RSTN, 0x898, 0),
++	DEF_RST(R9A08G046_GPIO_PORT_RESETN, 0x898, 1),
++	DEF_RST(R9A08G046_GPIO_SPARE_RESETN, 0x898, 2),
+ };
+ 
+ static const unsigned int r9a08g046_crit_mod_clks[] __initconst = {

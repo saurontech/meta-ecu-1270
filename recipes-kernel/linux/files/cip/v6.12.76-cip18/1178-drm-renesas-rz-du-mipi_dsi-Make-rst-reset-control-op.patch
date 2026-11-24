@@ -1,0 +1,43 @@
+From 1d57cec155674d54716c0ef4612f12ada75135df Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Feb 2026 12:12:21 +0000
+Subject: [PATCH 1178/1190] drm: renesas: rz-du: mipi_dsi: Make "rst" reset
+ control optional for RZ/V2H(P)
+
+commit e96bec001af60857ece60b5fd10caa9886bbf12d upstream.
+
+In preparation for adding support for the Renesas RZ/V2H(P) SoC, make the
+"rst" reset control optional in the MIPI DSI driver. The RZ/V2H(P) SoC
+does not provide this reset line, and attempting to acquire it using the
+mandatory API causes probe failure.
+
+Switching to devm_reset_control_get_optional_exclusive() ensures
+compatibility with both SoCs that provide this reset line and those that
+do not, such as RZ/V2H(P).
+
+Co-developed-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Fabrizio Castro <fabrizio.castro.jz@renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250609225630.502888-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+index 957f108ea708..f0a4d18d5f4d 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+@@ -749,7 +749,7 @@ static int rzg2l_mipi_dsi_probe(struct platform_device *pdev)
+ 	if (IS_ERR(dsi->vclk))
+ 		return PTR_ERR(dsi->vclk);
+ 
+-	dsi->rstc = devm_reset_control_get_exclusive(dsi->dev, "rst");
++	dsi->rstc = devm_reset_control_get_optional_exclusive(dsi->dev, "rst");
+ 	if (IS_ERR(dsi->rstc))
+ 		return dev_err_probe(dsi->dev, PTR_ERR(dsi->rstc),
+ 				     "failed to get rst\n");

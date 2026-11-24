@@ -1,0 +1,41 @@
+From f62daba11ac9c87e6aed3e80e1242d4f373b37b0 Mon Sep 17 00:00:00 2001
+From: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Date: Wed, 17 Jun 2026 10:34:47 +0200
+Subject: [PATCH 584/600] spi: rzv2h-rspi: remove call to
+ spi_finalize_current_transfer()
+
+commit 9e4830b35dc0d522f45e1ec3ee5b1ff1648afe1b upstream.
+
+A call to spi_finalize_current_transfer() is only needed when the SPI
+transfer is completed outside of the current context, when the
+.transfer_one() implementation returns > 0.
+
+Since the SPI transfer is completed in the current context, and we
+return 0 from .transfer_one(), the SPI core assumes that the transfer
+has completed and it does not wait for the completion variable that
+would be set by a call to spi_finalize_current_transfer().
+
+Remove the call to spi_finalize_current_transfer().
+
+Signed-off-by: Cosmin Tanislav <cosmin-gabriel.tanislav.xa@renesas.com>
+Link: https://patch.msgid.link/20251201134229.600817-3-cosmin-gabriel.tanislav.xa@renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index 8cffc9cb6b6b..beea4fb83d10 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -250,8 +250,6 @@ static int rzv2h_rspi_transfer_one(struct spi_controller *controller,
+ 	if (ret)
+ 		transfer->error = SPI_TRANS_FAIL_IO;
+ 
+-	spi_finalize_current_transfer(controller);
+-
+ 	return ret;
+ }
+ 

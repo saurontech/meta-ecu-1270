@@ -1,0 +1,108 @@
+From d24f2ea5a8a33529a60302dd52a04efe98738d58 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 17 Jun 2026 10:34:59 +0200
+Subject: [PATCH 596/600] spi: rzv2h-rspi: Simplify clock rate search function
+ signatures
+
+commit c958bb67b2dfd87b09d725a60162d13674fc5fd9 upstream.
+
+The spr_min and spr_max parameters passed to
+rzv2h_rspi_find_rate_variable() and rzv2h_rspi_find_rate_fixed() were
+always called with RSPI_SPBR_SPR_MIN and RSPI_SPBR_SPR_MAX respectively.
+There is no need to pass these as parameters since the valid SPR range
+is fixed by the hardware.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://patch.msgid.link/20260410080517.2405700-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Tommaso Merciai <tommaso.merciai.xr@bp.renesas.com>
+Signed-off-by: Pavel Machek <pavel@nabladev.com>
+---
+ drivers/spi/spi-rzv2h-rspi.c | 26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/spi/spi-rzv2h-rspi.c b/drivers/spi/spi-rzv2h-rspi.c
+index d8a7a0a36ecc..c60002f2b026 100644
+--- a/drivers/spi/spi-rzv2h-rspi.c
++++ b/drivers/spi/spi-rzv2h-rspi.c
+@@ -88,9 +88,9 @@ struct rzv2h_rspi_best_clock {
+ };
+ 
+ struct rzv2h_rspi_info {
+-	void (*find_tclk_rate)(struct clk *clk, u32 hz, u8 spr_min, u8 spr_max,
++	void (*find_tclk_rate)(struct clk *clk, u32 hz,
+ 			       struct rzv2h_rspi_best_clock *best_clk);
+-	void (*find_pclk_rate)(struct clk *clk, u32 hz, u8 spr_low, u8 spr_high,
++	void (*find_pclk_rate)(struct clk *clk, u32 hz,
+ 			       struct rzv2h_rspi_best_clock *best_clk);
+ 	const char *tclk_name;
+ 	unsigned int fifo_size;
+@@ -413,7 +413,6 @@ static inline u32 rzv2h_rspi_calc_bitrate(unsigned long tclk_rate, u8 spr,
+ }
+ 
+ static void rzv2h_rspi_find_rate_variable(struct clk *clk, u32 hz,
+-					  u8 spr_min, u8 spr_max,
+ 					  struct rzv2h_rspi_best_clock *best)
+ {
+ 	long clk_rate, clk_min_rate, clk_max_rate;
+@@ -464,7 +463,7 @@ static void rzv2h_rspi_find_rate_variable(struct clk *clk, u32 hz,
+ 		 * minimum SPR that is in the valid range.
+ 		 */
+ 		min_rate_spr = DIV_ROUND_CLOSEST(clk_min_rate, rate_div) - 1;
+-		if (min_rate_spr > spr_max)
++		if (min_rate_spr > RSPI_SPBR_SPR_MAX)
+ 			continue;
+ 
+ 		/*
+@@ -474,14 +473,14 @@ static void rzv2h_rspi_find_rate_variable(struct clk *clk, u32 hz,
+ 		 * maximum SPR that is in the valid range.
+ 		 */
+ 		max_rate_spr = DIV_ROUND_CLOSEST(clk_max_rate, rate_div) - 1;
+-		if (max_rate_spr < spr_min)
++		if (max_rate_spr < RSPI_SPBR_SPR_MIN)
+ 			break;
+ 
+-		if (min_rate_spr < spr_min)
+-			min_rate_spr = spr_min;
++		if (min_rate_spr < RSPI_SPBR_SPR_MIN)
++			min_rate_spr = RSPI_SPBR_SPR_MIN;
+ 
+-		if (max_rate_spr > spr_max)
+-			max_rate_spr = spr_max;
++		if (max_rate_spr > RSPI_SPBR_SPR_MAX)
++			max_rate_spr = RSPI_SPBR_SPR_MAX;
+ 
+ 		for (spr = min_rate_spr; spr <= max_rate_spr; spr++) {
+ 			clk_rate = (spr + 1) * rate_div;
+@@ -512,7 +511,6 @@ static void rzv2h_rspi_find_rate_variable(struct clk *clk, u32 hz,
+ }
+ 
+ static void rzv2h_rspi_find_rate_fixed(struct clk *clk, u32 hz,
+-				       u8 spr_min, u8 spr_max,
+ 				       struct rzv2h_rspi_best_clock *best)
+ {
+ 	unsigned long clk_rate;
+@@ -545,7 +543,7 @@ static void rzv2h_rspi_find_rate_fixed(struct clk *clk, u32 hz,
+ 		 */
+ 		if (!spr && !brdv)
+ 			continue;
+-		if (spr >= spr_min && spr <= spr_max)
++		if (spr >= RSPI_SPBR_SPR_MIN && spr <= RSPI_SPBR_SPR_MAX)
+ 			goto clock_found;
+ 	}
+ 
+@@ -575,12 +573,10 @@ static u32 rzv2h_rspi_setup_clock(struct rzv2h_rspi_priv *rspi, u32 hz)
+ 	};
+ 	int ret;
+ 
+-	rspi->info->find_tclk_rate(rspi->tclk, hz, RSPI_SPBR_SPR_MIN,
+-				   RSPI_SPBR_SPR_MAX, &best_clock);
++	rspi->info->find_tclk_rate(rspi->tclk, hz, &best_clock);
+ 
+ 	if (best_clock.error && rspi->info->find_pclk_rate)
+-		rspi->info->find_pclk_rate(rspi->pclk, hz, RSPI_SPBR_SPR_MIN,
+-					   RSPI_SPBR_SPR_MAX, &best_clock);
++		rspi->info->find_pclk_rate(rspi->pclk, hz, &best_clock);
+ 
+ 	if (!best_clock.clk_rate)
+ 		return -EINVAL;

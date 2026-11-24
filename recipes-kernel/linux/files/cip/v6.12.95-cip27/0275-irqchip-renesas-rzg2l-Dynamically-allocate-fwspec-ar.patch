@@ -1,0 +1,48 @@
+From 39f4f4b93a2d9ddab79a52f6baf66fdf705f4422 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 3 Jul 2026 11:07:35 +0100
+Subject: [PATCH 275/286] irqchip/renesas-rzg2l: Dynamically allocate fwspec
+ array
+
+[ Upstream commit b8e06e4e419bd3dd99f832d728f17007ada3359c ]
+
+The total number of interrupts in RZ/G2L and RZ/G3L SoC are different. The
+RZ/G3L has 16 external interrupts whereas RZ/G2L has only 8 external
+interrupts. Dynamically allocate fwspec memory instead of static allocation
+to support both SoCs.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Link: https://patch.msgid.link/20260325192451.172562-12-biju.das.jz@bp.renesas.com
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Pavel Machek <pavel@nabladev.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 1511e6bcbc4e..42a13ee0a50b 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -82,7 +82,7 @@ static struct rzg2l_irqc_priv {
+ 	void __iomem			*base;
+ 	const struct irq_chip		*irq_chip;
+ 	const struct irq_chip		*tint_chip;
+-	struct irq_fwspec		fwspec[IRQC_NUM_IRQ];
++	struct irq_fwspec		*fwspec;
+ 	raw_spinlock_t			lock;
+ 	struct rzg2l_irqc_reg_cache	cache;
+ } *rzg2l_irqc_data;
+@@ -630,6 +630,11 @@ static int rzg2l_irqc_common_init(struct device_node *node, struct device_node *
+ 	if (IS_ERR(rzg2l_irqc_data->base))
+ 		return PTR_ERR(rzg2l_irqc_data->base);
+ 
++	rzg2l_irqc_data->fwspec = devm_kcalloc(&pdev->dev, IRQC_NUM_IRQ,
++					       sizeof(*rzg2l_irqc_data->fwspec), GFP_KERNEL);
++	if (!rzg2l_irqc_data->fwspec)
++		return -ENOMEM;
++
+ 	ret = rzg2l_irqc_parse_interrupts(rzg2l_irqc_data, node);
+ 	if (ret)
+ 		return dev_err_probe(dev, ret, "cannot parse interrupts: %d\n", ret);
